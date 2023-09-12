@@ -190,7 +190,7 @@ class _CreateProductState extends State<CreateProduct> {
                     image = await imageFile.readAsBytes();
                   }
                 },
-                child: Text('照片上傳'),
+                child: const Text('照片上傳'),
               )
             ],
           ),
@@ -236,20 +236,20 @@ class _CreateProductState extends State<CreateProduct> {
             title: Text('修改 ${good.name}'),
             content: Column(children: [
               Padding(
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
                 child: TextField(
                   controller: nameController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Product Name',
                   ),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
                 child: TextField(
                   controller: priceController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Product Price',
                   ),
@@ -262,7 +262,7 @@ class _CreateProductState extends State<CreateProduct> {
                     good.image = await image.readAsBytes();
                   }
                 },
-                child: Text('選擇產品圖片'),
+                child: const Text('選擇產品圖片'),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -272,7 +272,7 @@ class _CreateProductState extends State<CreateProduct> {
                   Navigator.pop(context);
                   setState(() {});
                 },
-                child: Text('修改產品'),
+                child: const Text('修改產品'),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -280,8 +280,8 @@ class _CreateProductState extends State<CreateProduct> {
                   setState(() {});
                   Navigator.pop(context);
                 },
-                child: Text('刪除產品'),
                 style: ElevatedButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('刪除產品'),
               )
             ]),
           );

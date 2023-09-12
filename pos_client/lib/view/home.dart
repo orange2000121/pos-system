@@ -6,6 +6,7 @@ import 'package:pos/template/add_item.dart';
 import 'package:pos/view/cashier.dart';
 import 'package:pos/view/create_product.dart';
 import 'package:pos/view/order_history.dart';
+import 'package:pos/view/receipt.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -43,7 +44,7 @@ class _HomeState extends State<Home> {
             child: SizedBox(
               child: InkWell(
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => CreateProduct()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateProduct()));
                 },
                 child: const Column(
                   children: [
@@ -76,6 +77,19 @@ class _HomeState extends State<Home> {
                 children: [
                   Icon(Icons.add),
                   Text('銷售紀錄'),
+                ],
+              ),
+            ),
+          ),
+          Card(
+            child: InkWell(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const Receipt()));
+              },
+              child: const Column(
+                children: [
+                  Icon(Icons.local_shipping_outlined),
+                  Text('開立收據'),
                 ],
               ),
             ),

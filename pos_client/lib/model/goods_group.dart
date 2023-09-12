@@ -32,6 +32,7 @@ class GoodsGroupItem {
 }
 
 class GoodsGroupProvider {
+  // ignore: avoid_init_to_null
   late Database? db = null;
   String tableName = 'goods_group';
   String dbName = 'pos.db';

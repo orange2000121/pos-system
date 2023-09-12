@@ -26,6 +26,7 @@ class OrderItem {
 }
 
 class OrderProvider {
+  // ignore: avoid_init_to_null
   late Database? db = null;
   String tableName = 'orders';
   String dbName = 'pos.db';

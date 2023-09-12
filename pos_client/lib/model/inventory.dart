@@ -1,3 +1,5 @@
+// ignore_for_file: annotate_overrides, overridden_fields
+
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -60,6 +62,7 @@ class InventoryItem extends Item {
 class InventoryProvider extends ItemProvider {
   // ignore: avoid_init_to_null
   @override
+  // ignore: avoid_init_to_null
   late Database? db = null;
   @override
   String tableName = 'inventory';

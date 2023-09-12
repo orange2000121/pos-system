@@ -44,6 +44,7 @@ class SellItem {
 }
 
 class SellProvider {
+  // ignore: avoid_init_to_null
   late Database? db = null;
   String tableName = 'sell';
   String dbName = 'pos.db';

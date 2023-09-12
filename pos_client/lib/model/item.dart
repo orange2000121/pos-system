@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 
+//todo 應該可以刪掉這頁了
 class Item {
   int length = 0;
   Uint8List? image;
@@ -28,6 +29,7 @@ class Item {
 }
 
 class ItemProvider {
+  // ignore: avoid_init_to_null
   late Database? db = null;
   String tableName = '';
   String dbName = '';
