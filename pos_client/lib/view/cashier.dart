@@ -468,64 +468,58 @@ class _CashierState extends State<Cashier> {
           FutureBuilder(
             future: customerProvider.getAll(),
             builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                customerValueNotifier.value = (snapshot.data!.isNotEmpty ? snapshot.data?.first : Customer('', '', '', '')) ?? Customer('', '', '', '');
-                _name.text = customerValueNotifier.value.name;
-                _phone.text = customerValueNotifier.value.phone;
-                _contactPerson.text = customerValueNotifier.value.contactPerson;
-                _address.text = customerValueNotifier.value.address;
-                _nameFocusNode.addListener(() {
-                  if (!_nameFocusNode.hasFocus) {
-                    customerValueNotifier.value.name = _name.text;
-                    receiptSample.customName = _name.text;
-                    customerValueNotifier.notifyListeners();
-                  }
-                });
-                _phoneFocusNode.addListener(() {
-                  if (!_phoneFocusNode.hasFocus) {
-                    customerValueNotifier.value.phone = _phone.text;
-                    receiptSample.phone = _phone.text;
-                    customerValueNotifier.notifyListeners();
-                  }
-                });
-                _contactPersonFocusNode.addListener(() {
-                  if (!_contactPersonFocusNode.hasFocus) {
-                    customerValueNotifier.value.contactPerson = _contactPerson.text;
-                    receiptSample.contactPerson = _contactPerson.text;
-                    customerValueNotifier.notifyListeners();
-                  }
-                });
-                _addressFocusNode.addListener(() {
-                  if (!_addressFocusNode.hasFocus) {
-                    customerValueNotifier.value.address = _address.text;
-                    receiptSample.address = _address.text;
-                    customerValueNotifier.notifyListeners();
-                  }
-                });
-                dropdownItems = snapshot.data ?? [];
-                dropdownItems.add(Customer('新增客戶', '', '', ''));
-                List<Map<String, dynamic>> data = [];
-                for (var i = 0; i < cashierLogic.shopItemsNotifier.value.length; i++) {
-                  data.add({
-                    'name': cashierLogic.shopItemsNotifier.value[i].name,
-                    'num': cashierLogic.shopItemsNotifier.value[i].quantity.toInt(),
-                    'price': cashierLogic.shopItemsNotifier.value[i].price.toInt(),
-                  });
+              // customerValueNotifier.value = (snapshot.data!.isNotEmpty ? snapshot.data?.first : Customer('', '', '', '')) ?? Customer('', '', '', '');
+              _name.text = customerValueNotifier.value.name;
+              _phone.text = customerValueNotifier.value.phone;
+              _contactPerson.text = customerValueNotifier.value.contactPerson;
+              _address.text = customerValueNotifier.value.address;
+              _nameFocusNode.addListener(() {
+                if (!_nameFocusNode.hasFocus) {
+                  customerValueNotifier.value.name = _name.text;
+                  receiptSample.customName = _name.text;
+                  customerValueNotifier.notifyListeners();
                 }
-                receiptSample.customName = dropdownItems.first.name;
-                receiptSample.contactPerson = dropdownItems.first.contactPerson;
-                receiptSample.phone = dropdownItems.first.phone;
-                receiptSample.address = dropdownItems.first.address;
-                receiptSample.data = data;
+              });
+              _phoneFocusNode.addListener(() {
+                if (!_phoneFocusNode.hasFocus) {
+                  customerValueNotifier.value.phone = _phone.text;
+                  receiptSample.phone = _phone.text;
+                  customerValueNotifier.notifyListeners();
+                }
+              });
+              _contactPersonFocusNode.addListener(() {
+                if (!_contactPersonFocusNode.hasFocus) {
+                  customerValueNotifier.value.contactPerson = _contactPerson.text;
+                  receiptSample.contactPerson = _contactPerson.text;
+                  customerValueNotifier.notifyListeners();
+                }
+              });
+              _addressFocusNode.addListener(() {
+                if (!_addressFocusNode.hasFocus) {
+                  customerValueNotifier.value.address = _address.text;
+                  receiptSample.address = _address.text;
+                  customerValueNotifier.notifyListeners();
+                }
+              });
+
+              dropdownItems = snapshot.data ?? [];
+              dropdownItems.add(Customer('新增客戶', '', '', ''));
+              customerValueNotifier.value = dropdownItems.first;
+              List<Map<String, dynamic>> data = [];
+              for (var i = 0; i < cashierLogic.shopItemsNotifier.value.length; i++) {
+                data.add({
+                  'name': cashierLogic.shopItemsNotifier.value[i].name,
+                  'num': cashierLogic.shopItemsNotifier.value[i].quantity.toInt(),
+                  'price': cashierLogic.shopItemsNotifier.value[i].price.toInt(),
+                });
               }
+              receiptSample.customName = dropdownItems.first.name;
+              receiptSample.contactPerson = dropdownItems.first.contactPerson;
+              receiptSample.phone = dropdownItems.first.phone;
+              receiptSample.address = dropdownItems.first.address;
+              receiptSample.data = data;
               return Column(
                 children: [
-                  // !(snapshot.hasData && snapshot.data!.isEmpty)
-                  //     ? DropdownButton(
-                  //         items: const [DropdownMenuItem(child: Text('新增客戶'))],
-                  //         onChanged: (value) {},
-                  //       )
-                  //     :
                   ValueListenableBuilder(
                     valueListenable: customerValueNotifier,
                     builder: (context, value, child) => DropdownButton<Customer>(
@@ -534,7 +528,7 @@ class _CashierState extends State<Cashier> {
                       items: List.generate(dropdownItems.length, (index) {
                         return DropdownMenuItem<Customer>(
                           value: dropdownItems[index], // 每個選項的值
-                          child: Text(snapshot.data![index].name),
+                          child: Text(dropdownItems[index].name),
                         );
                       }),
                       onChanged: (newValue) {

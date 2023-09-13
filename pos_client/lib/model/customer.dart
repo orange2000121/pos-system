@@ -55,15 +55,15 @@ class CustomerProvider {
             createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
           ''');
     });
-    // await db!.execute('''
-    //       create table $tableName (
-    //         id integer primary key autoincrement,
-    //         name text not null,
-    //         phone text not null,
-    //         contactPerson text not null,
-    //         address text not null,
-    //         createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
-    //       ''');
+    await db!.execute('''
+          create table $tableName (
+            id integer primary key autoincrement,
+            name text not null,
+            phone text not null,
+            contactPerson text not null,
+            address text not null,
+            createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+          ''');
     return db;
   }
 
