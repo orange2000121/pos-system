@@ -215,13 +215,13 @@ class _CashierState extends State<Cashier> {
         });
   }
 
-  Widget abacus(String name, double price) {
+  Widget abacus(String name, double price, {int num = 1, Function? onFinished}) {
     List<Widget> sugar = [];
     List<Widget> ice = [];
     List<String> sugarList = ['正常糖', '少糖', '半糖', '微糖', '無糖'];
     List<String> iceList = ['正常冰', '少冰', '半冰', '微冰', '去冰'];
-    String chosenSugar = sugarList[0], chosenIce = iceList[0];
-    TextEditingController quantity = TextEditingController(text: '1');
+    String chosenSugar = '', chosenIce = '';
+    TextEditingController quantity = TextEditingController(text: num.toString());
     for (var i = 0; i < sugarList.length; i++) {
       sugar.add(ElevatedButton(
         onPressed: () {
@@ -276,8 +276,12 @@ class _CashierState extends State<Cashier> {
         ),
         ElevatedButton(
           onPressed: () {
-            cashierLogic.addItem(name, price, chosenIce, chosenSugar, int.parse(quantity.text));
-            Navigator.pop(context);
+            if (onFinished == null) {
+              cashierLogic.addItem(name, price, chosenIce, chosenSugar, int.parse(quantity.text));
+            } else {
+              onFinished();
+            }
+            Navigator.pop(context, ShopItem(name, price, chosenIce, chosenSugar, int.parse(quantity.text)));
           },
           child: const Text('確定'),
         ),
@@ -285,6 +289,7 @@ class _CashierState extends State<Cashier> {
     );
   }
 
+  /// 所有點餐項目的列表。
   Widget shoppingCart() {
     return ValueListenableBuilder(
       valueListenable: cashierLogic.shopItemsNotifier,
@@ -296,6 +301,18 @@ class _CashierState extends State<Cashier> {
               title: Text(shopItems[index].name),
               subtitle: Text('${shopItems[index].ice} ${shopItems[index].sugar}'),
               trailing: Text(shopItems[index].quantity.toString()),
+              onTap: () async {
+                ShopItem item = await showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                          title: Text(shopItems[index].name),
+                          content: abacus(
+                            shopItems[index].name,
+                            shopItems[index].price,
+                            num: shopItems[index].quantity,
+                          ),
+                        ));
+              },
             );
           },
         );

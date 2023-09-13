@@ -105,14 +105,12 @@ class _CreateProductState extends State<CreateProduct> {
 
   Widget product(int groupId) {
     return FutureBuilder(
-      initialData: const [
-        {'name': 'no data', 'price': 0}
-      ],
+      initialData: const [],
       future: goodsProvider.getItemsByGroupId(groupId),
-      builder: (BuildContext context, AsyncSnapshot<List> snapshot) {
+      builder: (BuildContext context, snapshot) {
         if (snapshot.hasData) {
           List<Widget> widgets = [];
-          for (Good item in snapshot.data!) {
+          for (Good item in snapshot.data ?? []) {
             widgets.add(item.toWidget(
               onTap: () => editproduct(item),
             ));
