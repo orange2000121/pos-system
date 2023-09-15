@@ -477,9 +477,7 @@ class _CashierState extends State<Cashier> {
                 customerValueNotifier.notifyListeners();
                 await receiptSample.upatePdf();
                 await file.writeAsBytes(await receiptSample.pdf.save());
-              } catch (e) {
-                print('save pdf erroe: $e');
-              }
+              } catch (e) {}
               if (!await customerProvider.isExist(customerValueNotifier.value.name)) {
                 await customerProvider.insert(customerValueNotifier.value);
               }
@@ -498,10 +496,6 @@ class _CashierState extends State<Cashier> {
           FutureBuilder(
             future: customerProvider.getAll(),
             builder: (context, snapshot) {
-              _name.text = customerValueNotifier.value.name;
-              _phone.text = customerValueNotifier.value.phone;
-              _contactPerson.text = customerValueNotifier.value.contactPerson;
-              _address.text = customerValueNotifier.value.address;
               _nameFocusNode.addListener(() {
                 if (!_nameFocusNode.hasFocus) {
                   customerValueNotifier.value.name = _name.text;
@@ -530,7 +524,6 @@ class _CashierState extends State<Cashier> {
                   customerValueNotifier.notifyListeners();
                 }
               });
-              print('snapshot data: ${snapshot.data}');
               dropdownItems = snapshot.data ?? [];
               dropdownItems.add(Customer('新增客戶', '', '', ''));
               customerValueNotifier.value = dropdownItems.first;
@@ -547,6 +540,10 @@ class _CashierState extends State<Cashier> {
               receiptSample.phone = dropdownItems.first.phone;
               receiptSample.address = dropdownItems.first.address;
               receiptSample.data = data;
+              _name.text = customerValueNotifier.value.name;
+              _phone.text = customerValueNotifier.value.phone;
+              _contactPerson.text = customerValueNotifier.value.contactPerson;
+              _address.text = customerValueNotifier.value.address;
               return Column(
                 children: [
                   ValueListenableBuilder(
