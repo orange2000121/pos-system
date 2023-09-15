@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import 'package:image_picker/image_picker.dart';
-import 'package:pos/model/item.dart';
+import 'package:pos/store/model/item.dart';
 
 class AddItem extends StatefulWidget {
   final Item item;

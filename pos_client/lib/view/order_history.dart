@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pos/model/order.dart';
-import 'package:pos/model/sell.dart';
+import 'package:pos/store/model/order.dart';
+import 'package:pos/store/model/sell.dart';
 
 class OrderHistory extends StatefulWidget {
   const OrderHistory({super.key});

@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+// ignore: must_be_immutable
 class ReceiptSample extends StatefulWidget {
   late String customName;
   late String contactPerson;
@@ -11,6 +12,7 @@ class ReceiptSample extends StatefulWidget {
   late String address;
   late List<Map<String, dynamic>> data;
   late pw.Document pdf;
+  late Function upatePdf;
 
   ///```
   ///const ReceiptSample(
@@ -170,8 +172,15 @@ class _ReceiptSampleState extends State<ReceiptSample> {
     return pdf;
   }
 
+  Future<pw.Document> updatePage() async {
+    pw.Document pdf = await addPage();
+    widget.pdf = pdf;
+    return pdf;
+  }
+
   @override
   Widget build(BuildContext context) {
+    widget.upatePdf = updatePage;
     return Scaffold(
       body: Center(
         child: PdfPreview(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 // ignore: unused_import
-import 'package:pos/model/goods.dart';
-import 'package:pos/model/inventory.dart';
+import 'package:pos/store/model/goods.dart';
+import 'package:pos/store/model/inventory.dart';
 import 'package:pos/template/add_item.dart';
 import 'package:pos/view/cashier.dart';
 import 'package:pos/view/create_product.dart';
@@ -29,7 +29,7 @@ class _HomeState extends State<Home> {
             child: SizedBox(
               child: InkWell(
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const Cashier()));
+                  CashierInit(context).init();
                 },
                 child: const Column(
                   children: [

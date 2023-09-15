@@ -3,7 +3,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:pos/model/item.dart';
+import 'package:pos/store/model/item.dart';
 import 'package:sqflite/sqflite.dart';
 
 class InventoryItem extends Item {

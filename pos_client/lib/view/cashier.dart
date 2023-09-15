@@ -6,13 +6,31 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pos/logic/cashier_logic.dart';
-import 'package:pos/model/customer.dart';
-import 'package:pos/model/goods.dart';
-import 'package:pos/model/goods_group.dart';
+import 'package:pos/store/sharePreferenes/user_info_sharepreference.dart';
+import 'package:pos/store/model/customer.dart';
+import 'package:pos/store/model/goods.dart';
+import 'package:pos/store/model/goods_group.dart';
 import 'package:shipment/sample.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+class CashierInit {
+  SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper.instance;
+  final BuildContext context;
+  CashierInit(this.context);
+  Future<bool> init() async {
+    await sharedPreferenceHelper.init();
+    if (!context.mounted) return false;
+    Navigator.push(context, MaterialPageRoute(builder: (context) => Cashier(init: this)));
+    return true;
+  }
+}
 
 class Cashier extends StatefulWidget {
-  const Cashier({super.key});
+  final CashierInit init;
+  const Cashier({
+    super.key,
+    required this.init,
+  });
 
   @override
   State<Cashier> createState() => _CashierState();
@@ -21,9 +39,9 @@ class Cashier extends StatefulWidget {
 class _CashierState extends State<Cashier> {
   late CashierLogic cashierLogic;
   late ValueNotifier<int> groupIdNotifier = ValueNotifier(-1); // -1: 全部
-  Map<String, dynamic> setting = {
-    'receipt': false,
-  };
+  // Map<String, dynamic> setting = {
+  //   'receipt': false,
+  // };
   @override
   void initState() {
     super.initState();
@@ -69,9 +87,9 @@ class _CashierState extends State<Cashier> {
           children: [
             const Text('開立收據'),
             Switch(
-                value: setting['receipt'],
+                value: widget.init.sharedPreferenceHelper.getSetting(SettingKey.useReceiptPrinter) ?? false,
                 onChanged: (isAvailable) {
-                  setting['receipt'] = isAvailable;
+                  widget.init.sharedPreferenceHelper.editSetting(isAvailable, SettingKey.useReceiptPrinter);
                   setState(() {});
                 }),
           ],
@@ -140,13 +158,14 @@ class _CashierState extends State<Cashier> {
 
   Widget cashierProduct(Good item) {
     return InkWell(
-      onTap: () {
-        showDialog(
+      onTap: () async {
+        ShopItem tempItem = await showDialog(
             context: context,
             builder: (context) => AlertDialog(
                   title: Text(item.name),
                   content: abacus(item.name, item.price),
                 ));
+        cashierLogic.addItem(tempItem.name, tempItem.price, tempItem.ice, tempItem.sugar, tempItem.quantity);
       },
       child: Card(
           child: SizedBox(
@@ -215,15 +234,15 @@ class _CashierState extends State<Cashier> {
         });
   }
 
-  Widget abacus(String name, double price, {int num = 1, Function? onFinished}) {
-    List<Widget> sugar = [];
-    List<Widget> ice = [];
+  Widget abacus(String name, double price, {int num = 1, String ice = '', String sugar = ''}) {
+    List<Widget> sugarChoseWidgets = [];
+    List<Widget> iceChoseWidgets = [];
     List<String> sugarList = ['正常糖', '少糖', '半糖', '微糖', '無糖'];
     List<String> iceList = ['正常冰', '少冰', '半冰', '微冰', '去冰'];
-    String chosenSugar = '', chosenIce = '';
+    String chosenSugar = sugar, chosenIce = ice;
     TextEditingController quantity = TextEditingController(text: num.toString());
     for (var i = 0; i < sugarList.length; i++) {
-      sugar.add(ElevatedButton(
+      sugarChoseWidgets.add(ElevatedButton(
         onPressed: () {
           chosenSugar = sugarList[i];
         },
@@ -231,7 +250,7 @@ class _CashierState extends State<Cashier> {
       ));
     }
     for (var i = 0; i < iceList.length; i++) {
-      ice.add(ElevatedButton(
+      iceChoseWidgets.add(ElevatedButton(
         onPressed: () {
           chosenIce = iceList[i];
         },
@@ -241,9 +260,9 @@ class _CashierState extends State<Cashier> {
     return Column(
       children: [
         const Text('糖度'),
-        Row(children: sugar),
+        Row(children: sugarChoseWidgets),
         const Text('冰塊'),
-        Row(children: ice),
+        Row(children: iceChoseWidgets),
         const Text('數量'),
         Row(
           children: [
@@ -276,11 +295,11 @@ class _CashierState extends State<Cashier> {
         ),
         ElevatedButton(
           onPressed: () {
-            if (onFinished == null) {
-              cashierLogic.addItem(name, price, chosenIce, chosenSugar, int.parse(quantity.text));
-            } else {
-              onFinished();
-            }
+            // if (onFinished == null) {
+            //   cashierLogic.addItem(name, price, chosenIce, chosenSugar, int.parse(quantity.text));
+            // } else {
+            //   onFinished();
+            // }
             Navigator.pop(context, ShopItem(name, price, chosenIce, chosenSugar, int.parse(quantity.text)));
           },
           child: const Text('確定'),
@@ -297,22 +316,29 @@ class _CashierState extends State<Cashier> {
         return ListView.builder(
           itemCount: shopItems.length,
           itemBuilder: (context, index) {
-            return ListTile(
-              title: Text(shopItems[index].name),
-              subtitle: Text('${shopItems[index].ice} ${shopItems[index].sugar}'),
-              trailing: Text(shopItems[index].quantity.toString()),
-              onTap: () async {
-                ShopItem item = await showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                          title: Text(shopItems[index].name),
-                          content: abacus(
-                            shopItems[index].name,
-                            shopItems[index].price,
-                            num: shopItems[index].quantity,
-                          ),
-                        ));
+            return Dismissible(
+              key: Key(shopItems[index].name),
+              onDismissed: (direction) {
+                // cashierLogic.removeItem(shopItems[index]);
               },
+              child: ListTile(
+                title: Text(shopItems[index].name),
+                subtitle: Text('${shopItems[index].ice} ${shopItems[index].sugar}'),
+                trailing: Text(shopItems[index].quantity.toString()),
+                onTap: () async {
+                  ShopItem? item = await showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                            title: Text(shopItems[index].name),
+                            content: abacus(
+                              shopItems[index].name,
+                              shopItems[index].price,
+                              num: shopItems[index].quantity,
+                            ),
+                          ));
+                  if (item != null) cashierLogic.editItem(shopItems[index], ice: item.ice, sugar: item.sugar, quantity: item.quantity);
+                },
+              ),
             );
           },
         );
@@ -401,7 +427,7 @@ class _CashierState extends State<Cashier> {
                 children: [
                   ElevatedButton(
                     onPressed: () async {
-                      if (setting['receipt']) {
+                      if (widget.init.sharedPreferenceHelper.getSetting(SettingKey.useReceiptPrinter) as bool? ?? false) {
                         await showDialog(context: context, builder: (context) => receiptOption());
                       }
                       cashierLogic.settleAccount();
@@ -443,13 +469,17 @@ class _CashierState extends State<Cashier> {
               Navigator.pop(context, true);
               final output = await getDownloadsDirectory();
               final file = File("${output?.path}/example.pdf");
-              while (true) {
-                try {
-                  await file.writeAsBytes(await receiptSample.pdf.save());
-                  break;
-                } catch (e) {}
+              try {
+                receiptSample.customName = _name.text;
+                receiptSample.contactPerson = _contactPerson.text;
+                receiptSample.phone = _phone.text;
+                receiptSample.address = _address.text;
+                customerValueNotifier.notifyListeners();
+                await receiptSample.upatePdf();
+                await file.writeAsBytes(await receiptSample.pdf.save());
+              } catch (e) {
+                print('save pdf erroe: $e');
               }
-
               if (!await customerProvider.isExist(customerValueNotifier.value.name)) {
                 await customerProvider.insert(customerValueNotifier.value);
               }
@@ -468,7 +498,6 @@ class _CashierState extends State<Cashier> {
           FutureBuilder(
             future: customerProvider.getAll(),
             builder: (context, snapshot) {
-              // customerValueNotifier.value = (snapshot.data!.isNotEmpty ? snapshot.data?.first : Customer('', '', '', '')) ?? Customer('', '', '', '');
               _name.text = customerValueNotifier.value.name;
               _phone.text = customerValueNotifier.value.phone;
               _contactPerson.text = customerValueNotifier.value.contactPerson;
@@ -501,7 +530,7 @@ class _CashierState extends State<Cashier> {
                   customerValueNotifier.notifyListeners();
                 }
               });
-
+              print('snapshot data: ${snapshot.data}');
               dropdownItems = snapshot.data ?? [];
               dropdownItems.add(Customer('新增客戶', '', '', ''));
               customerValueNotifier.value = dropdownItems.first;
@@ -539,7 +568,6 @@ class _CashierState extends State<Cashier> {
                           _contactPerson.text = newValue.contactPerson;
                           _address.text = newValue.address;
                         });
-                        print((customerValueNotifier.value));
                       },
                     ),
                   ),
@@ -577,7 +605,6 @@ class _CashierState extends State<Cashier> {
                       child: ValueListenableBuilder(
                         valueListenable: customerValueNotifier,
                         builder: (context, value, child) {
-                          print('recepid: ${receiptSample.customName}');
                           receiptSample = ReceiptSample(
                               customName: customerValueNotifier.value.name,
                               contactPerson: customerValueNotifier.value.contactPerson,

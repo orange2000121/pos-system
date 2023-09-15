@@ -37,8 +37,7 @@ class Customer {
 }
 
 class CustomerProvider {
-  // ignore: avoid_init_to_null
-  late Database? db = null;
+  late Database? db;
   String tableName = 'customer';
   String dbName = 'pos.db';
   Future open() async {
@@ -86,13 +85,17 @@ class CustomerProvider {
 
   Future<List<Customer>> getAll() async {
     db ??= await open();
+    print('customer db: $db');
     List<Map<String, dynamic>> maps = await db!.query(tableName);
     List<Customer> items = [];
     for (var map in maps) {
       try {
         items.add(Customer.fromMapStatic(map));
-      } catch (e) {}
+      } catch (e) {
+        print('get customers error: $e');
+      }
     }
+    print('items: $items');
     return items;
   }
 
