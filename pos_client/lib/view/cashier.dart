@@ -159,12 +159,14 @@ class _CashierState extends State<Cashier> {
   Widget cashierProduct(Good item) {
     return InkWell(
       onTap: () async {
-        ShopItem tempItem = await showDialog(
+        // 新增商品
+        ShopItem? tempItem = await showDialog(
             context: context,
             builder: (context) => AlertDialog(
                   title: Text(item.name),
                   content: abacus(item.name, item.price),
                 ));
+        if (tempItem == null) return;
         cashierLogic.addItem(tempItem.name, tempItem.price, tempItem.ice, tempItem.sugar, tempItem.quantity);
       },
       child: Card(
@@ -598,7 +600,7 @@ class _CashierState extends State<Cashier> {
                   ),
                   SizedBox(
                       height: MediaQuery.of(context).size.height * 0.4,
-                      width: MediaQuery.of(context).size.height * 0.3,
+                      width: MediaQuery.of(context).size.height * 0.6,
                       child: ValueListenableBuilder(
                         valueListenable: customerValueNotifier,
                         builder: (context, value, child) {

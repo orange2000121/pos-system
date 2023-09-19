@@ -2,27 +2,31 @@ import 'package:sqflite/sqflite.dart';
 
 class OrderItem {
   late double totalPrice;
+  late int? customerId;
   int? id;
   DateTime? createAt;
 
   OrderItem fromMap(Map<String, dynamic> map) {
     totalPrice = map['totalPrice'];
+    customerId = map['customerId'];
     return this;
   }
 
   static OrderItem fromMapStatic(Map<String, dynamic> map) {
     return OrderItem(
       map['totalPrice'],
+      customerId: map['customerId'],
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'totalPrice': totalPrice,
+      'customerId': customerId,
     };
   }
 
-  OrderItem(this.totalPrice, {this.id, this.createAt});
+  OrderItem(this.totalPrice, {this.id, this.createAt, this.customerId});
 }
 
 class OrderProvider {
@@ -33,18 +37,29 @@ class OrderProvider {
   Future open() async {
     var databasesPath = await getDatabasesPath();
     String path = databasesPath + dbName;
-    db = await openDatabase(path, version: 1, onCreate: (Database db, int version) async {
-      await db.execute('''
+    db = await openDatabase(
+      path,
+      version: 4,
+      onCreate: (Database db, int version) async {
+        print('order db onCreate: $version');
+        await db.execute('''
           create table $tableName ( 
             id integer primary key autoincrement, 
+            customerId integer,
             totalPrice real not null,
             createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
           ''');
-    });
+      },
+      onUpgrade: (Database db, int oldVersion, int newVersion) async {
+        print('oldVersion: $oldVersion, newVersion: $newVersion');
+        await db.execute('ALTER TABLE $tableName ADD COLUMN customerId TEXT');
+      },
+    );
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
+            customerId integer,
             totalPrice real not null,
             createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
@@ -53,7 +68,15 @@ class OrderProvider {
   }
 
   Future<int> insert(OrderItem item) async {
+    try {
+      print('start db version: ${await db!.getVersion()}');
+    } catch (e) {
+      print(e);
+    }
+
     db ??= await open();
+    print('DB vesion: ${await db!.getVersion()}');
+
     int id = await db!.insert(tableName, item.toMap());
     return id;
   }
