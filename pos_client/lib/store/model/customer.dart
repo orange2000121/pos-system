@@ -37,17 +37,21 @@ class Customer {
 }
 
 class CustomerProvider {
-  late Database? db;
+  // ignore: avoid_init_to_null
+  late Database? db = null;
   String tableName = 'customer';
   String dbName = 'pos.db';
+  // CustomerProvider() {
+  //   open();
+  // }
+
   Future open() async {
-    var databasesPath = await getDatabasesPath();
-    String path = databasesPath + dbName;
-    db = await openDatabase(path, version: 2, onCreate: (Database db, int version) async {
+    var path = await getDatabasesPath() + dbName;
+    db = await openDatabase(path, version: 1, onCreate: (Database db, int version) async {
       await db.execute('''
           create table $tableName ( 
             id integer primary key autoincrement, 
-            name text not null primary key,
+            name text not null,
             phone text not null,
             contactPerson text not null,
             address text not null,
@@ -55,8 +59,8 @@ class CustomerProvider {
           ''');
     });
     await db!.execute('''
-          create table $tableName (
-            id integer primary key autoincrement,
+          create table if not exists $tableName ( 
+            id integer primary key autoincrement, 
             name text not null,
             phone text not null,
             contactPerson text not null,
@@ -85,17 +89,13 @@ class CustomerProvider {
 
   Future<List<Customer>> getAll() async {
     db ??= await open();
-    print('customer db: $db');
     List<Map<String, dynamic>> maps = await db!.query(tableName);
     List<Customer> items = [];
     for (var map in maps) {
       try {
         items.add(Customer.fromMapStatic(map));
-      } catch (e) {
-        print('get customers error: $e');
-      }
+      } catch (e) {}
     }
-    print('items: $items');
     return items;
   }
 

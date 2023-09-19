@@ -159,12 +159,14 @@ class _CashierState extends State<Cashier> {
   Widget cashierProduct(Good item) {
     return InkWell(
       onTap: () async {
-        ShopItem tempItem = await showDialog(
+        // 新增商品
+        ShopItem? tempItem = await showDialog(
             context: context,
             builder: (context) => AlertDialog(
                   title: Text(item.name),
                   content: abacus(item.name, item.price),
                 ));
+        if (tempItem == null) return;
         cashierLogic.addItem(tempItem.name, tempItem.price, tempItem.ice, tempItem.sugar, tempItem.quantity);
       },
       child: Card(
@@ -477,9 +479,7 @@ class _CashierState extends State<Cashier> {
                 customerValueNotifier.notifyListeners();
                 await receiptSample.upatePdf();
                 await file.writeAsBytes(await receiptSample.pdf.save());
-              } catch (e) {
-                print('save pdf erroe: $e');
-              }
+              } catch (e) {}
               if (!await customerProvider.isExist(customerValueNotifier.value.name)) {
                 await customerProvider.insert(customerValueNotifier.value);
               }
@@ -498,10 +498,6 @@ class _CashierState extends State<Cashier> {
           FutureBuilder(
             future: customerProvider.getAll(),
             builder: (context, snapshot) {
-              _name.text = customerValueNotifier.value.name;
-              _phone.text = customerValueNotifier.value.phone;
-              _contactPerson.text = customerValueNotifier.value.contactPerson;
-              _address.text = customerValueNotifier.value.address;
               _nameFocusNode.addListener(() {
                 if (!_nameFocusNode.hasFocus) {
                   customerValueNotifier.value.name = _name.text;
@@ -530,7 +526,6 @@ class _CashierState extends State<Cashier> {
                   customerValueNotifier.notifyListeners();
                 }
               });
-              print('snapshot data: ${snapshot.data}');
               dropdownItems = snapshot.data ?? [];
               dropdownItems.add(Customer('新增客戶', '', '', ''));
               customerValueNotifier.value = dropdownItems.first;
@@ -547,6 +542,10 @@ class _CashierState extends State<Cashier> {
               receiptSample.phone = dropdownItems.first.phone;
               receiptSample.address = dropdownItems.first.address;
               receiptSample.data = data;
+              _name.text = customerValueNotifier.value.name;
+              _phone.text = customerValueNotifier.value.phone;
+              _contactPerson.text = customerValueNotifier.value.contactPerson;
+              _address.text = customerValueNotifier.value.address;
               return Column(
                 children: [
                   ValueListenableBuilder(
@@ -601,7 +600,7 @@ class _CashierState extends State<Cashier> {
                   ),
                   SizedBox(
                       height: MediaQuery.of(context).size.height * 0.4,
-                      width: MediaQuery.of(context).size.height * 0.3,
+                      width: MediaQuery.of(context).size.height * 0.6,
                       child: ValueListenableBuilder(
                         valueListenable: customerValueNotifier,
                         builder: (context, value, child) {

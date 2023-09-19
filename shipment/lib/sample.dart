@@ -47,11 +47,14 @@ class _ReceiptSampleState extends State<ReceiptSample> {
       mainAxisAlignment: pw.MainAxisAlignment.start,
       children: [
         pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.Text('一朵花', style: pw.TextStyle(font: ttf, fontSize: titleSize, fontBold: pw.Font.timesBold())),
-            pw.Text('電話： 0975-203-230', style: pw.TextStyle(font: ttf, fontSize: textSize)),
-            pw.Text('地址： 彰化縣鹿港鎮鹿和路二段240號', style: pw.TextStyle(font: ttf, fontSize: textSize)),
+            pw.Row(children: [
+              pw.Text('電話： 0975-203-230', style: pw.TextStyle(font: ttf, fontSize: textSize)),
+            ]),
+            pw.Row(children: [
+              pw.Text('電話： 0975-203-230', style: pw.TextStyle(font: ttf, fontSize: textSize)),
+            ]),
           ],
         ),
       ],
@@ -159,7 +162,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
     final font = await rootBundle.load("assets/font/NotoSansTC-VariableFont_wght.ttf");
     final ttf = pw.Font.ttf(font);
     pdf.addPage(pw.Page(
-        pageFormat: PdfPageFormat.a4,
+        pageFormat: const PdfPageFormat(24.5 * PdfPageFormat.cm, 14 * PdfPageFormat.cm, marginAll: 1.5 * PdfPageFormat.cm),
         build: (pw.Context context) {
           return pw.Column(
             children: [

@@ -558,7 +558,7 @@ packages:
       path: "../shipment"
       relative: true
     source: path
-    version: "1.0.0+1"
+    version: "1.0.0+2"
   sky_engine:
     dependency: transitive
     description: flutter
