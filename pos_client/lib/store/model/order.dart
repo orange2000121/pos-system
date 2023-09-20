@@ -41,7 +41,6 @@ class OrderProvider {
       path,
       version: 4,
       onCreate: (Database db, int version) async {
-        print('order db onCreate: $version');
         await db.execute('''
           create table $tableName ( 
             id integer primary key autoincrement, 
@@ -52,7 +51,6 @@ class OrderProvider {
           ''');
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        print('oldVersion: $oldVersion, newVersion: $newVersion');
         await db.execute('ALTER TABLE $tableName ADD COLUMN customerId TEXT');
       },
     );
@@ -68,14 +66,7 @@ class OrderProvider {
   }
 
   Future<int> insert(OrderItem item) async {
-    try {
-      print('start db version: ${await db!.getVersion()}');
-    } catch (e) {
-      print(e);
-    }
-
     db ??= await open();
-    print('DB vesion: ${await db!.getVersion()}');
 
     int id = await db!.insert(tableName, item.toMap());
     return id;

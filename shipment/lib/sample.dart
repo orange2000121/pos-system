@@ -12,8 +12,15 @@ class SaleItemData {
   int num;
   int price;
   String unit;
-  String note;
-  SaleItemData({required this.id, required this.name, required this.num, required this.price, required this.unit, required this.note});
+  String? note;
+  SaleItemData({
+    required this.id,
+    required this.name,
+    required this.num,
+    required this.price,
+    required this.unit,
+    this.note,
+  });
 }
 
 // ignore: must_be_immutable
@@ -132,6 +139,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
           ),
           ...widget.data.sublist(min((page - 1) * 10, widget.data.length - 1), min((page - 1) * 10 + 10, widget.data.length)).map((item) {
             int subtotal = item.num * item.price;
+            print('note: ${item.note}');
             return pw.TableRow(
               children: [
                 pw.Text(item.id, style: pw.TextStyle(font: ttf, fontSize: textSize)),
@@ -140,6 +148,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
                 pw.Text(item.unit, style: pw.TextStyle(font: ttf, fontSize: textSize)),
                 pw.Text(item.price.toString(), style: pw.TextStyle(font: ttf, fontSize: textSize)),
                 pw.Text(subtotal.toString(), style: pw.TextStyle(font: ttf, fontSize: textSize)),
+                pw.Text(item.note ?? '', style: pw.TextStyle(font: ttf, fontSize: textSize)),
               ],
             );
           }),
@@ -150,10 +159,10 @@ class _ReceiptSampleState extends State<ReceiptSample> {
 
   pw.Widget total(pw.Font ttf) {
     double allPrice = 0;
-    widget.data.forEach((item) {
+    for (var item in widget.data) {
       int subtotal = item.num * item.price;
       allPrice += subtotal;
-    });
+    }
     return pw.Container(
       decoration: const pw.BoxDecoration(border: pw.Border(top: pw.BorderSide(width: 1))),
       child: pw.Row(
@@ -231,7 +240,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
           },
           onError: (context, error) {
             String errorText = error.toString();
-            if (widget.data.length == 0) {
+            if (widget.data.isEmpty) {
               errorText = '資料不可為空';
             }
             return Center(

@@ -62,7 +62,7 @@ class _SmallItemCardState extends State<SmallItemCard> {
       },
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           border: Border(bottom: BorderSide(color: Colors.grey)),
           // borderRadius: BorderRadius.circular(8),
         ),

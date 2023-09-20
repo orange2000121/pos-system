@@ -39,6 +39,7 @@ class GoodsTemplate {
                         itemCount: goodListLength,
                         itemBuilder: (context, index) {
                           if (groupId == -1) {
+                            // groupId == -1 代表顯示全部商品
                             return cashierProduct(snapshot.data![index]);
                           } else {
                             return cashierProduct(groupMap[groupId]![index]);
@@ -52,7 +53,7 @@ class GoodsTemplate {
         });
   }
 
-  Widget abacus(String name, double price) {
+  Widget abacus(Good item) {
     List<Widget> sugar = [];
     List<Widget> ice = [];
     List<String> sugarList = ['正常糖', '少糖', '半糖', '微糖', '無糖'];
@@ -113,7 +114,7 @@ class GoodsTemplate {
         ),
         ElevatedButton(
           onPressed: () {
-            cashierLogic.addItem(name, price, chosenIce, chosenSugar, int.parse(quantity.text));
+            cashierLogic.addItem(item.id ?? -1, item.name, item.price, chosenIce, chosenSugar, int.parse(quantity.text), item.unit);
             Navigator.pop(context);
           },
           child: const Text('確定'),
@@ -129,7 +130,7 @@ class GoodsTemplate {
             context: context,
             builder: (context) => AlertDialog(
                   title: Text(item.name),
-                  content: abacus(item.name, item.price),
+                  content: abacus(item),
                 ));
       },
       child: Card(

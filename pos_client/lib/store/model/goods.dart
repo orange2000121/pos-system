@@ -8,6 +8,7 @@ class Good {
   late int groupId;
   late String name;
   late double price;
+  late String unit;
   late Uint8List? image;
   int length = 0;
   Map<String, dynamic> toMap() {
@@ -15,6 +16,7 @@ class Good {
     map['group_id'] = groupId;
     map['name'] = name;
     map['price'] = price;
+    map['unit'] = unit;
     map['image'] = image ?? Uint8List(0);
     return map;
   }
@@ -24,15 +26,18 @@ class Good {
       map['group_id'] as int,
       map['name'] as String,
       map['price'] as double,
+      map['unit'] as String,
       image: map['image'] as Uint8List?,
       id: map['id'] as int?,
     );
   }
 
   Good fromMap(Map<String, dynamic> map) {
+    id = map['id'] as int?;
     groupId = map['group_id'] as int;
     name = map['name'] as String;
     price = double.parse(map['price'].toString());
+    unit = map['unit'] as String;
     image = map['image'] as Uint8List?;
     return this;
   }
@@ -52,7 +57,7 @@ class Good {
     );
   }
 
-  Good(this.groupId, this.name, this.price, {this.image, this.id}) {
+  Good(this.groupId, this.name, this.price, this.unit, {this.image, this.id}) {
     length = toMap().length;
   }
 }
@@ -72,6 +77,7 @@ class GoodsProvider {
             group_id integer not null,
             name text not null,
             price real not null,
+            unit text not null,
             image blob,
             foreign key (group_id) references goods_group(id) on delete cascade on update cascade)
           ''');
@@ -82,6 +88,7 @@ class GoodsProvider {
             group_id integer not null,
             name text not null,
             price real not null,
+            unit text not null,
             image blob,
             foreign key (group_id) references goods_group(id) on delete cascade on update cascade)
           ''');
@@ -135,5 +142,5 @@ class GoodsProvider {
     await db!.delete(tableName);
   }
 
-  void close() async => db!.close();
+  void close() async => db != null ? await db!.close() : null;
 }

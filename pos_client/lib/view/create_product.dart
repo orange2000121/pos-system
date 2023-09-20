@@ -16,6 +16,7 @@ class _CreateProductState extends State<CreateProduct> {
   GoodsProvider goodsProvider = GoodsProvider();
   TextEditingController nameController = TextEditingController();
   TextEditingController priceController = TextEditingController();
+  TextEditingController unitController = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -47,7 +48,7 @@ class _CreateProductState extends State<CreateProduct> {
   /*                                   Widget                                   */
   /* -------------------------------------------------------------------------- */
   Widget inputWidget(int groupId) {
-    Good good = Good(groupId, '', 0);
+    Good good = Good(groupId, '', 0, '');
     return Column(
       children: [
         Padding(
@@ -56,7 +57,17 @@ class _CreateProductState extends State<CreateProduct> {
             controller: nameController,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
-              labelText: 'Product Name',
+              labelText: '產品名稱',
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextField(
+            controller: unitController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: '產品單位',
             ),
           ),
         ),
@@ -66,7 +77,7 @@ class _CreateProductState extends State<CreateProduct> {
             controller: priceController,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
-              labelText: 'Product Price',
+              labelText: '產品價格',
             ),
           ),
         ),
@@ -89,10 +100,12 @@ class _CreateProductState extends State<CreateProduct> {
               good.groupId = groupId;
               good.name = nameController.text;
               good.price = double.parse(priceController.text);
+              good.unit = unitController.text;
               goodsProvider.insert(good);
               good.image = null;
               nameController.clear();
               priceController.clear();
+              unitController.clear();
               Navigator.pop(context);
               setState(() {});
             },

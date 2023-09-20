@@ -11,7 +11,6 @@ import 'package:pos/store/model/customer.dart';
 import 'package:pos/store/model/goods.dart';
 import 'package:pos/store/model/goods_group.dart';
 import 'package:shipment/sample.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class CashierInit {
   SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper.instance;
@@ -164,10 +163,10 @@ class _CashierState extends State<Cashier> {
             context: context,
             builder: (context) => AlertDialog(
                   title: Text(item.name),
-                  content: abacus(item.name, item.price),
+                  content: abacus(ShopItem(item.id ?? -1, item.name, item.price, 1, item.unit)),
                 ));
         if (tempItem == null) return;
-        cashierLogic.addItem(tempItem.name, tempItem.price, tempItem.ice, tempItem.sugar, tempItem.quantity);
+        cashierLogic.addItem(tempItem.id, tempItem.name, tempItem.price, tempItem.ice ?? '', tempItem.sugar ?? '', tempItem.quantity, tempItem.unit, note: tempItem.note);
       },
       child: Card(
           child: SizedBox(
@@ -236,13 +235,14 @@ class _CashierState extends State<Cashier> {
         });
   }
 
-  Widget abacus(String name, double price, {int num = 1, String ice = '', String sugar = ''}) {
+  Widget abacus(ShopItem item, {int num = 1, String ice = '', String sugar = ''}) {
     List<Widget> sugarChoseWidgets = [];
     List<Widget> iceChoseWidgets = [];
     List<String> sugarList = ['正常糖', '少糖', '半糖', '微糖', '無糖'];
     List<String> iceList = ['正常冰', '少冰', '半冰', '微冰', '去冰'];
     String chosenSugar = sugar, chosenIce = ice;
     TextEditingController quantity = TextEditingController(text: num.toString());
+    TextEditingController noteEditingController = TextEditingController(text: item.note);
     for (var i = 0; i < sugarList.length; i++) {
       sugarChoseWidgets.add(ElevatedButton(
         onPressed: () {
@@ -295,6 +295,13 @@ class _CashierState extends State<Cashier> {
             ),
           ],
         ),
+        TextField(
+          controller: noteEditingController,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: '備註',
+          ),
+        ),
         ElevatedButton(
           onPressed: () {
             // if (onFinished == null) {
@@ -302,7 +309,18 @@ class _CashierState extends State<Cashier> {
             // } else {
             //   onFinished();
             // }
-            Navigator.pop(context, ShopItem(name, price, chosenIce, chosenSugar, int.parse(quantity.text)));
+            Navigator.pop(
+                context,
+                ShopItem(
+                  item.id,
+                  item.name,
+                  item.price,
+                  int.parse(quantity.text),
+                  item.unit,
+                  ice: chosenIce,
+                  sugar: chosenSugar,
+                  note: noteEditingController.text,
+                ));
           },
           child: const Text('確定'),
         ),
@@ -333,8 +351,7 @@ class _CashierState extends State<Cashier> {
                       builder: (context) => AlertDialog(
                             title: Text(shopItems[index].name),
                             content: abacus(
-                              shopItems[index].name,
-                              shopItems[index].price,
+                              shopItems[index],
                               num: shopItems[index].quantity,
                             ),
                           ));
@@ -429,7 +446,7 @@ class _CashierState extends State<Cashier> {
                 children: [
                   ElevatedButton(
                     onPressed: () async {
-                      if (widget.init.sharedPreferenceHelper.getSetting(SettingKey.useReceiptPrinter) as bool? ?? false) {
+                      if (widget.init.sharedPreferenceHelper.getSetting(SettingKey.useReceiptPrinter) ?? false) {
                         await showDialog(context: context, builder: (context) => receiptOption());
                       }
                       cashierLogic.settleAccount();
@@ -529,13 +546,18 @@ class _CashierState extends State<Cashier> {
               dropdownItems = snapshot.data ?? [];
               dropdownItems.add(Customer('新增客戶', '', '', ''));
               customerValueNotifier.value = dropdownItems.first;
-              List<Map<String, dynamic>> data = [];
+              List<SaleItemData> data = [];
               for (var i = 0; i < cashierLogic.shopItemsNotifier.value.length; i++) {
-                data.add({
-                  'name': cashierLogic.shopItemsNotifier.value[i].name,
-                  'num': cashierLogic.shopItemsNotifier.value[i].quantity.toInt(),
-                  'price': cashierLogic.shopItemsNotifier.value[i].price.toInt(),
-                });
+                data.add(
+                  SaleItemData(
+                    id: cashierLogic.shopItemsNotifier.value[i].id.toString(),
+                    name: cashierLogic.shopItemsNotifier.value[i].name,
+                    price: cashierLogic.shopItemsNotifier.value[i].price.toInt(),
+                    num: cashierLogic.shopItemsNotifier.value[i].quantity.toInt(),
+                    unit: cashierLogic.shopItemsNotifier.value[i].unit,
+                    note: cashierLogic.shopItemsNotifier.value[i].note,
+                  ),
+                );
               }
               receiptSample.customName = dropdownItems.first.name;
               receiptSample.contactPerson = dropdownItems.first.contactPerson;

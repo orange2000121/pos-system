@@ -26,8 +26,8 @@ class CashierLogic {
     return total;
   }
 
-  void addItem(String name, double price, String ice, String sugar, int quantity) {
-    shopItemsNotifier.value.add(ShopItem(name, price, ice, sugar, quantity));
+  void addItem(int id, String name, double price, String ice, String sugar, int quantity, String unit, {String? note}) {
+    shopItemsNotifier.value.add(ShopItem(id, name, price, quantity, unit, ice: ice, sugar: sugar, note: note));
     shopItemsNotifier.notifyListeners();
   }
 
@@ -50,8 +50,8 @@ class CashierLogic {
         orderId,
         shopItemsNotifier.value[i].name,
         shopItemsNotifier.value[i].price,
-        shopItemsNotifier.value[i].ice,
-        shopItemsNotifier.value[i].sugar,
+        shopItemsNotifier.value[i].ice ?? '',
+        shopItemsNotifier.value[i].sugar ?? '',
         shopItemsNotifier.value[i].quantity,
       );
       sellProvider.insert(item);
@@ -61,10 +61,22 @@ class CashierLogic {
 }
 
 class ShopItem {
+  int id;
   String name;
   double price;
-  String ice;
-  String sugar;
+  String? ice;
+  String? sugar;
+  String unit;
+  String? note;
   int quantity = 1;
-  ShopItem(this.name, this.price, this.ice, this.sugar, this.quantity);
+  ShopItem(
+    this.id,
+    this.name,
+    this.price,
+    this.quantity,
+    this.unit, {
+    this.ice,
+    this.sugar,
+    this.note,
+  });
 }
