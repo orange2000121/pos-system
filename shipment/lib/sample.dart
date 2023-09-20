@@ -33,6 +33,7 @@ class ReceiptSample extends StatefulWidget {
   late List<SaleItemData> data;
   late pw.Document pdf;
   late Function upatePdf;
+  late Function layout;
 
   ///```
   ///const ReceiptSample(
@@ -64,6 +65,7 @@ class ReceiptSample extends StatefulWidget {
 class _ReceiptSampleState extends State<ReceiptSample> {
   final double textSize = 10, titleSize = 20;
   final int pageNum = 10;
+
   pw.Widget companyInfo(pw.Font ttf) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -139,7 +141,6 @@ class _ReceiptSampleState extends State<ReceiptSample> {
           ),
           ...widget.data.sublist(min((page - 1) * 10, widget.data.length - 1), min((page - 1) * 10 + 10, widget.data.length)).map((item) {
             int subtotal = item.num * item.price;
-            print('note: ${item.note}');
             return pw.TableRow(
               children: [
                 pw.Text(item.id, style: pw.TextStyle(font: ttf, fontSize: textSize)),
@@ -223,6 +224,15 @@ class _ReceiptSampleState extends State<ReceiptSample> {
     pw.Document pdf = await addPage();
     widget.pdf = pdf;
     return pdf;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.layout = () => Printing.layoutPdf(
+          onLayout: (PdfPageFormat format) async => widget.pdf.save(),
+          format: const PdfPageFormat(21.5 * PdfPageFormat.cm, 14 * PdfPageFormat.cm, marginAll: 1.5 * PdfPageFormat.cm),
+        );
   }
 
   @override

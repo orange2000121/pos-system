@@ -5,11 +5,13 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
 import 'package:pos/logic/cashier_logic.dart';
 import 'package:pos/store/sharePreferenes/user_info_sharepreference.dart';
 import 'package:pos/store/model/customer.dart';
 import 'package:pos/store/model/goods.dart';
 import 'package:pos/store/model/goods_group.dart';
+import 'package:printing/printing.dart';
 import 'package:shipment/sample.dart';
 
 class CashierInit {
@@ -339,7 +341,8 @@ class _CashierState extends State<Cashier> {
             return Dismissible(
               key: Key(shopItems[index].name),
               onDismissed: (direction) {
-                // cashierLogic.removeItem(shopItems[index]);
+                cashierLogic.shopItemsNotifier.value.removeAt(index);
+                cashierLogic.shopItemsNotifier.notifyListeners();
               },
               child: ListTile(
                 title: Text(shopItems[index].name),
@@ -446,11 +449,14 @@ class _CashierState extends State<Cashier> {
                 children: [
                   ElevatedButton(
                     onPressed: () async {
+                      bool? isSettle = true;
                       if (widget.init.sharedPreferenceHelper.getSetting(SettingKey.useReceiptPrinter) ?? false) {
-                        await showDialog(context: context, builder: (context) => receiptOption());
+                        isSettle = await showDialog(context: context, builder: (context) => receiptOption());
                       }
-                      cashierLogic.settleAccount();
-                      receivedCashNotifier.value = '';
+                      if (isSettle == true) {
+                        cashierLogic.settleAccount();
+                        receivedCashNotifier.value = '';
+                      }
                     },
                     child: Container(
                       width: 100,
@@ -486,17 +492,33 @@ class _CashierState extends State<Cashier> {
         ElevatedButton(
             onPressed: () async {
               Navigator.pop(context, true);
-              final output = await getDownloadsDirectory();
-              final file = File("${output?.path}/example.pdf");
-              try {
-                receiptSample.customName = _name.text;
-                receiptSample.contactPerson = _contactPerson.text;
-                receiptSample.phone = _phone.text;
-                receiptSample.address = _address.text;
-                customerValueNotifier.notifyListeners();
-                await receiptSample.upatePdf();
-                await file.writeAsBytes(await receiptSample.pdf.save());
-              } catch (e) {}
+              String receiptFolder = 'receipt';
+              String customerName = _name.text;
+              // 建立pdf儲存資料夾
+              final output = await getApplicationDocumentsDirectory();
+              if (File('${output.path}/$receiptFolder').existsSync() == false) {
+                Directory('${output.path}/$receiptFolder').createSync();
+              }
+              if (File('${output.path}/$receiptFolder/$customerName').existsSync() == false) {
+                Directory('${output.path}/$receiptFolder/$customerName').createSync();
+              }
+              final file = File("${output.path}/$receiptFolder/$customerName/$customerName${DateTime.now()}.pdf");
+              print('store path: ${file.path}');
+              // 最後更新客戶資料
+              receiptSample.customName = _name.text;
+              receiptSample.contactPerson = _contactPerson.text;
+              receiptSample.phone = _phone.text;
+              receiptSample.address = _address.text;
+              customerValueNotifier.notifyListeners();
+              await receiptSample.upatePdf();
+              // pdf存檔
+              Uint8List bytes = await receiptSample.pdf.save();
+              await file.writeAsBytes(bytes);
+              // 列印pdf
+              Printing.layoutPdf(
+                onLayout: (PdfPageFormat format) async => bytes,
+                format: const PdfPageFormat(21.5 * PdfPageFormat.cm, 14 * PdfPageFormat.cm, marginAll: 1.5 * PdfPageFormat.cm),
+              );
               if (!await customerProvider.isExist(customerValueNotifier.value.name)) {
                 await customerProvider.insert(customerValueNotifier.value);
               }
@@ -505,7 +527,6 @@ class _CashierState extends State<Cashier> {
         ElevatedButton(
             onPressed: () {
               Navigator.pop(context, false);
-              customerProvider.deleteAll();
             },
             child: const Text('取消')),
       ],
