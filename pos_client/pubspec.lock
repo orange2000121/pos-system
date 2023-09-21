@@ -433,7 +433,7 @@ packages:
     source: hosted
     version: "2.2.1"
   pdf:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: pdf
       sha256: "9f75fc7f5580ea5e635b5724de58fb27f684c9ad03ed46fdc1aac768e4557315"
@@ -473,7 +473,7 @@ packages:
     source: hosted
     version: "3.7.3"
   printing:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: printing
       sha256: e7c383dca95ee7b88c02dc1c66638628d3dcdc2fb2cc47e7a595facd47e46b56
