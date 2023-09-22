@@ -6,7 +6,7 @@ class SmallItemCard extends StatefulWidget {
   final List<Widget>? subtitle;
   final List<Widget>? simpleInfo;
   final List<Widget>? detailedInfo;
-  final Function()? dialogAction;
+  final List<Widget>? dialogAction;
   const SmallItemCard({super.key, required this.title, this.subtitle, this.simpleInfo, this.detailedInfo, this.dialogAction});
 
   @override
@@ -19,34 +19,32 @@ class _SmallItemCardState extends State<SmallItemCard> {
   /* -------------------------------------------------------------------------- */
   Widget dialog(BuildContext context) {
     return AlertDialog(
-      title: widget.title,
-      content: Column(
-        children: [
-          SizedBox(
-            height: widget.subtitle != null ? MediaQuery.of(context).size.height * 0.1 : 0,
-            child: Column(
-              children: widget.subtitle ?? [],
+        title: widget.title,
+        content: Column(
+          children: [
+            SizedBox(
+              height: widget.subtitle != null ? MediaQuery.of(context).size.height * 0.1 : 0,
+              child: Column(
+                children: widget.subtitle ?? [],
+              ),
             ),
-          ),
-          Expanded(
-            child: SizedBox(
-              width: MediaQuery.of(context).size.height * 0.8,
-              child: ListView(children: widget.detailedInfo ?? widget.simpleInfo ?? []),
+            Expanded(
+              child: SizedBox(
+                width: MediaQuery.of(context).size.height * 0.8,
+                child: ListView(children: widget.detailedInfo ?? widget.simpleInfo ?? []),
+              ),
             ),
-          ),
-        ],
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () {
-            widget.dialogAction?.call();
-            Navigator.of(context).pop();
-          },
-          child: const Text('確認'),
+          ],
         ),
-        ElevatedButton(onPressed: Navigator.of(context).pop, child: const Text('取消')),
-      ],
-    );
+        actions: widget.dialogAction ??
+            [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('關閉'),
+              ),
+            ]);
   }
 
   @override

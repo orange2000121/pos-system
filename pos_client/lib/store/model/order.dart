@@ -7,8 +7,10 @@ class OrderItem {
   DateTime? createAt;
 
   OrderItem fromMap(Map<String, dynamic> map) {
+    id = map['id'];
     totalPrice = map['totalPrice'];
     customerId = map['customerId'];
+    createAt = DateTime.parse(map['createAt']);
     return this;
   }
 
@@ -16,6 +18,8 @@ class OrderItem {
     return OrderItem(
       map['totalPrice'],
       customerId: map['customerId'],
+      id: map['id'],
+      createAt: DateTime.parse(map['createAt']),
     );
   }
 
@@ -23,6 +27,7 @@ class OrderItem {
     return {
       'totalPrice': totalPrice,
       'customerId': customerId,
+      'createAt': createAt == null ? DateTime.now().toString() : createAt.toString(),
     };
   }
 
@@ -39,19 +44,16 @@ class OrderProvider {
     String path = databasesPath + dbName;
     db = await openDatabase(
       path,
-      version: 4,
+      version: 1,
       onCreate: (Database db, int version) async {
         await db.execute('''
           create table $tableName ( 
             id integer primary key autoincrement, 
             customerId integer,
             totalPrice real not null,
-            createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            createAt TIMESTAMP not null
           )
           ''');
-      },
-      onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        await db.execute('ALTER TABLE $tableName ADD COLUMN customerId TEXT');
       },
     );
     await db!.execute('''
@@ -59,7 +61,7 @@ class OrderProvider {
             id integer primary key autoincrement, 
             customerId integer,
             totalPrice real not null,
-            createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            createAt TIMESTAMP not null
           )
           ''');
     return db;
@@ -81,11 +83,7 @@ class OrderProvider {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'id = ?', whereArgs: [id]);
     Map<String, dynamic> map = maps.first;
-    return OrderItem(
-      map['totalPrice'],
-      id: map['id'],
-      createAt: DateTime.parse(map['createAt']),
-    );
+    return OrderItem.fromMapStatic(map);
   }
 
   Future<List<OrderItem>> getAll() async {
@@ -93,11 +91,17 @@ class OrderProvider {
     List<Map<String, dynamic>> maps = await db!.query(tableName);
     List<OrderItem> items = [];
     for (var map in maps) {
-      items.add(OrderItem(
-        map['totalPrice'],
-        id: map['id'],
-        createAt: DateTime.parse(map['createAt']),
-      ));
+      items.add(OrderItem.fromMapStatic(map));
+    }
+    return items;
+  }
+
+  Future<List<OrderItem>> getAllFromDateRange(DateTime start, DateTime end) async {
+    db ??= await open();
+    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'createAt BETWEEN ? AND ?', whereArgs: [start.toString(), end.toString()]);
+    List<OrderItem> items = [];
+    for (var map in maps) {
+      items.add(OrderItem.fromMapStatic(map));
     }
     return items;
   }

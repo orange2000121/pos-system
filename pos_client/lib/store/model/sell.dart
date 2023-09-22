@@ -1,11 +1,13 @@
 import 'package:sqflite/sqflite.dart';
 
 class SellItem {
+  late int? id;
   late int orderId;
   late String name;
   late double price;
   late String ice;
   late String sugar;
+  late DateTime? createAt;
   int quantity = 1;
   Map<String, dynamic> toMap() {
     return {
@@ -15,6 +17,7 @@ class SellItem {
       'ice': ice,
       'sugar': sugar,
       'quantity': quantity,
+      'createAt': createAt == null ? DateTime.now().toString() : createAt.toString(),
     };
   }
 
@@ -26,6 +29,8 @@ class SellItem {
       map['ice'],
       map['sugar'],
       map['quantity'],
+      id: map['id'],
+      createAt: DateTime.parse(map['createAt']),
     );
     return item;
   }
@@ -37,10 +42,12 @@ class SellItem {
     ice = map['ice'];
     sugar = map['sugar'];
     quantity = map['quantity'];
+    id = map['id'];
+    createAt = DateTime.parse(map['createAt']);
     return this;
   }
 
-  SellItem(this.orderId, this.name, this.price, this.ice, this.sugar, this.quantity);
+  SellItem(this.orderId, this.name, this.price, this.ice, this.sugar, this.quantity, {this.id, this.createAt});
 }
 
 class SellProvider {
@@ -51,8 +58,11 @@ class SellProvider {
   Future open() async {
     var databasesPath = await getDatabasesPath();
     String path = databasesPath + dbName;
-    db = await openDatabase(path, version: 1, onCreate: (Database db, int version) async {
-      await db.execute('''
+    db = await openDatabase(
+      path,
+      version: 1,
+      onCreate: (Database db, int version) async {
+        await db.execute('''
           create table $tableName ( 
             id integer primary key autoincrement, 
             orderId integer not null,
@@ -61,10 +71,12 @@ class SellProvider {
             ice text not null,
             sugar text not null,
             quantity integer not null,
-            createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            createAt TIMESTAMP not null,
             foreign key (orderId) references order(id) on delete cascade on update cascade)
           ''');
-    });
+      },
+      onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
+    );
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
@@ -74,7 +86,7 @@ class SellProvider {
             ice text not null,
             sugar text not null,
             quantity integer not null,
-            createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            createAt TIMESTAMP not null,
             foreign key (orderId) references orders(id) on delete cascade on update cascade)
           ''');
     return db;
