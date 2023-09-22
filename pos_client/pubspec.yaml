@@ -102,10 +102,12 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
 msix_config:
   display_name: POS
-  publisher_display_name: Orange
-  identity_name: Orange.POS
-  msix_version: 1.0.0.0
-  certificate_path: C:\Users\danny\CERTIFICATE.pfx
-  certificate_password: 0121
-  # logo_path: C:\path\to\logo.png
-  # capabilities: internetClient, location, microphone, webcam 
+  publisher_display_name: Danny
+  store: false # Set to true to deploy to Microsoft Store
+  publisher: CN=01A6D5C0-D51A-4EEE-8DD0-F134DDD378F7
+  identity_name: 16354flutter.dev.FlutterDesktopPhotoSearch
+  msix_version: 1.0.0.1
+  icons_background_color: "#ffffff"
+  architecture: x64
+  # See https://docs.microsoft.com/en-us/windows/uwp/packaging/app-capability-declarations
+  capabilities: "internetClient"
