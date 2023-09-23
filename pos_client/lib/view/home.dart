@@ -34,7 +34,7 @@ class _HomeState extends State<Home> {
                 child: const Column(
                   children: [
                     Icon(Icons.add),
-                    Text('cashier'),
+                    Text('收銀台'),
                   ],
                 ),
               ),
@@ -55,19 +55,19 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
-          Card(
-            child: InkWell(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => AddItem(item: InventoryItem('', 0), itemProvider: InventoryProvider(), title: '庫存')));
-              },
-              child: const Column(
-                children: [
-                  Icon(Icons.add),
-                  Text('庫存'),
-                ],
-              ),
-            ),
-          ),
+          // Card(
+          //   child: InkWell(
+          //     onTap: () {
+          //       Navigator.push(context, MaterialPageRoute(builder: (context) => AddItem(item: InventoryItem('', 0), itemProvider: InventoryProvider(), title: '庫存')));
+          //     },
+          //     child: const Column(
+          //       children: [
+          //         Icon(Icons.add),
+          //         Text('庫存'),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           Card(
             child: InkWell(
               onTap: () {
@@ -81,19 +81,19 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
-          Card(
-            child: InkWell(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const Receipt()));
-              },
-              child: const Column(
-                children: [
-                  Icon(Icons.local_shipping_outlined),
-                  Text('開立收據'),
-                ],
-              ),
-            ),
-          ),
+          // Card(
+          //   child: InkWell(
+          //     onTap: () {
+          //       Navigator.push(context, MaterialPageRoute(builder: (context) => const Receipt()));
+          //     },
+          //     child: const Column(
+          //       children: [
+          //         Icon(Icons.local_shipping_outlined),
+          //         Text('開立收據'),
+          //       ],
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

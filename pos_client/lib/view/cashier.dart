@@ -502,7 +502,9 @@ class _CashierState extends State<Cashier> {
               if (File('${output.path}/$receiptFolder/$customerName').existsSync() == false) {
                 Directory('${output.path}/$receiptFolder/$customerName').createSync();
               }
-              final file = File("${output.path}/$receiptFolder/$customerName/$customerName${DateTime.now()}.pdf");
+              DateTime now = DateTime.now();
+              String formattedDate = '${now.year}-${now.month}-${now.day}-${now.hour}-${now.minute}-${now.second}';
+              final file = File('${output.path}/$receiptFolder/$customerName/$customerName$formattedDate.pdf');
               print('store path: ${file.path}');
               // 最後更新客戶資料
               receiptSample.customName = _name.text;
