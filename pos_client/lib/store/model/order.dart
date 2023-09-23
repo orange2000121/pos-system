@@ -1,3 +1,4 @@
+import 'package:pos/store/model/sell.dart';
 import 'package:sqflite/sqflite.dart';
 
 class OrderItem {
@@ -109,6 +110,7 @@ class OrderProvider {
   Future delete(int id) async {
     db ??= await open();
     await db!.delete(tableName, where: 'id = ?', whereArgs: [id]);
+    await db!.delete(SellProvider().tableName, where: 'orderId = ?', whereArgs: [id]);
   }
 
   Future deleteAll() async {
