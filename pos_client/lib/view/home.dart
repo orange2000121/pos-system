@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 // ignore: unused_import
 import 'package:pos/store/model/goods.dart';
-import 'package:pos/store/model/inventory.dart';
-import 'package:pos/template/add_item.dart';
 import 'package:pos/view/cashier.dart';
 import 'package:pos/view/create_product.dart';
-import 'package:pos/view/order_history.dart';
-import 'package:pos/view/receipt.dart';
+import 'package:pos/view/order_overview.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -71,7 +68,7 @@ class _HomeState extends State<Home> {
           Card(
             child: InkWell(
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const OrderHistory()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const OrderOverview()));
               },
               child: const Column(
                 children: [

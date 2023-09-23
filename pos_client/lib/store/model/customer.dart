@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 
 class Customer {
+  late int? id;
   String name;
   String phone;
   String contactPerson;
@@ -16,15 +17,27 @@ class Customer {
   }
 
   static Customer fromMapStatic(Map<String, dynamic> map) {
-    return Customer(map['name'], map['phone'], map['contactPerson'], map['address']);
+    return Customer(
+      map['name'],
+      map['phone'],
+      map['contactPerson'],
+      map['address'],
+      id: map['id'],
+    );
   }
 
   Customer fromMap(Map<String, dynamic> map) {
-    return Customer(map['name'], map['phone'], map['contactPerson'], map['address']);
+    return Customer(
+      map['name'],
+      map['phone'],
+      map['contactPerson'],
+      map['address'],
+      id: map['id'],
+    );
   }
 
   Customer copy() {
-    return Customer(name, phone, contactPerson, address);
+    return Customer(name, phone, contactPerson, address, id: id);
   }
 
   Widget toWidget() {
@@ -33,7 +46,7 @@ class Customer {
     );
   }
 
-  Customer(this.name, this.phone, this.contactPerson, this.address);
+  Customer(this.name, this.phone, this.contactPerson, this.address, {this.id});
 }
 
 class CustomerProvider {
@@ -72,7 +85,8 @@ class CustomerProvider {
 
   Future<Customer> insert(Customer item) async {
     db ??= await open();
-    await db!.insert(tableName, item.toMap());
+    int newid = await db!.insert(tableName, item.toMap());
+    item.id = newid;
     return item;
   }
 
@@ -94,6 +108,7 @@ class CustomerProvider {
     for (var map in maps) {
       try {
         items.add(Customer.fromMapStatic(map));
+        // ignore: empty_catches
       } catch (e) {}
     }
     return items;

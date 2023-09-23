@@ -449,12 +449,17 @@ class _CashierState extends State<Cashier> {
                 children: [
                   ElevatedButton(
                     onPressed: () async {
-                      bool? isSettle = true;
+                      int? isSettle;
                       if (widget.init.sharedPreferenceHelper.getSetting(SettingKey.useReceiptPrinter) ?? false) {
                         isSettle = await showDialog(context: context, builder: (context) => receiptOption());
                       }
-                      if (isSettle == true) {
+                      if (isSettle != -1) {
+                        cashierLogic.customerId = isSettle;
                         cashierLogic.settleAccount();
+                        receivedCashNotifier.value = '';
+                      }
+                      if (isSettle == -1) {
+                        cashierLogic.clear();
                         receivedCashNotifier.value = '';
                       }
                     },
@@ -491,7 +496,6 @@ class _CashierState extends State<Cashier> {
       actions: [
         ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context, true);
               String receiptFolder = 'receipt';
               String customerName = _name.text;
               // 建立pdf儲存資料夾
@@ -505,7 +509,6 @@ class _CashierState extends State<Cashier> {
               DateTime now = DateTime.now();
               String formattedDate = '${now.year}-${now.month}-${now.day}-${now.hour}-${now.minute}-${now.second}';
               final file = File('${output.path}/$receiptFolder/$customerName/$customerName$formattedDate.pdf');
-              print('store path: ${file.path}');
               // 最後更新客戶資料
               receiptSample.customName = _name.text;
               receiptSample.contactPerson = _contactPerson.text;
@@ -521,14 +524,17 @@ class _CashierState extends State<Cashier> {
                 onLayout: (PdfPageFormat format) async => bytes,
                 format: const PdfPageFormat(21.5 * PdfPageFormat.cm, 14 * PdfPageFormat.cm, marginAll: 1.5 * PdfPageFormat.cm),
               );
-              if (!await customerProvider.isExist(customerValueNotifier.value.name)) {
-                await customerProvider.insert(customerValueNotifier.value);
+              Customer? insertCustomer;
+              if (customerValueNotifier.value.id == null) {
+                insertCustomer = await customerProvider.insert(customerValueNotifier.value);
               }
+              customerValueNotifier.value.id = insertCustomer?.id;
+              if (context.mounted) Navigator.pop(context, customerValueNotifier.value.id);
             },
             child: const Text('列印')),
         ElevatedButton(
             onPressed: () {
-              Navigator.pop(context, false);
+              Navigator.pop(context, -1);
             },
             child: const Text('取消')),
       ],

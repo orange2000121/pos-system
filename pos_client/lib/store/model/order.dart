@@ -107,6 +107,16 @@ class OrderProvider {
     return items;
   }
 
+  Future<List<OrderItem>> getAllFromCustomerIdandDateRange(int customerId, DateTime start, DateTime end) async {
+    db ??= await open();
+    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'customerId = ? AND createAt BETWEEN ? AND ?', whereArgs: [customerId, start.toString(), end.toString()]);
+    List<OrderItem> items = [];
+    for (var map in maps) {
+      items.add(OrderItem.fromMapStatic(map));
+    }
+    return items;
+  }
+
   Future delete(int id) async {
     db ??= await open();
     await db!.delete(tableName, where: 'id = ?', whereArgs: [id]);

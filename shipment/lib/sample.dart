@@ -110,8 +110,6 @@ class _ReceiptSampleState extends State<ReceiptSample> {
   }
 
   pw.Widget salesItem(pw.Font ttf, {int page = 1}) {
-    debugPrint('start page: ${(page - 1) * 10}');
-    debugPrint('end page: ${min((page - 1) * 10 + 9, widget.data.length - 1)}');
     return pw.Column(children: [
       pw.Table(
         // border: pw.TableBorder.symmetric(outside: const pw.BorderSide()),

@@ -10,6 +10,7 @@ class CashierLogic {
   OrderProvider orderProvider = OrderProvider();
   ValueNotifier<List<ShopItem>> shopItemsNotifier = ValueNotifier<List<ShopItem>>([]);
   ValueNotifier<double> totalPriceNotifier = ValueNotifier<double>(0);
+  int? customerId;
 
   CashierLogic() {
     shopItemsNotifier.addListener(() {
@@ -44,7 +45,7 @@ class CashierLogic {
     for (var i = 0; i < shopItemsNotifier.value.length; i++) {
       total += shopItemsNotifier.value[i].price * shopItemsNotifier.value[i].quantity;
     }
-    int orderId = await orderProvider.insert(OrderItem(total));
+    int orderId = await orderProvider.insert(OrderItem(total, customerId: customerId));
     for (var i = 0; i < shopItemsNotifier.value.length; i++) {
       SellItem item = SellItem(
         orderId,
@@ -56,6 +57,10 @@ class CashierLogic {
       );
       sellProvider.insert(item);
     }
+    shopItemsNotifier.value = [];
+  }
+
+  void clear() {
     shopItemsNotifier.value = [];
   }
 }
