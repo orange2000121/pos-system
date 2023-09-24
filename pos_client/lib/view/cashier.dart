@@ -40,9 +40,6 @@ class Cashier extends StatefulWidget {
 class _CashierState extends State<Cashier> {
   late CashierLogic cashierLogic;
   late ValueNotifier<int> groupIdNotifier = ValueNotifier(-1); // -1: 全部
-  // Map<String, dynamic> setting = {
-  //   'receipt': false,
-  // };
   @override
   void initState() {
     super.initState();
@@ -83,17 +80,15 @@ class _CashierState extends State<Cashier> {
   /* -------------------------------------------------------------------------- */
   Widget drawer() {
     return Drawer(
-      child: Column(children: [
-        Row(
-          children: [
-            const Text('開立收據'),
-            Switch(
-                value: widget.init.sharedPreferenceHelper.getSetting(SettingKey.useReceiptPrinter) ?? false,
-                onChanged: (isAvailable) {
-                  widget.init.sharedPreferenceHelper.editSetting(isAvailable, SettingKey.useReceiptPrinter);
-                  setState(() {});
-                }),
-          ],
+      child: ListView(children: [
+        ListTile(
+          title: const Text('開立收據'),
+          trailing: Switch(
+              value: widget.init.sharedPreferenceHelper.getSetting(BoolSettingKey.useReceiptPrinter) ?? false,
+              onChanged: (isAvailable) {
+                widget.init.sharedPreferenceHelper.editSetting(isAvailable, BoolSettingKey.useReceiptPrinter);
+                setState(() {});
+              }),
         )
       ]),
     );
@@ -306,11 +301,6 @@ class _CashierState extends State<Cashier> {
         ),
         ElevatedButton(
           onPressed: () {
-            // if (onFinished == null) {
-            //   cashierLogic.addItem(name, price, chosenIce, chosenSugar, int.parse(quantity.text));
-            // } else {
-            //   onFinished();
-            // }
             Navigator.pop(
                 context,
                 ShopItem(
@@ -450,7 +440,7 @@ class _CashierState extends State<Cashier> {
                   ElevatedButton(
                     onPressed: () async {
                       int? isSettle;
-                      if (widget.init.sharedPreferenceHelper.getSetting(SettingKey.useReceiptPrinter) ?? false) {
+                      if (widget.init.sharedPreferenceHelper.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
                         isSettle = await showDialog(context: context, builder: (context) => receiptOption());
                       }
                       if (isSettle != -1) {
@@ -527,8 +517,8 @@ class _CashierState extends State<Cashier> {
               Customer? insertCustomer;
               if (customerValueNotifier.value.id == null) {
                 insertCustomer = await customerProvider.insert(customerValueNotifier.value);
+                customerValueNotifier.value.id = insertCustomer.id;
               }
-              customerValueNotifier.value.id = insertCustomer?.id;
               if (context.mounted) Navigator.pop(context, customerValueNotifier.value.id);
             },
             child: const Text('列印')),
