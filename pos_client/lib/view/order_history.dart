@@ -166,21 +166,15 @@ class _OrderHistoryState extends State<OrderHistory> {
             child: Column(
               children: [
                 Text(e),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('銷售數：${sellMap[e]?['quantity']}'),
-                    const SizedBox(width: 10),
-                    Text('${(sellMap[e]!['quantity']! / totalQuantity * 100).toStringAsFixed(2)}%'),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('總銷售額：${sellMap[e]?['totalPrice']}'),
-                    const SizedBox(width: 10),
-                    Text('${(sellMap[e]!['totalPrice']! / totalPrice * 100).toStringAsFixed(2)}%'),
-                  ],
+                Expanded(
+                  child: ListView(
+                    // mainAxisAlignment: MainAxisAlignment.center,
+                    // crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${(sellMap[e]!['quantity']! / totalQuantity * 100).toStringAsFixed(2)}%' '  ' '銷售數量：${sellMap[e]?['quantity']}'),
+                      Text('${(sellMap[e]!['totalPrice']! / totalPrice * 100).toStringAsFixed(2)}%' '  ' '總銷售額：${sellMap[e]?['totalPrice']}'),
+                    ],
+                  ),
                 ),
               ],
             ),
