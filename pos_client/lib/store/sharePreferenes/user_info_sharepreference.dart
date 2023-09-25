@@ -6,8 +6,12 @@ enum UserInfoKey {
   phone,
 }
 
-enum SettingKey {
+enum BoolSettingKey {
   useReceiptPrinter,
+}
+
+enum DoubleSettingKey {
+  fontSizeScale,
 }
 
 class SharedPreferenceHelper {
@@ -31,11 +35,19 @@ class SharedPreferenceHelper {
     return prefs!.getString(key.toString()) ?? '';
   }
 
-  editSetting(bool value, SettingKey key) async {
+  editSetting(bool value, BoolSettingKey key) async {
     prefs!.setBool(key.toString(), value);
   }
 
-  bool? getSetting(SettingKey key) {
+  bool? getSetting(BoolSettingKey key) {
     return prefs!.getBool(key.toString());
+  }
+
+  editDoubleSetting(double value, DoubleSettingKey key) async {
+    prefs!.setDouble(key.toString(), value);
+  }
+
+  double? getDoubleSetting(DoubleSettingKey key) {
+    return prefs!.getDouble(key.toString());
   }
 }

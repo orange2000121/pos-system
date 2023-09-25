@@ -4,6 +4,7 @@ import 'package:pos/store/model/goods.dart';
 import 'package:pos/view/cashier.dart';
 import 'package:pos/view/create_product.dart';
 import 'package:pos/view/order_overview.dart';
+import 'package:pos/view/setting.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -30,7 +31,7 @@ class _HomeState extends State<Home> {
                 },
                 child: const Column(
                   children: [
-                    Icon(Icons.add),
+                    Icon(Icons.attach_money),
                     Text('收銀台'),
                   ],
                 ),
@@ -72,7 +73,7 @@ class _HomeState extends State<Home> {
               },
               child: const Column(
                 children: [
-                  Icon(Icons.add),
+                  Icon(Icons.history),
                   Text('銷售紀錄'),
                 ],
               ),
@@ -91,6 +92,19 @@ class _HomeState extends State<Home> {
           //     ),
           //   ),
           // ),
+          Card(
+            child: InkWell(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const Setting()));
+              },
+              child: const Column(
+                children: [
+                  Icon(Icons.settings),
+                  Text('設定'),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

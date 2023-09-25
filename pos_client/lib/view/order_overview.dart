@@ -46,6 +46,7 @@ class _OrderOverviewState extends State<OrderOverview> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 allCustomerSnapshot.data![index].name,
@@ -57,6 +58,10 @@ class _OrderOverviewState extends State<OrderOverview> {
                                 style: const TextStyle(fontSize: 20),
                               ),
                             ],
+                          ),
+                          Text(
+                            allCustomerSnapshot.data![index].address,
+                            style: const TextStyle(fontSize: 20),
                           ),
                           FutureBuilder(
                             future: () async {

@@ -3,7 +3,6 @@ import 'package:pos/store/model/order.dart';
 import 'package:pos/store/model/sell.dart';
 import 'package:pos/template/data_retrieval_widget.dart';
 import 'package:pos/template/date_picker.dart';
-import 'package:printing/printing.dart';
 
 class OrderHistory extends StatefulWidget {
   final DateTime? startDate;
@@ -76,8 +75,9 @@ class _OrderHistoryState extends State<OrderHistory> {
           ElevatedButton(
               onPressed: () {
                 setState(() {
-                  startDateNotifier.value = DateTime.now().subtract(const Duration(days: 1));
-                  endDateNotifier.value = DateTime.now();
+                  DateTime now = DateTime.now();
+                  startDateNotifier.value = DateTime(now.year, now.month, now.day, 0, 0, 0);
+                  endDateNotifier.value = DateTime(now.year, now.month, now.day, 23, 59, 59);
                 });
               },
               child: const Text('今天')),
@@ -151,6 +151,12 @@ class _OrderHistoryState extends State<OrderHistory> {
         }
       }
     }
+    int totalQuantity = 0;
+    int totalPrice = 0;
+    for (var element in sellMap.values) {
+      totalQuantity += element['quantity']!;
+      totalPrice += element['totalPrice']!;
+    }
     return ListView(
       scrollDirection: Axis.horizontal,
       children: sellMap.keys.map((e) {
@@ -160,8 +166,22 @@ class _OrderHistoryState extends State<OrderHistory> {
             child: Column(
               children: [
                 Text(e),
-                Text('銷售數：${sellMap[e]?['quantity']}'),
-                Text('總銷售額：${sellMap[e]?['totalPrice']}'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('銷售數：${sellMap[e]?['quantity']}'),
+                    SizedBox(width: 10),
+                    Text('${(sellMap[e]!['quantity']! / totalQuantity * 100).toStringAsFixed(2)}%'),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('總銷售額：${sellMap[e]?['totalPrice']}'),
+                    SizedBox(width: 10),
+                    Text('${(sellMap[e]!['totalPrice']! / totalPrice * 100).toStringAsFixed(2)}%'),
+                  ],
+                ),
               ],
             ),
           ),
