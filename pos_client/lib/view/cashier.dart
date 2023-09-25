@@ -478,7 +478,7 @@ class _CashierState extends State<Cashier> {
   Widget receiptOption() {
     CustomerProvider customerProvider = CustomerProvider();
     ValueNotifier<Customer> customerValueNotifier = ValueNotifier<Customer>(Customer('', '', '', ''));
-    ReceiptSample receiptSample = ReceiptSample(customName: '', contactPerson: '', phone: '', address: '', data: const []);
+    ReceiptSample receiptSample = ReceiptSample(userName: '', customName: '', contactPerson: '', phone: '', address: '', data: const []);
     TextEditingController _name = TextEditingController(), _phone = TextEditingController(), _contactPerson = TextEditingController(), _address = TextEditingController();
     FocusNode _nameFocusNode = FocusNode(), _phoneFocusNode = FocusNode(), _contactPersonFocusNode = FocusNode(), _addressFocusNode = FocusNode();
     List dropdownItems = [];
@@ -646,6 +646,7 @@ class _CashierState extends State<Cashier> {
                         valueListenable: customerValueNotifier,
                         builder: (context, value, child) {
                           receiptSample = ReceiptSample(
+                              userName: widget.init.sharedPreferenceHelper.getUserInfo(UserInfoKey.userName) ?? '',
                               customName: customerValueNotifier.value.name,
                               contactPerson: customerValueNotifier.value.contactPerson,
                               phone: customerValueNotifier.value.phone,

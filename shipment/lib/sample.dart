@@ -25,6 +25,7 @@ class SaleItemData {
 
 // ignore: must_be_immutable
 class ReceiptSample extends StatefulWidget {
+  late String userName;
   late String customName;
   late String contactPerson;
   late String phone;
@@ -50,6 +51,7 @@ class ReceiptSample extends StatefulWidget {
   /// ```
   ReceiptSample({
     super.key,
+    required this.userName,
     required this.customName,
     required this.contactPerson,
     required this.phone,
@@ -70,7 +72,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Row(mainAxisAlignment: pw.MainAxisAlignment.center, children: [pw.Text('一朵花', style: pw.TextStyle(font: ttf, fontSize: titleSize, height: 0.8, fontBold: pw.Font.timesBold()))]),
+        pw.Row(mainAxisAlignment: pw.MainAxisAlignment.center, children: [pw.Text(widget.userName, style: pw.TextStyle(font: ttf, fontSize: titleSize, height: 0.8, fontBold: pw.Font.timesBold()))]),
         pw.Row(mainAxisAlignment: pw.MainAxisAlignment.center, children: [pw.Text('出貨單', style: pw.TextStyle(font: ttf, fontSize: titleSize - 5, height: 0.8))]),
       ],
     );

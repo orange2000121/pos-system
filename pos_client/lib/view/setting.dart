@@ -27,9 +27,9 @@ class _SettingState extends State<Setting> {
                 ListTile(
                   title: const Text('開立發票'),
                   trailing: Switch(
-                      value: snapshot.data.getSetting(BoolSettingKey.useReceiptPrinter) ?? false,
+                      value: snapshot.data!.getSetting(BoolSettingKey.useReceiptPrinter) ?? false,
                       onChanged: (isAvailable) {
-                        snapshot.data.editSetting(isAvailable, BoolSettingKey.useReceiptPrinter);
+                        snapshot.data!.editSetting(isAvailable, BoolSettingKey.useReceiptPrinter);
                         setState(() {});
                       }),
                 ),
@@ -38,17 +38,17 @@ class _SettingState extends State<Setting> {
                   subtitle: Row(children: [
                     ElevatedButton(
                         onPressed: () {
-                          snapshot.data.editDoubleSetting(1.0, DoubleSettingKey.fontSizeScale);
+                          snapshot.data!.editDoubleSetting(1.0, DoubleSettingKey.fontSizeScale);
                         },
                         child: const Text('X1')),
                     ElevatedButton(
                         onPressed: () {
-                          snapshot.data.editDoubleSetting(1.5, DoubleSettingKey.fontSizeScale);
+                          snapshot.data!.editDoubleSetting(1.5, DoubleSettingKey.fontSizeScale);
                         },
                         child: const Text('X1.5')),
                     ElevatedButton(
                         onPressed: () {
-                          snapshot.data.editDoubleSetting(2.0, DoubleSettingKey.fontSizeScale);
+                          snapshot.data!.editDoubleSetting(2.0, DoubleSettingKey.fontSizeScale);
                         },
                         child: const Text('X2')),
                   ]),
@@ -58,14 +58,74 @@ class _SettingState extends State<Setting> {
                     },
                     child: const Text('設定並重啟'),
                   ),
-                )
+                ),
+                userInfoSetting(
+                  context: context,
+                  title: '商店名稱',
+                  settingValue: snapshot.data!.getUserInfo(UserInfoKey.userName) ?? '',
+                  actionHint: '輸入商店名稱',
+                  onEditFinished: (controller) => snapshot.data!.editUserInfo(controller.text, UserInfoKey.userName),
+                ),
+                userInfoSetting(
+                  context: context,
+                  title: '商店地址',
+                  settingValue: snapshot.data!.getUserInfo(UserInfoKey.address) ?? '',
+                  actionHint: '輸入商店地址',
+                  onEditFinished: (controller) => snapshot.data!.editUserInfo(controller.text, UserInfoKey.address),
+                ),
+                userInfoSetting(
+                  context: context,
+                  title: '商店電話',
+                  settingValue: snapshot.data!.getUserInfo(UserInfoKey.phone) ?? '',
+                  actionHint: '輸入商店電話',
+                  onEditFinished: (controller) => snapshot.data!.editUserInfo(controller.text, UserInfoKey.phone),
+                ),
               ],
             );
           },
         ));
   }
 
-  Future getSetting() async {
+  ListTile userInfoSetting({
+    required BuildContext context,
+    required String title,
+    required String settingValue,
+    required String actionHint,
+    required Function(TextEditingController) onEditFinished,
+  }) {
+    TextEditingController controller = TextEditingController();
+    return ListTile(
+      title: Text(title),
+      subtitle: Text(settingValue),
+      trailing: ElevatedButton(
+        onPressed: () {
+          showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text(actionHint),
+                  content: TextField(
+                    controller: controller,
+                  ),
+                  actions: [
+                    ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            onEditFinished(controller);
+                          });
+                          Navigator.pop(context);
+                        },
+                        child: const Text('確定'))
+                  ],
+                );
+              });
+        },
+        child: const Text('編輯'),
+      ),
+    );
+  }
+
+  Future<SharedPreferenceHelper> getSetting() async {
     SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper();
     await sharedPreferenceHelper.init();
     return sharedPreferenceHelper;

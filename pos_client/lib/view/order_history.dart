@@ -170,7 +170,7 @@ class _OrderHistoryState extends State<OrderHistory> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text('銷售數：${sellMap[e]?['quantity']}'),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Text('${(sellMap[e]!['quantity']! / totalQuantity * 100).toStringAsFixed(2)}%'),
                   ],
                 ),
@@ -178,7 +178,7 @@ class _OrderHistoryState extends State<OrderHistory> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text('總銷售額：${sellMap[e]?['totalPrice']}'),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Text('${(sellMap[e]!['totalPrice']! / totalPrice * 100).toStringAsFixed(2)}%'),
                   ],
                 ),

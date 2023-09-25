@@ -33,6 +33,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: ReceiptSample(
+        userName: '一朵花',
         customName: '中正店',
         phone: '0908811233',
         contactPerson: '許子霆',
