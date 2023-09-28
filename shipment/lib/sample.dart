@@ -198,7 +198,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
     for (int i = 0; i < widget.data.length; i += 10) {
       int page = i ~/ pageNum + 1;
       pdf.addPage(pw.Page(
-          pageFormat: const PdfPageFormat(21.5 * PdfPageFormat.cm, 14 * PdfPageFormat.cm, marginAll: 1.5 * PdfPageFormat.cm),
+          pageFormat: const PdfPageFormat(240 * PdfPageFormat.mm, 139.7 * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm),
           build: (pw.Context context) {
             return pw.Column(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
