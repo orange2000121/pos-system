@@ -25,9 +25,8 @@ class _OrderOverviewState extends State<OrderOverview> {
             if (allCustomerSnapshot.hasData) {
               return GridView.builder(
                 itemCount: allCustomerSnapshot.data!.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 1.5,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 400,
                 ),
                 itemBuilder: (context, index) {
                   return Card(

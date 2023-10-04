@@ -115,12 +115,15 @@ class _ReceiptSampleState extends State<ReceiptSample> {
     return pw.Column(children: [
       pw.Table(
         // border: pw.TableBorder.symmetric(outside: const pw.BorderSide()),
-        // columnWidths: {
-        //   0: const pw.FlexColumnWidth(6),
-        //   1: const pw.FlexColumnWidth(1),
-        //   2: const pw.FlexColumnWidth(1),
-        //   3: const pw.FlexColumnWidth(2),
-        // },
+        columnWidths: {
+          0: pw.FixedColumnWidth(40),
+          1: pw.FixedColumnWidth(80),
+          2: pw.FixedColumnWidth(40),
+          3: pw.FixedColumnWidth(40),
+          4: pw.FixedColumnWidth(40),
+          5: pw.FixedColumnWidth(40),
+          6: pw.FixedColumnWidth(40),
+        },
         children: [
           pw.TableRow(
             decoration: const pw.BoxDecoration(

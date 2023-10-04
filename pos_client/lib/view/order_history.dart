@@ -162,7 +162,7 @@ class _OrderHistoryState extends State<OrderHistory> {
       children: sellMap.keys.map((e) {
         return Card(
           child: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.2,
+            width: (MediaQuery.of(context).size.width * 0.2) > 200 ? MediaQuery.of(context).size.width * 0.2 : 200,
             child: Column(
               children: [
                 Text(e),
@@ -184,83 +184,192 @@ class _OrderHistoryState extends State<OrderHistory> {
     );
   }
 
-  Widget orderContent(int orderId) {
-    return AlertDialog(
-      title: const Text('Order Content'),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.height * 0.8,
-        height: MediaQuery.of(context).size.height * 0.8,
-        child: FutureBuilder(
-          future: sellProvider.getItemByOrderId(orderId),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return ListView.builder(
-                itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(snapshot.data![index].name),
-                    subtitle: Text('${snapshot.data![index].sugar} ${snapshot.data![index].ice}'),
-                    trailing: Text(snapshot.data![index].quantity.toString()),
-                  );
-                },
-              );
-            } else {
-              return const Center(child: CircularProgressIndicator());
-            }
-          },
-        ),
-      ),
-    );
-  }
+  // Widget orderContent(int orderId) {
+  //   return AlertDialog(
+  //     title: const Text('Order Content'),
+  //     content: SizedBox(
+  //       width: MediaQuery.of(context).size.height * 0.8,
+  //       height: MediaQuery.of(context).size.height * 0.8,
+  //       child: FutureBuilder(
+  //         future: sellProvider.getItemByOrderId(orderId),
+  //         builder: (context, snapshot) {
+  //           if (snapshot.hasData) {
+  //             return ListView.builder(
+  //               itemCount: snapshot.data!.length,
+  //               itemBuilder: (context, index) {
+  //                 return ListTile(
+  //                   title: Text(snapshot.data![index].name),
+  //                   subtitle: Text('${snapshot.data![index].sugar} ${snapshot.data![index].ice}'),
+  //                   trailing: Text(snapshot.data![index].quantity.toString()),
+  //                 );
+  //               },
+  //             );
+  //           } else {
+  //             return const Center(child: CircularProgressIndicator());
+  //           }
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget ordersListView(Map<OrderItem, List<SellItem>> orderMap) {
     return ListView.builder(
       itemCount: orderMap.length,
       itemBuilder: (context, index) {
         List<SellItem> sellitems = orderMap.values.toList()[index];
-        var orders = orderMap.keys.toList()[index];
+        OrderItem order = orderMap.keys.toList()[index];
+        ValueNotifier editSwitchNotifier = ValueNotifier(false);
         return SmallItemCard(
-          title: Column(
-            children: [
-              Text(orders.createAt.toString()),
-            ],
-          ),
-          simpleInfo: sellitems.map((e) => Text('${e.name} x${e.quantity}')).toList(),
+          title: ValueListenableBuilder(
+              valueListenable: editSwitchNotifier,
+              builder: (context, value, child) {
+                return value
+                    ? DatePickerfield(
+                        selectedDate: order.createAt,
+                        onChanged: (date) => order.createAt = date,
+                      )
+                    : Text(
+                        order.createAt.toString(),
+                        textAlign: TextAlign.center,
+                      );
+              }),
+          simpleInfo: sellitems.map((e) {
+            return Text('${e.name} x${e.quantity}');
+          }).toList(),
           detailedInfo: sellitems.map((e) {
-            return ListTile(
-              title: Text(e.name),
-              subtitle: Text('${e.sugar} ${e.ice}'),
-              trailing: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.2,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('${e.price} x${e.quantity}'),
-                    Text('${e.price * e.quantity}'),
-                  ],
-                ),
-              ),
-            );
+            return ValueListenableBuilder(
+                valueListenable: editSwitchNotifier,
+                builder: (context, value, child) {
+                  return ListTile(
+                    leading: value
+                        ? IconButton(
+                            onPressed: () {
+                              showDialog(context: context, builder: (context) => editSellItem(context, e));
+                            },
+                            icon: const Icon(Icons.edit),
+                          )
+                        : null,
+                    title: Text(e.name),
+                    subtitle: Text('${e.sugar} ${e.ice}'),
+                    trailing: SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.2,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('${e.price} x${e.quantity}'),
+                          Text('${e.price * e.quantity}'),
+                        ],
+                      ),
+                    ),
+                  );
+                });
           }).toList(),
           dialogAction: [
+            ValueListenableBuilder(
+              valueListenable: editSwitchNotifier,
+              builder: (context, value, child) => Switch(
+                value: editSwitchNotifier.value,
+                onChanged: (value) => editSwitchNotifier.value = value,
+              ),
+            ),
             ElevatedButton(
               onPressed: () {
-                orderProvider.delete(orders.id!);
+                orderProvider.delete(order.id!);
                 setState(() {
                   Navigator.of(context).pop();
                 });
               },
               child: const Text('刪除', style: TextStyle(color: Colors.red)),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('關閉'),
+            ValueListenableBuilder(
+              valueListenable: editSwitchNotifier,
+              builder: (context, value, child) => ElevatedButton(
+                onPressed: value
+                    ? () {
+                        orderProvider.update(order.id!, order);
+                        for (var element in sellitems) {
+                          sellProvider.update(element.id!, element);
+                        }
+                        setState(() {
+                          Navigator.of(context).pop();
+                        });
+                      }
+                    : () {
+                        Navigator.of(context).pop();
+                      },
+                child: Text(value ? '確認' : '關閉'),
+              ),
             ),
           ],
         );
       },
+    );
+  }
+
+  AlertDialog editSellItem(BuildContext context, SellItem e) {
+    return AlertDialog(
+      title: const Text('編輯商品紀錄'),
+      content: SizedBox(
+        width: MediaQuery.of(context).size.height * 0.8,
+        height: MediaQuery.of(context).size.height * 0.8,
+        child: GridView(
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: MediaQuery.of(context).size.width * 0.2,
+          ),
+          children: [
+            editcard(context, '商品名稱', e.name, (value) => e.name = value),
+            editcard(context, '糖度', e.sugar, (value) => e.sugar = value),
+            editcard(context, '冰塊', e.ice, (value) => e.ice = value),
+            editcard(context, '數量', e.quantity.toString(), (value) => e.quantity = int.parse(value)),
+          ],
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            // sellProvider.update(e.id!, e);
+            setState(() {
+              Navigator.of(context).pop();
+            });
+          },
+          child: const Text('確認'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('關閉'),
+        ),
+      ],
+    );
+  }
+
+  Card editcard(BuildContext context, String hint, String initialvalue, Function(String value) onChanged) {
+    return Card(
+      color: const Color.fromARGB(188, 184, 156, 184),
+      child: Column(
+        children: [
+          Flexible(
+            flex: 2,
+            child: Center(child: Text(hint)),
+          ),
+          Flexible(
+            flex: 4,
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.08,
+              child: TextFormField(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  fillColor: Color.fromARGB(255, 130, 107, 107),
+                ),
+                initialValue: initialvalue,
+                onChanged: onChanged,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

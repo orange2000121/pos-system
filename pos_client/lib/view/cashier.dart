@@ -513,6 +513,7 @@ class _CashierState extends State<Cashier> {
               Printing.layoutPdf(
                 onLayout: (PdfPageFormat format) async => bytes,
                 format: const PdfPageFormat(21.5 * PdfPageFormat.cm, 14 * PdfPageFormat.cm, marginAll: 1.5 * PdfPageFormat.cm),
+                usePrinterSettings: true,
               );
               Customer? insertCustomer;
               if (customerValueNotifier.value.id == null) {
