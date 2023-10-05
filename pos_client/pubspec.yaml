@@ -45,6 +45,8 @@ dependencies:
   shared_preferences: ^2.2.1
   printing: ^5.11.0
   pdf: ^3.10.4
+  package_info: ^2.0.2
+  dio: ^5.3.3
 
 dev_dependencies:
   flutter_test:

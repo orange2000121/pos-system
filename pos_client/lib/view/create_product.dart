@@ -240,6 +240,7 @@ class _CreateProductState extends State<CreateProduct> {
   void editproduct(Good good) {
     TextEditingController nameController = TextEditingController(text: good.name);
     TextEditingController priceController = TextEditingController(text: good.price.toString());
+    TextEditingController unitController = TextEditingController(text: good.unit);
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -266,6 +267,16 @@ class _CreateProductState extends State<CreateProduct> {
                   ),
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: TextField(
+                  controller: unitController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: '單位',
+                  ),
+                ),
+              ),
               ElevatedButton(
                 onPressed: () async {
                   XFile? image = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -279,6 +290,7 @@ class _CreateProductState extends State<CreateProduct> {
                 onPressed: () {
                   good.name = nameController.text;
                   good.price = double.parse(priceController.text);
+                  good.unit = unitController.text;
                   goodsProvider.update(good);
                   Navigator.pop(context);
                   setState(() {});
