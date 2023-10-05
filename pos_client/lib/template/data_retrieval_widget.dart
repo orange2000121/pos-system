@@ -7,7 +7,8 @@ class SmallItemCard extends StatefulWidget {
   final List<Widget>? simpleInfo;
   final List<Widget>? detailedInfo;
   final List<Widget>? dialogAction;
-  const SmallItemCard({super.key, required this.title, this.subtitle, this.simpleInfo, this.detailedInfo, this.dialogAction});
+  final Function(dynamic popValue)? onPop;
+  const SmallItemCard({super.key, required this.title, this.subtitle, this.simpleInfo, this.detailedInfo, this.dialogAction, this.onPop});
 
   @override
   State<SmallItemCard> createState() => _SmallItemCardState();
@@ -50,13 +51,16 @@ class _SmallItemCardState extends State<SmallItemCard> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        showDialog(
+      onTap: () async {
+        var popValue = await showDialog(
           context: context,
           builder: (BuildContext context) {
             return dialog(context);
           },
         );
+        if (widget.onPop != null) {
+          widget.onPop!(popValue);
+        }
       },
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),

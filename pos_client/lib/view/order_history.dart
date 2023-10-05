@@ -270,6 +270,7 @@ class _OrderHistoryState extends State<OrderHistory> {
               valueListenable: editSwitchNotifier,
               builder: (context, value, child) => Switch(
                 value: editSwitchNotifier.value,
+                thumbIcon: MaterialStateProperty.all(const Icon(Icons.edit)),
                 onChanged: (value) => editSwitchNotifier.value = value,
               ),
             ),
@@ -302,6 +303,10 @@ class _OrderHistoryState extends State<OrderHistory> {
               ),
             ),
           ],
+          onPop: (popValue) {
+            editSwitchNotifier.value = false;
+            print('pop value: $popValue');
+          },
         );
       },
     );

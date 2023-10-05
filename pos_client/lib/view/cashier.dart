@@ -275,7 +275,7 @@ class _CashierState extends State<Cashier> {
             ),
             Container(
               width: 50,
-              height: 50,
+              height: 60,
               margin: const EdgeInsets.all(10),
               child: TextField(
                 keyboardType: TextInputType.number,
