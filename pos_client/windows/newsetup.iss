@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "pos"
-#define MyAppVersion "0.0.2"
+#define MyAppVersion "0.0.4"
 #define MyAppPublisher "My Company, Inc."
 #define MyAppURL "https://www.example.com/"
 #define MyAppExeName "pos.exe"
@@ -26,9 +26,9 @@ ChangesAssociations=yes
 DisableProgramGroupPage=yes
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
-OutputDir=C:\Users\danny\Downloads
+OutputDir=..\
 OutputBaseFilename=setupPOS
-Compression=lzma
+Compression=zip
 SolidCompression=yes
 WizardStyle=modern
 
