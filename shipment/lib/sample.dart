@@ -66,7 +66,7 @@ class ReceiptSample extends StatefulWidget {
 
 class _ReceiptSampleState extends State<ReceiptSample> {
   final double textSize = 10, titleSize = 20;
-  final int pageNum = 10;
+  final int pageNum = 12;
 
   pw.Widget companyInfo(pw.Font ttf) {
     return pw.Column(
@@ -116,13 +116,13 @@ class _ReceiptSampleState extends State<ReceiptSample> {
       pw.Table(
         // border: pw.TableBorder.symmetric(outside: const pw.BorderSide()),
         columnWidths: {
-          0: pw.FixedColumnWidth(40),
-          1: pw.FixedColumnWidth(80),
-          2: pw.FixedColumnWidth(40),
-          3: pw.FixedColumnWidth(40),
-          4: pw.FixedColumnWidth(40),
-          5: pw.FixedColumnWidth(40),
-          6: pw.FixedColumnWidth(40),
+          0: const pw.FlexColumnWidth(40),
+          1: const pw.FlexColumnWidth(80),
+          2: const pw.FlexColumnWidth(40),
+          3: const pw.FlexColumnWidth(40),
+          4: const pw.FlexColumnWidth(40),
+          5: const pw.FlexColumnWidth(40),
+          6: const pw.FlexColumnWidth(40),
         },
         children: [
           pw.TableRow(
@@ -142,7 +142,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
               pw.Text('備註', style: pw.TextStyle(font: ttf, fontSize: textSize)),
             ],
           ),
-          ...widget.data.sublist(min((page - 1) * 10, widget.data.length - 1), min((page - 1) * 10 + 10, widget.data.length)).map((item) {
+          ...widget.data.sublist(min((page - 1) * pageNum, widget.data.length - 1), min((page - 1) * pageNum + pageNum, widget.data.length)).map((item) {
             int subtotal = item.num * item.price;
             return pw.TableRow(
               children: [
@@ -198,7 +198,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
     final pdf = pw.Document();
     final font = await rootBundle.load("assets/font/NotoSansTC-VariableFont_wght.ttf");
     final ttf = pw.Font.ttf(font);
-    for (int i = 0; i < widget.data.length; i += 10) {
+    for (int i = 0; i < widget.data.length; i += pageNum) {
       int page = i ~/ pageNum + 1;
       pdf.addPage(pw.Page(
           pageFormat: const PdfPageFormat(240 * PdfPageFormat.mm, 139.7 * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm),
