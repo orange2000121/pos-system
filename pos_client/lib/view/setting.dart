@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pos/main.dart';
-import 'package:pos/store/sharePreferenes/user_info_sharepreference.dart';
+import 'package:pos/store/sharePreferenes/setting_key.dart';
+import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
+import 'package:pos/store/sharePreferenes/user_info_key.dart';
 
 class Setting extends StatefulWidget {
   const Setting({super.key});
@@ -27,9 +29,9 @@ class _SettingState extends State<Setting> {
                 ListTile(
                   title: const Text('開立發票'),
                   trailing: Switch(
-                      value: snapshot.data!.getSetting(BoolSettingKey.useReceiptPrinter) ?? false,
+                      value: snapshot.data!.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false,
                       onChanged: (isAvailable) {
-                        snapshot.data!.editSetting(isAvailable, BoolSettingKey.useReceiptPrinter);
+                        snapshot.data!.setting.editSetting(isAvailable, BoolSettingKey.useReceiptPrinter);
                         setState(() {});
                       }),
                 ),
@@ -38,17 +40,17 @@ class _SettingState extends State<Setting> {
                   subtitle: Row(children: [
                     ElevatedButton(
                         onPressed: () {
-                          snapshot.data!.editDoubleSetting(1.0, DoubleSettingKey.fontSizeScale);
+                          snapshot.data!.setting.editDoubleSetting(1.0, DoubleSettingKey.fontSizeScale);
                         },
                         child: const Text('X1')),
                     ElevatedButton(
                         onPressed: () {
-                          snapshot.data!.editDoubleSetting(1.5, DoubleSettingKey.fontSizeScale);
+                          snapshot.data!.setting.editDoubleSetting(1.5, DoubleSettingKey.fontSizeScale);
                         },
                         child: const Text('X1.5')),
                     ElevatedButton(
                         onPressed: () {
-                          snapshot.data!.editDoubleSetting(2.0, DoubleSettingKey.fontSizeScale);
+                          snapshot.data!.setting.editDoubleSetting(2.0, DoubleSettingKey.fontSizeScale);
                         },
                         child: const Text('X2')),
                   ]),
@@ -62,23 +64,23 @@ class _SettingState extends State<Setting> {
                 userInfoSetting(
                   context: context,
                   title: '商店名稱',
-                  settingValue: snapshot.data!.getUserInfo(UserInfoKey.userName) ?? '',
+                  settingValue: snapshot.data!.userInfo.getUserInfo(UserInfoKey.userName) ?? '',
                   actionHint: '輸入商店名稱',
-                  onEditFinished: (controller) => snapshot.data!.editUserInfo(controller.text, UserInfoKey.userName),
+                  onEditFinished: (controller) => snapshot.data!.userInfo.editUserInfo(controller.text, UserInfoKey.userName),
                 ),
                 userInfoSetting(
                   context: context,
                   title: '商店地址',
-                  settingValue: snapshot.data!.getUserInfo(UserInfoKey.address) ?? '',
+                  settingValue: snapshot.data!.userInfo.getUserInfo(UserInfoKey.address) ?? '',
                   actionHint: '輸入商店地址',
-                  onEditFinished: (controller) => snapshot.data!.editUserInfo(controller.text, UserInfoKey.address),
+                  onEditFinished: (controller) => snapshot.data!.userInfo.editUserInfo(controller.text, UserInfoKey.address),
                 ),
                 userInfoSetting(
                   context: context,
                   title: '商店電話',
-                  settingValue: snapshot.data!.getUserInfo(UserInfoKey.phone) ?? '',
+                  settingValue: snapshot.data!.userInfo.getUserInfo(UserInfoKey.phone) ?? '',
                   actionHint: '輸入商店電話',
-                  onEditFinished: (controller) => snapshot.data!.editUserInfo(controller.text, UserInfoKey.phone),
+                  onEditFinished: (controller) => snapshot.data!.userInfo.editUserInfo(controller.text, UserInfoKey.phone),
                 ),
               ],
             );
