@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 // ignore: unused_import
 import 'package:pos/store/model/goods.dart';
+import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
+import 'package:pos/tool/upgrade_app.dart';
 import 'package:pos/view/cashier.dart';
 import 'package:pos/view/create_product.dart';
 import 'package:pos/view/order_overview.dart';
 import 'package:pos/view/setting.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -14,8 +19,43 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  void showUpgrade() async {
+    SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper();
+    await sharedPreferenceHelper.init();
+    String? upgradePath = sharedPreferenceHelper.appInfo.getUpdateExePath();
+
+    print('path: ${await path_provider.getApplicationSupportDirectory()}');
+    if (upgradePath == null) return; // 沒有更新檔案
+    if (!File(upgradePath).existsSync()) return;
+    if (!context.mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('更新'),
+          content: const Text('請更新至最新版本'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                upgradeApp(executeSetup: true);
+                Navigator.pop(context);
+              },
+              child: const Text('更新'),
+            ),
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('取消更新', style: TextStyle(color: Colors.red)))
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    showUpgrade();
     return Scaffold(
       appBar: AppBar(title: const Text('Home')),
       body: GridView(

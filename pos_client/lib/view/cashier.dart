@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pos/logic/cashier_logic.dart';
-import 'package:pos/store/sharePreferenes/user_info_sharepreference.dart';
+import 'package:pos/store/sharePreferenes/setting_key.dart';
+import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:pos/store/model/customer.dart';
 import 'package:pos/store/model/goods.dart';
 import 'package:pos/store/model/goods_group.dart';
+import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:printing/printing.dart';
 import 'package:shipment/sample.dart';
 
@@ -84,9 +86,9 @@ class _CashierState extends State<Cashier> {
         ListTile(
           title: const Text('開立收據'),
           trailing: Switch(
-              value: widget.init.sharedPreferenceHelper.getSetting(BoolSettingKey.useReceiptPrinter) ?? false,
+              value: widget.init.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false,
               onChanged: (isAvailable) {
-                widget.init.sharedPreferenceHelper.editSetting(isAvailable, BoolSettingKey.useReceiptPrinter);
+                widget.init.sharedPreferenceHelper.setting.editSetting(isAvailable, BoolSettingKey.useReceiptPrinter);
                 setState(() {});
               }),
         )
@@ -440,7 +442,7 @@ class _CashierState extends State<Cashier> {
                   ElevatedButton(
                     onPressed: () async {
                       int? isSettle;
-                      if (widget.init.sharedPreferenceHelper.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
+                      if (widget.init.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
                         isSettle = await showDialog(context: context, builder: (context) => receiptOption());
                       }
                       if (isSettle != -1) {
@@ -647,7 +649,7 @@ class _CashierState extends State<Cashier> {
                         valueListenable: customerValueNotifier,
                         builder: (context, value, child) {
                           receiptSample = ReceiptSample(
-                              userName: widget.init.sharedPreferenceHelper.getUserInfo(UserInfoKey.userName) ?? '',
+                              userName: widget.init.sharedPreferenceHelper.userInfo.getUserInfo(UserInfoKey.userName) ?? '',
                               customName: customerValueNotifier.value.name,
                               contactPerson: customerValueNotifier.value.contactPerson,
                               phone: customerValueNotifier.value.phone,
