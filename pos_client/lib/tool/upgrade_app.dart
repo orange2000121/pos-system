@@ -1,15 +1,24 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:pos/store/sharePreferenes/app_info_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 
-void upgradeApp() async {
+void upgradeApp({bool executeSetup = false}) async {
   SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper();
   await sharedPreferenceHelper.init();
   final latestVersionInfo = await fetchLatestInfoFromGitHub();
   final currentVersion = await getCurrentAppVersion(); // 自己实现获取当前应用版本的逻辑
-  executeSetupEXE(sharedPreferenceHelper.appInfo.getUpdateExePath());
-
+  print('currentVersion: $currentVersion');
+  print('latestVersionInfo: $latestVersionInfo');
+  if (executeSetup) {
+    if (await executeSetupEXE(sharedPreferenceHelper.appInfo.getUpdateExePath())) {
+      print('更新成功');
+      // 更新成功後，更新版本號
+      sharedPreferenceHelper.appInfo.setAppVersion(latestVersionInfo?['version'] ?? '');
+      return;
+    } else {
+      print('更新失敗');
+    }
+  }
   if (isNeedUpgrade(currentVersion, latestVersionInfo?['version'])) {
     String? downloadUrl = latestVersionInfo?['downloadUrl'];
     if (downloadUrl != null) {
@@ -39,7 +48,7 @@ bool isNeedUpgrade(String? currentVersion, String? latestVersion) {
 Future<String?> getCurrentAppVersion() async {
   SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper();
   await sharedPreferenceHelper.init();
-  return sharedPreferenceHelper.appInfo.getAppInfo(AppInfoKey.version);
+  return sharedPreferenceHelper.appInfo.getAppVersion();
 }
 
 Future<Map?> fetchLatestInfoFromGitHub() async {
@@ -47,10 +56,10 @@ Future<Map?> fetchLatestInfoFromGitHub() async {
   final response = await dio.get('https://api.github.com/repos/orange2000121/pos-system/releases/latest');
   if (response.statusCode == 200) {
     final json = response.data;
-    final tagName = json['name'];
+    final version = json['name'];
     final asset = json['assets'][0];
     return {
-      'version': tagName.toString(),
+      'version': version.toString(),
       'downloadUrl': asset['browser_download_url'],
     };
   }
@@ -70,6 +79,7 @@ Future<String?> fetchDownloadUrlFromGitHub() async {
 }
 
 Future<String?> downloadFile(String url) async {
+  print('downLoading');
   final response = await Dio().get(url, options: Options(responseType: ResponseType.bytes));
   if (response.statusCode == 200) {
     final tempDir = Directory.systemTemp;
@@ -81,15 +91,17 @@ Future<String?> downloadFile(String url) async {
   return null;
 }
 
-void executeSetupEXE(String? filePath) async {
-  if (filePath == null) return;
+Future<bool> executeSetupEXE(String? filePath) async {
+  if (filePath == null) return false;
   if (File(filePath).existsSync()) {
-    print('setup.exe exists');
   } else {
-    print('setup.exe not exists');
-    return;
+    return false;
   }
-  await Process.run(filePath, [], runInShell: true);
-  //刪除安裝檔
-  File(filePath).delete();
+  ProcessResult processResult = await Process.run(filePath, ['/VERYSILENT'], runInShell: true);
+  if (processResult.exitCode == 0) {
+    //刪除安裝檔
+    File(filePath).delete();
+    return true;
+  }
+  return false;
 }

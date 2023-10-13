@@ -8,12 +8,12 @@ enum AppInfoKey {
 class AppInfoSharedPreferenes {
   final SharedPreferences prefs;
   AppInfoSharedPreferenes(this.prefs);
-  void editAppInfo(String version, AppInfoKey key) async {
-    prefs.setString(key.toString(), version);
+  void setAppVersion(String version) async {
+    prefs.setString(AppInfoKey.version.toString(), version);
   }
 
-  String? getAppInfo(AppInfoKey key) {
-    return prefs.getString(key.toString());
+  String? getAppVersion() {
+    return prefs.getString(AppInfoKey.version.toString());
   }
 
   String? getUpdateExePath() {
