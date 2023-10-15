@@ -20,13 +20,9 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   void showUpgrade() async {
-    SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper();
-    await sharedPreferenceHelper.init();
-    String? upgradePath = sharedPreferenceHelper.appInfo.getUpdateExePath();
-
-    print('path: ${await path_provider.getApplicationSupportDirectory()}');
-    if (upgradePath == null) return; // 沒有更新檔案
-    if (!File(upgradePath).existsSync()) return;
+    UpgradeApp upgradeAppHelper = UpgradeApp();
+    if (await upgradeAppHelper.isNeedUpgrade() == false) return;
+    if (await upgradeAppHelper.isUpgradeExeExist() == false) return;
     if (!context.mounted) return;
     showDialog(
       context: context,
@@ -37,7 +33,7 @@ class _HomeState extends State<Home> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                upgradeApp(executeSetup: true);
+                upgradeAppHelper.upgradeApp(executeSetup: true);
                 Navigator.pop(context);
               },
               child: const Text('更新'),
