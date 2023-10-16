@@ -68,18 +68,6 @@ class UpgradeApp {
     return null;
   }
 
-// Future<String?> fetchDownloadUrlFromGitHub() async {
-//   final response = await Dio().get('https://api.github.com/repos/orange2000121/pos-system/releases/latest');
-//   if (response.statusCode == 200) {
-//     final json = response.data;
-//     final assets = json['assets'];
-//     final asset = assets[0];
-//     final downloadUrl = asset['browser_download_url'];
-//     return downloadUrl.toString();
-//   }
-//   return null;
-// }
-
   Future<String?> downloadFile(String url) async {
     print('downLoading');
     final response = await Dio().get(url, options: Options(responseType: ResponseType.bytes));
