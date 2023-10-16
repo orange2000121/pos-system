@@ -215,8 +215,8 @@ class _CashierState extends State<Cashier> {
                         goodListLength = groupMap[groupId]?.length ?? 0;
                       }
                       return GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 200,
                         ),
                         itemCount: goodListLength,
                         itemBuilder: (context, index) {
