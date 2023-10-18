@@ -5,7 +5,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pdf/pdf.dart';
 import 'package:pos/logic/cashier_logic.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
@@ -13,7 +12,6 @@ import 'package:pos/store/model/customer.dart';
 import 'package:pos/store/model/goods.dart';
 import 'package:pos/store/model/goods_group.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
-import 'package:printing/printing.dart';
 import 'package:shipment/sample.dart';
 
 class CashierInit {
@@ -509,16 +507,12 @@ class _CashierState extends State<Cashier> {
               // 更新客戶資料
               customerProvider.update(customerValueNotifier.value.id!, customerValueNotifier.value);
               customerValueNotifier.notifyListeners();
-              await receiptSample.upatePdf();
+              await receiptSample.upatePdf;
               // pdf存檔
               Uint8List bytes = await receiptSample.pdf.save();
               await file.writeAsBytes(bytes);
               // 列印pdf
-              Printing.layoutPdf(
-                onLayout: (PdfPageFormat format) async => bytes,
-                format: const PdfPageFormat(21.5 * PdfPageFormat.cm, 14 * PdfPageFormat.cm, marginAll: 1.5 * PdfPageFormat.cm),
-                usePrinterSettings: true,
-              );
+              receiptSample.layout();
               Customer? insertCustomer;
               if (customerValueNotifier.value.id == null) {
                 insertCustomer = await customerProvider.insert(customerValueNotifier.value);
