@@ -1,8 +1,17 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pos/store/model/customer.dart';
+import 'package:pos/store/model/goods.dart';
 import 'package:pos/store/model/order.dart';
 import 'package:pos/store/model/sell.dart';
+import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
+import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:pos/template/data_retrieval_widget.dart';
 import 'package:pos/template/date_picker.dart';
+import 'package:shipment/sample.dart';
 
 class OrderHistory extends StatefulWidget {
   final DateTime? startDate;
@@ -22,6 +31,7 @@ class OrderHistory extends StatefulWidget {
 class _OrderHistoryState extends State<OrderHistory> {
   OrderProvider orderProvider = OrderProvider();
   SellProvider sellProvider = SellProvider();
+  CustomerProvider customerProvider = CustomerProvider();
   ValueNotifier<DateTime?> startDateNotifier = ValueNotifier(null);
   ValueNotifier<DateTime?> endDateNotifier = ValueNotifier(null);
   int? customerId;
@@ -136,6 +146,8 @@ class _OrderHistoryState extends State<OrderHistory> {
 
   Widget sellOverview(List<List<SellItem>> sellItems) {
     Map<String, Map<String, int>> sellMap = {};
+    final _scrollController = ScrollController();
+
     for (var element in sellItems) {
       for (var element in element) {
         if (sellMap.containsKey(element.name)) {
@@ -157,30 +169,39 @@ class _OrderHistoryState extends State<OrderHistory> {
       totalQuantity += element['quantity']!;
       totalPrice += element['totalPrice']!;
     }
-    return ListView(
-      scrollDirection: Axis.horizontal,
-      children: sellMap.keys.map((e) {
-        return Card(
-          child: SizedBox(
-            width: (MediaQuery.of(context).size.width * 0.2) > 200 ? MediaQuery.of(context).size.width * 0.2 : 200,
-            child: Column(
-              children: [
-                Text(e),
-                Expanded(
-                  child: ListView(
-                    // mainAxisAlignment: MainAxisAlignment.center,
-                    // crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('${(sellMap[e]!['quantity']! / totalQuantity * 100).toStringAsFixed(2)}%' '  ' '銷售數量：${sellMap[e]?['quantity']}'),
-                      Text('${(sellMap[e]!['totalPrice']! / totalPrice * 100).toStringAsFixed(2)}%' '  ' '總銷售額：${sellMap[e]?['totalPrice']}'),
-                    ],
-                  ),
+    return GestureDetector(
+      onHorizontalDragUpdate: (details) {
+        _scrollController.jumpTo(_scrollController.offset - details.delta.dx);
+      },
+      child: Scrollbar(
+        controller: _scrollController,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          controller: _scrollController,
+          children: sellMap.keys.map((e) {
+            return Card(
+              child: SizedBox(
+                width: (MediaQuery.of(context).size.width * 0.2) > 200 ? MediaQuery.of(context).size.width * 0.2 : 200,
+                child: Column(
+                  children: [
+                    Text(e),
+                    Expanded(
+                      child: ListView(
+                        // mainAxisAlignment: MainAxisAlignment.center,
+                        // crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${(sellMap[e]!['quantity']! / totalQuantity * 100).toStringAsFixed(2)}%' '  ' '銷售數量：${sellMap[e]?['quantity']}'),
+                          Text('${(sellMap[e]!['totalPrice']! / totalPrice * 100).toStringAsFixed(2)}%' '  ' '總銷售額：${sellMap[e]?['totalPrice']}'),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
     );
   }
 
@@ -288,10 +309,13 @@ class _OrderHistoryState extends State<OrderHistory> {
               builder: (context, value, child) => ElevatedButton(
                 onPressed: value
                     ? () {
-                        orderProvider.update(order.id!, order);
+                        double totalPrice = 0;
                         for (var element in sellitems) {
-                          sellProvider.update(element.id!, element);
+                          sellProvider.update(element.id!, element); //更新sellitem
+                          totalPrice += element.price * element.quantity;
                         }
+                        order.totalPrice = totalPrice;
+                        orderProvider.update(order.id!, order);
                         setState(() {
                           Navigator.of(context).pop();
                         });
@@ -302,10 +326,62 @@ class _OrderHistoryState extends State<OrderHistory> {
                 child: Text(value ? '確認' : '關閉'),
               ),
             ),
+            ElevatedButton(
+              onPressed: () async {
+                Customer customer = await customerProvider.getItem(customerId!);
+                SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper();
+                await sharedPreferenceHelper.init();
+                String userName = sharedPreferenceHelper.userInfo.getUserInfo(UserInfoKey.userName) ?? '';
+                List<SellItem> sellItemsTemp = await sellProvider.getItemByOrderId(order.id!);
+                List<SaleItemData> data = [];
+                GoodsProvider goodsProvider = GoodsProvider();
+
+                for (var element in sellItemsTemp) {
+                  print('element.id: ${element.id}');
+                  data.add(SaleItemData(
+                    id: element.id!.toString(),
+                    name: element.name,
+                    num: element.quantity,
+                    price: element.price.toInt(),
+                    unit: await goodsProvider.getItemByName(element.name).then((value) => value?.unit ?? ''),
+                  ));
+                }
+                if (!context.mounted) return;
+                DateTime sellDate = order.createAt ?? DateTime.now();
+                String formatSellDate = '${sellDate.year}-${sellDate.month}-${sellDate.day}';
+                CreateReceipt receiptSample = CreateReceipt(
+                  userName: userName,
+                  customName: customer.name,
+                  contactPerson: customer.contactPerson,
+                  phone: customer.phone,
+                  address: customer.address,
+                  formattedDate: formatSellDate,
+                  data: data,
+                );
+                // 建立pdf儲存資料夾
+                String receiptFolder = 'receipt';
+                String customerName = customer.name;
+                final output = await getApplicationDocumentsDirectory();
+                if (File('${output.path}/$receiptFolder').existsSync() == false) {
+                  Directory('${output.path}/$receiptFolder').createSync();
+                }
+                if (File('${output.path}/$receiptFolder/$customerName').existsSync() == false) {
+                  Directory('${output.path}/$receiptFolder/$customerName').createSync();
+                }
+                DateTime now = DateTime.now();
+                String formattedDate = '${now.year}-${now.month}-${now.day}-${now.hour}-${now.minute}-${now.second}';
+                final file = File('${output.path}/$receiptFolder/$customerName/$customerName$formattedDate.pdf');
+                // pdf存檔
+                Uint8List bytes = await receiptSample.layout().then((value) => value.save());
+                await file.writeAsBytes(bytes);
+
+                Navigator.pop(context);
+              },
+              child: const Text('列印歷史訂單'),
+            ),
           ],
           onPop: (popValue) {
             editSwitchNotifier.value = false;
-            print('pop value: $popValue');
           },
         );
       },

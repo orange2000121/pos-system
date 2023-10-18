@@ -107,6 +107,15 @@ class GoodsProvider {
     return Good.fromMapStatic(maps.first);
   }
 
+  Future<Good?> getItemByName(String name) async {
+    db ??= await open();
+    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'name = ?', whereArgs: [name]);
+    if (maps.isEmpty) {
+      return null;
+    }
+    return Good.fromMapStatic(maps.first);
+  }
+
   Future<List<Good>> getItemsByGroupId(int groupId) async {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'group_id = ?', whereArgs: [groupId]);

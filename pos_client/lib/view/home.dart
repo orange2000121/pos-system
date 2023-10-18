@@ -1,15 +1,11 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 // ignore: unused_import
 import 'package:pos/store/model/goods.dart';
-import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:pos/tool/upgrade_app.dart';
 import 'package:pos/view/cashier.dart';
 import 'package:pos/view/create_product.dart';
 import 'package:pos/view/order_overview.dart';
 import 'package:pos/view/setting.dart';
-import 'package:path_provider/path_provider.dart' as path_provider;
 
 class Home extends StatefulWidget {
   const Home({super.key});
