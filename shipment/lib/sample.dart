@@ -293,6 +293,7 @@ class CreateReceipt {
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => pdf.save(),
       format: pdfPageFormat,
+      usePrinterSettings: true,
     );
     return pdf;
   }
