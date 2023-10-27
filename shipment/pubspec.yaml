@@ -91,11 +91,3 @@ flutter:
   #   - assets/font/NotoSansTC-VariableFont_wght.ttf
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
-msix_config:
-  display_name: POS
-  publisher_display_name: Orange
-  identity_name: Orange.POS
-  msix_version: 1.0.0.0
-  certificate_path: C:\Users\danny\CERTIFICATE.pfx
-  # logo_path: C:\path\to\logo.png
-  # capabilities: internetClient, location, microphone, webcam 
