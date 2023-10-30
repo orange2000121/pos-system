@@ -35,6 +35,7 @@ class ReceiptSample extends StatefulWidget {
   late pw.Document pdf;
   late Future<pw.Document> Function() upatePdf;
   late Future<pw.Document> Function() layout;
+  final PdfPageFormat? pdfPageFormat;
 
   ///```
   ///const ReceiptSample(
@@ -57,6 +58,7 @@ class ReceiptSample extends StatefulWidget {
     required this.phone,
     required this.address,
     required this.data,
+    this.pdfPageFormat,
     this.taxRate = 0,
   });
 
@@ -76,6 +78,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
       data: widget.data,
       taxRate: widget.taxRate,
       formattedDate: DateTime.now().toString().split(' ')[0],
+      pdfPageFormat: widget.pdfPageFormat,
     );
     widget.upatePdf = () => createReceipt.updatePage();
     widget.layout = () => createReceipt.layout();
@@ -110,7 +113,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
 class CreateReceipt {
   final double textSize = 10, titleSize = 20;
   final int pageNum = 12;
-  final pdfPageFormat = const PdfPageFormat(214.9 * PdfPageFormat.mm, 139.7 * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm);
+  final PdfPageFormat? pdfPageFormat;
   final String userName;
   final String customName;
   final String contactPerson;
@@ -128,6 +131,7 @@ class CreateReceipt {
     required this.address,
     required this.formattedDate,
     required this.data,
+    this.pdfPageFormat = const PdfPageFormat(190 * PdfPageFormat.mm, 139.7 * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm),
     this.taxRate = 0,
   });
 
@@ -292,7 +296,7 @@ class CreateReceipt {
     final pdf = await addPage();
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => pdf.save(),
-      format: pdfPageFormat,
+      format: pdfPageFormat!,
     );
     return pdf;
   }

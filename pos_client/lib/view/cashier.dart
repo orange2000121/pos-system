@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
 import 'package:pos/logic/cashier_logic.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
@@ -644,13 +645,22 @@ class _CashierState extends State<Cashier> {
                       child: ValueListenableBuilder(
                         valueListenable: customerValueNotifier,
                         builder: (context, value, child) {
+                          double? shippingPaperWidth = widget.init.sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperWidth);
+                          double? shippingPaperHeight = widget.init.sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperHeight);
+                          PdfPageFormat? pdfPageFormat;
+                          if (shippingPaperWidth != null && shippingPaperHeight != null) {
+                            pdfPageFormat = PdfPageFormat(shippingPaperWidth * PdfPageFormat.mm, shippingPaperHeight * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm);
+                          }
                           receiptSample = ReceiptSample(
-                              userName: widget.init.sharedPreferenceHelper.userInfo.getUserInfo(UserInfoKey.userName) ?? '',
-                              customName: customerValueNotifier.value.name,
-                              contactPerson: customerValueNotifier.value.contactPerson,
-                              phone: customerValueNotifier.value.phone,
-                              address: customerValueNotifier.value.address,
-                              data: receiptSample.data);
+                            userName: widget.init.sharedPreferenceHelper.userInfo.getUserInfo(UserInfoKey.userName) ?? '',
+                            customName: customerValueNotifier.value.name,
+                            contactPerson: customerValueNotifier.value.contactPerson,
+                            phone: customerValueNotifier.value.phone,
+                            address: customerValueNotifier.value.address,
+                            data: receiptSample.data,
+                            pdfPageFormat: pdfPageFormat,
+                          );
+
                           return receiptSample; // 根据新值构建用户界面
                         },
                       ))

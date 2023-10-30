@@ -3,10 +3,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
 import 'package:pos/store/model/customer.dart';
 import 'package:pos/store/model/goods.dart';
 import 'package:pos/store/model/order.dart';
 import 'package:pos/store/model/sell.dart';
+import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:pos/template/data_retrieval_widget.dart';
@@ -349,6 +351,12 @@ class _OrderHistoryState extends State<OrderHistory> {
                 if (!context.mounted) return;
                 DateTime sellDate = order.createAt ?? DateTime.now();
                 String formatSellDate = '${sellDate.year}-${sellDate.month}-${sellDate.day}';
+                double? shippingPaperWidth = sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperWidth);
+                double? shippingPaperHeight = sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperHeight);
+                PdfPageFormat? pdfPageFormat;
+                if (shippingPaperWidth != null && shippingPaperHeight != null) {
+                  pdfPageFormat = PdfPageFormat(shippingPaperWidth * PdfPageFormat.mm, shippingPaperHeight * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm);
+                }
                 CreateReceipt receiptSample = CreateReceipt(
                   userName: userName,
                   customName: customer.name,
@@ -357,6 +365,7 @@ class _OrderHistoryState extends State<OrderHistory> {
                   address: customer.address,
                   formattedDate: formatSellDate,
                   data: data,
+                  pdfPageFormat: pdfPageFormat,
                 );
                 // 建立pdf儲存資料夾
                 String receiptFolder = 'receipt';

@@ -35,6 +35,11 @@ class _SettingState extends State<Setting> {
                         setState(() {});
                       }),
                 ),
+                // 出貨單尺寸設定
+                shippingSize(
+                    context: context,
+                    height: snapshot.data!.setting.getDoubleSetting(DoubleSettingKey.shippingPaperHeight),
+                    width: snapshot.data!.setting.getDoubleSetting(DoubleSettingKey.shippingPaperWidth)),
                 ListTile(
                   title: const Text('字體放大'),
                   subtitle: Row(children: [
@@ -114,6 +119,59 @@ class _SettingState extends State<Setting> {
                         onPressed: () {
                           setState(() {
                             onEditFinished(controller);
+                          });
+                          Navigator.pop(context);
+                        },
+                        child: const Text('確定'))
+                  ],
+                );
+              });
+        },
+        child: const Text('編輯'),
+      ),
+    );
+  }
+
+  ListTile shippingSize({
+    required BuildContext context,
+    double? height,
+    double? width,
+  }) {
+    TextEditingController widthController = TextEditingController();
+    TextEditingController heightController = TextEditingController();
+    widthController.text = width?.toString() ?? '';
+    heightController.text = height?.toString() ?? '';
+    SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper();
+    return ListTile(
+      title: const Text('出貨單尺寸'),
+      subtitle: Text('高(mm) X 寬(mm)：${height ?? ''} X ${width ?? ''}'),
+      trailing: ElevatedButton(
+        onPressed: () async {
+          await sharedPreferenceHelper.init();
+          if (!context.mounted) return;
+          showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text('輸入出貨單尺寸'),
+                  content: Column(
+                    children: [
+                      const Text('高(mm)'),
+                      TextFormField(
+                        controller: heightController,
+                      ),
+                      const Text('寬(mm)'),
+                      TextFormField(
+                        controller: widthController,
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            sharedPreferenceHelper.setting.editDoubleSetting(double.parse(heightController.text), DoubleSettingKey.shippingPaperHeight);
+                            sharedPreferenceHelper.setting.editDoubleSetting(double.parse(widthController.text), DoubleSettingKey.shippingPaperWidth);
                           });
                           Navigator.pop(context);
                         },

@@ -6,6 +6,8 @@ enum BoolSettingKey {
 
 enum DoubleSettingKey {
   fontSizeScale,
+  shippingPaperWidth,
+  shippingPaperHeight,
 }
 
 class SettingSharedPreference {
