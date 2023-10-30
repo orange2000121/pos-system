@@ -506,7 +506,9 @@ class _CashierState extends State<Cashier> {
               receiptSample.phone = _phone.text;
               receiptSample.address = _address.text;
               // 更新客戶資料
-              customerProvider.update(customerValueNotifier.value.id!, customerValueNotifier.value);
+              if (customerValueNotifier.value.id != null) {
+                customerProvider.update(customerValueNotifier.value.id!, customerValueNotifier.value);
+              }
               customerValueNotifier.notifyListeners();
               await receiptSample.upatePdf;
               // pdf存檔
