@@ -69,17 +69,32 @@ class ReceiptSample extends StatefulWidget {
 class _ReceiptSampleState extends State<ReceiptSample> {
   @override
   Widget build(BuildContext context) {
-    CreateReceipt createReceipt = CreateReceipt(
-      userName: widget.userName,
-      customName: widget.customName,
-      contactPerson: widget.contactPerson,
-      phone: widget.phone,
-      address: widget.address,
-      data: widget.data,
-      taxRate: widget.taxRate,
-      formattedDate: DateTime.now().toString().split(' ')[0],
-      pdfPageFormat: widget.pdfPageFormat,
-    );
+    CreateReceipt createReceipt;
+    if (widget.pdfPageFormat == null) {
+      createReceipt = CreateReceipt(
+        userName: widget.userName,
+        customName: widget.customName,
+        contactPerson: widget.contactPerson,
+        phone: widget.phone,
+        address: widget.address,
+        data: widget.data,
+        taxRate: widget.taxRate,
+        formattedDate: DateTime.now().toString().split(' ')[0],
+      );
+    } else {
+      createReceipt = CreateReceipt(
+        userName: widget.userName,
+        customName: widget.customName,
+        contactPerson: widget.contactPerson,
+        phone: widget.phone,
+        address: widget.address,
+        data: widget.data,
+        taxRate: widget.taxRate,
+        formattedDate: DateTime.now().toString().split(' ')[0],
+        pdfPageFormat: widget.pdfPageFormat!,
+      );
+    }
+
     widget.upatePdf = () => createReceipt.updatePage();
     widget.layout = () => createReceipt.layout();
     return Scaffold(
@@ -113,7 +128,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
 class CreateReceipt {
   final double textSize = 10, titleSize = 20;
   final int pageNum = 12;
-  final PdfPageFormat? pdfPageFormat;
+  final PdfPageFormat pdfPageFormat;
   final String userName;
   final String customName;
   final String contactPerson;
@@ -296,7 +311,7 @@ class CreateReceipt {
     final pdf = await addPage();
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => pdf.save(),
-      format: pdfPageFormat!,
+      format: pdfPageFormat,
       usePrinterSettings: true,
     );
     return pdf;

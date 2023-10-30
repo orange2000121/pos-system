@@ -354,19 +354,30 @@ class _OrderHistoryState extends State<OrderHistory> {
                 double? shippingPaperWidth = sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperWidth);
                 double? shippingPaperHeight = sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperHeight);
                 PdfPageFormat? pdfPageFormat;
+                CreateReceipt receiptSample;
                 if (shippingPaperWidth != null && shippingPaperHeight != null) {
                   pdfPageFormat = PdfPageFormat(shippingPaperWidth * PdfPageFormat.mm, shippingPaperHeight * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm);
+                  receiptSample = CreateReceipt(
+                    userName: userName,
+                    customName: customer.name,
+                    contactPerson: customer.contactPerson,
+                    phone: customer.phone,
+                    address: customer.address,
+                    formattedDate: formatSellDate,
+                    data: data,
+                    pdfPageFormat: pdfPageFormat,
+                  );
+                } else {
+                  receiptSample = CreateReceipt(
+                    userName: userName,
+                    customName: customer.name,
+                    contactPerson: customer.contactPerson,
+                    phone: customer.phone,
+                    address: customer.address,
+                    formattedDate: formatSellDate,
+                    data: data,
+                  );
                 }
-                CreateReceipt receiptSample = CreateReceipt(
-                  userName: userName,
-                  customName: customer.name,
-                  contactPerson: customer.contactPerson,
-                  phone: customer.phone,
-                  address: customer.address,
-                  formattedDate: formatSellDate,
-                  data: data,
-                  pdfPageFormat: pdfPageFormat,
-                );
                 // 建立pdf儲存資料夾
                 String receiptFolder = 'receipt';
                 String customerName = customer.name;
