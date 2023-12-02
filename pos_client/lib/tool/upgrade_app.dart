@@ -11,11 +11,8 @@ class UpgradeApp {
     await sharedPreferenceHelper.init();
     if (executeSetup) {
       if (await executeSetupEXE(sharedPreferenceHelper.appInfo.getUpdateExePath())) {
-        print('更新成功');
         return;
-      } else {
-        print('更新失敗');
-      }
+      } else {}
     }
     if (await isNeedUpgrade()) {
       String? downloadUrl = latestVersionInfo?['downloadUrl'];
@@ -29,16 +26,14 @@ class UpgradeApp {
   Future<bool> isNeedUpgrade() async {
     latestVersionInfo = await fetchLatestInfoFromGitHub();
     final currentVersion = await getCurrentAppVersion(); // 自己实现获取当前应用版本的逻辑
-    print('currentVersion: $currentVersion');
-    print('latestVersionInfo: $latestVersionInfo');
     String? latestVersion = latestVersionInfo?['version'];
     if (latestVersion == null) return false;
     if (currentVersion == null) return true;
     final currentVersionList = currentVersion.split('.');
-    final lastestVersionList = latestVersion.split('.');
+    final latestVersionList = latestVersion.split('.');
     for (int i = 0; i < currentVersionList.length; i++) {
       final currentVersionNumber = int.parse(currentVersionList[i]);
-      final latestVersionNumber = int.parse(lastestVersionList[i]);
+      final latestVersionNumber = int.parse(latestVersionList[i]);
       if (currentVersionNumber < latestVersionNumber) {
         return true;
       } else if (currentVersionNumber > latestVersionNumber) {
@@ -69,13 +64,11 @@ class UpgradeApp {
   }
 
   Future<String?> downloadFile(String url) async {
-    print('downLoading');
     final response = await Dio().get(url, options: Options(responseType: ResponseType.bytes));
     if (response.statusCode == 200) {
       final tempDir = Directory.systemTemp;
       final tempFile = File('${tempDir.path}/setupPOS.exe');
       await tempFile.writeAsBytes(response.data);
-      print('tempFile: ${tempFile.path}');
       return tempFile.path;
     }
     return null;

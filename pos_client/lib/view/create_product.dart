@@ -32,12 +32,12 @@ class _CreateProductState extends State<CreateProduct> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Product'),
+        title: const Text('新增產品'),
       ),
       body: Center(
         child: Row(
           children: [
-            Expanded(flex: 2, child: showPeoduct()),
+            Expanded(flex: 2, child: showProduct()),
           ],
         ),
       ),
@@ -125,7 +125,7 @@ class _CreateProductState extends State<CreateProduct> {
           List<Widget> widgets = [];
           for (Good item in snapshot.data ?? []) {
             widgets.add(item.toWidget(
-              onTap: () => editproduct(item),
+              onTap: () => editProduct(item),
             ));
           }
           return Column(children: widgets);
@@ -136,7 +136,7 @@ class _CreateProductState extends State<CreateProduct> {
     );
   }
 
-  Widget showPeoduct() {
+  Widget showProduct() {
     return FutureBuilder(
       future: GoodsGroupProvider().getAll(),
       builder: (BuildContext context, AsyncSnapshot<List> snapshot) {
@@ -145,7 +145,7 @@ class _CreateProductState extends State<CreateProduct> {
           for (GoodsGroupItem item in snapshot.data!) {
             widgets.add(Column(
               children: [
-                groubBar(item.name, () => addProduct(item)),
+                groupBar(item.name, () => addProduct(item)),
                 product(item.id!),
               ],
             ));
@@ -154,14 +154,14 @@ class _CreateProductState extends State<CreateProduct> {
         return ListView(
           children: [
             ...widgets,
-            groubBar('新增群組', addGroup),
+            groupBar('新增群組', addGroup),
           ],
         );
       },
     );
   }
 
-  Widget groubBar(String title, Function? onTap) {
+  Widget groupBar(String title, Function? onTap) {
     return Card(
       child: InkWell(
         onTap: onTap as void Function()?,
@@ -237,7 +237,7 @@ class _CreateProductState extends State<CreateProduct> {
         });
   }
 
-  void editproduct(Good good) {
+  void editProduct(Good good) {
     TextEditingController nameController = TextEditingController(text: good.name);
     TextEditingController priceController = TextEditingController(text: good.price.toString());
     TextEditingController unitController = TextEditingController(text: good.unit);
@@ -253,7 +253,7 @@ class _CreateProductState extends State<CreateProduct> {
                   controller: nameController,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    labelText: 'Product Name',
+                    labelText: '產品名稱',
                   ),
                 ),
               ),
@@ -263,7 +263,7 @@ class _CreateProductState extends State<CreateProduct> {
                   controller: priceController,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    labelText: 'Product Price',
+                    labelText: '單價金額',
                   ),
                 ),
               ),

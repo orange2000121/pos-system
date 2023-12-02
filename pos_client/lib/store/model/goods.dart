@@ -49,7 +49,7 @@ class Good {
         errorBuilder: (context, error, stackTrace) => const FlutterLogo(size: 50),
       ),
       title: Text(name),
-      subtitle: Text('Price: $price'),
+      subtitle: Text('單價: $price'),
       trailing: IconButton(
         icon: const Icon(Icons.edit),
         onPressed: onTap,

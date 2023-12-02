@@ -60,7 +60,7 @@ class _OrderHistoryState extends State<OrderHistory> {
               })),
       body: Column(
         children: [
-          filterBar(),
+          filterBar(startDateNotifier: startDateNotifier, endDateNotifier: endDateNotifier, onChanged: () => setState(() {})),
           Expanded(
             child: FutureBuilder(
                 future: getOrders(),
@@ -85,78 +85,9 @@ class _OrderHistoryState extends State<OrderHistory> {
     );
   }
 
-  Widget filterBar() {
-    /// 選擇日期範圍
-    return Container(
-      margin: const EdgeInsets.all(10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  DateTime now = DateTime.now();
-                  startDateNotifier.value = DateTime(now.year, now.month, now.day, 0, 0, 0);
-                  endDateNotifier.value = DateTime(now.year, now.month, now.day, 23, 59, 59);
-                });
-              },
-              child: const Text('今天')),
-          ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  DateTime now = DateTime.now();
-                  startDateNotifier.value = DateTime(now.year, now.month, 1);
-                  endDateNotifier.value = DateTime(now.year, now.month + 1, 0);
-                });
-              },
-              child: const Text('這個月')),
-          ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  DateTime now = DateTime.now();
-                  startDateNotifier.value = DateTime(now.year, 1, 1);
-                  endDateNotifier.value = DateTime(now.year, 12, 31);
-                });
-              },
-              child: const Text('今年')),
-          ValueListenableBuilder(
-              valueListenable: startDateNotifier,
-              builder: (context, startDate, child) {
-                return DatePickerfield(
-                  selectedDate: startDate,
-                  onChanged: (date) {
-                    startDateNotifier.value = date;
-                  },
-                );
-              }),
-          const SizedBox(
-            width: 10,
-            child: Text('~'),
-          ),
-          ValueListenableBuilder(
-              valueListenable: endDateNotifier,
-              builder: (context, endDate, child) {
-                return DatePickerfield(
-                  selectedDate: endDate,
-                  onChanged: (date) {
-                    endDateNotifier.value = date;
-                  },
-                );
-              }),
-          IconButton(
-            onPressed: () {
-              setState(() {});
-            },
-            icon: const Icon(Icons.search),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget sellOverview(List<List<SellItem>> sellItems) {
     Map<String, Map<String, int>> sellMap = {};
-    final _scrollController = ScrollController();
+    final scrollController = ScrollController();
 
     for (var element in sellItems) {
       for (var element in element) {
@@ -181,13 +112,13 @@ class _OrderHistoryState extends State<OrderHistory> {
     }
     return GestureDetector(
       onHorizontalDragUpdate: (details) {
-        _scrollController.jumpTo(_scrollController.offset - details.delta.dx);
+        scrollController.jumpTo(scrollController.offset - details.delta.dx);
       },
       child: Scrollbar(
-        controller: _scrollController,
+        controller: scrollController,
         child: ListView(
           scrollDirection: Axis.horizontal,
-          controller: _scrollController,
+          controller: scrollController,
           children: sellMap.keys.map((e) {
             return Card(
               child: SizedBox(
@@ -217,7 +148,7 @@ class _OrderHistoryState extends State<OrderHistory> {
     return ListView.builder(
       itemCount: orderMap.length,
       itemBuilder: (context, index) {
-        List<SellItem> sellitems = orderMap.values.toList()[index];
+        List<SellItem> sellItems = orderMap.values.toList()[index];
         OrderItem order = orderMap.keys.toList()[index];
         ValueNotifier editSwitchNotifier = ValueNotifier(false);
         return SmallItemCard(
@@ -225,7 +156,7 @@ class _OrderHistoryState extends State<OrderHistory> {
               valueListenable: editSwitchNotifier,
               builder: (context, value, child) {
                 return value
-                    ? DatePickerfield(
+                    ? DatePickerField(
                         selectedDate: order.createAt,
                         onChanged: (date) => order.createAt = date,
                       )
@@ -234,10 +165,10 @@ class _OrderHistoryState extends State<OrderHistory> {
                         textAlign: TextAlign.center,
                       );
               }),
-          simpleInfo: sellitems.map((e) {
+          simpleInfo: sellItems.map((e) {
             return Text('${e.name} x${e.quantity}');
           }).toList(),
-          detailedInfo: sellitems.map((e) {
+          detailedInfo: sellItems.map((e) {
             return ValueListenableBuilder(
                 valueListenable: editSwitchNotifier,
                 builder: (context, value, child) {
@@ -289,8 +220,8 @@ class _OrderHistoryState extends State<OrderHistory> {
                 onPressed: value
                     ? () {
                         double totalPrice = 0;
-                        for (var element in sellitems) {
-                          sellProvider.update(element.id!, element); //更新sellitem
+                        for (var element in sellItems) {
+                          sellProvider.update(element.id!, element); //更新sellItem
                           totalPrice += element.price * element.quantity;
                         }
                         order.totalPrice = totalPrice;
@@ -316,7 +247,6 @@ class _OrderHistoryState extends State<OrderHistory> {
                 GoodsProvider goodsProvider = GoodsProvider();
 
                 for (var element in sellItemsTemp) {
-                  print('element.id: ${element.id}');
                   data.add(SaleItemData(
                     id: element.id!.toString(),
                     name: element.name,
@@ -371,7 +301,7 @@ class _OrderHistoryState extends State<OrderHistory> {
                 // pdf存檔
                 Uint8List bytes = await receiptSample.layout().then((value) => value.save());
                 await file.writeAsBytes(bytes);
-
+                if (!context.mounted) return;
                 Navigator.pop(context);
               },
               child: const Text('列印歷史訂單'),
@@ -396,10 +326,10 @@ class _OrderHistoryState extends State<OrderHistory> {
             maxCrossAxisExtent: MediaQuery.of(context).size.width * 0.2,
           ),
           children: [
-            editcard(context, '商品名稱', e.name, (value) => e.name = value),
-            editcard(context, '糖度', e.sugar, (value) => e.sugar = value),
-            editcard(context, '冰塊', e.ice, (value) => e.ice = value),
-            editcard(context, '數量', e.quantity.toString(), (value) => e.quantity = int.parse(value)),
+            editCard(context, '商品名稱', e.name, (value) => e.name = value),
+            editCard(context, '糖度', e.sugar, (value) => e.sugar = value),
+            editCard(context, '冰塊', e.ice, (value) => e.ice = value),
+            editCard(context, '數量', e.quantity.toString(), (value) => e.quantity = int.parse(value)),
           ],
         ),
       ),
@@ -423,7 +353,7 @@ class _OrderHistoryState extends State<OrderHistory> {
     );
   }
 
-  Card editcard(BuildContext context, String hint, String initialvalue, Function(String value) onChanged) {
+  Card editCard(BuildContext context, String hint, String initialValue, Function(String value) onChanged) {
     return Card(
       color: const Color.fromARGB(188, 184, 156, 184),
       child: Column(
@@ -441,7 +371,7 @@ class _OrderHistoryState extends State<OrderHistory> {
                   border: OutlineInputBorder(),
                   fillColor: Color.fromARGB(255, 130, 107, 107),
                 ),
-                initialValue: initialvalue,
+                initialValue: initialValue,
                 onChanged: onChanged,
               ),
             ),
@@ -455,7 +385,7 @@ class _OrderHistoryState extends State<OrderHistory> {
     List orders;
 
     if (customerId != null) {
-      orders = await orderProvider.getAllFromCustomerIdandDateRange(customerId!, startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
+      orders = await orderProvider.getAllFromCustomerIdAndDateRange(customerId!, startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
     } else {
       orders = await orderProvider.getAllFromDateRange(startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
     }

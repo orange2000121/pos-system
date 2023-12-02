@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
-import 'package:pos/tool/bug_fixes.dart';
 import 'package:pos/tool/upgrade_app.dart';
 import 'package:pos/view/home.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -14,7 +13,6 @@ void main() {
     sqfliteFfiInit();
   }
   databaseFactory = databaseFactoryFfi;
-  BugFixes.fix_version0_0_2_database(); // fix database 下一版需要拿掉
   runApp(
     const RestartWidget(
       child: MyApp(),

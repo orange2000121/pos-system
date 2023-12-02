@@ -1,3 +1,12 @@
 {
-    "cmake.sourceDirectory": "C:/Users/danny/Desktop/pos-system/pos_client/linux"
+    "cmake.sourceDirectory": "C:/Users/danny/Desktop/pos-system/pos_client/linux",
+    "cSpell.words": [
+        "ARGB",
+        "Noto",
+        "Preferenes",
+        "sharepreference",
+        "sublist",
+        "VERYSILENT",
+        "wght"
+    ]
 }

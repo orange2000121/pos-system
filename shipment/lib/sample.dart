@@ -33,7 +33,7 @@ class ReceiptSample extends StatefulWidget {
   late double taxRate;
   late List<SaleItemData> data;
   late pw.Document pdf;
-  late Future<pw.Document> Function() upatePdf;
+  late Future<pw.Document> Function() updatePdf;
   late Future<pw.Document> Function() layout;
   final PdfPageFormat? pdfPageFormat;
 
@@ -95,7 +95,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
       );
     }
 
-    widget.upatePdf = () => createReceipt.updatePage();
+    widget.updatePdf = () => createReceipt.updatePage();
     widget.layout = () => createReceipt.layout();
     return Scaffold(
       body: Center(
@@ -169,12 +169,12 @@ class CreateReceipt {
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('客戶名稱： ${customName}', style: pw.TextStyle(font: ttf, fontSize: textSize)),
-              pw.Text('送貨地址： ${address}', style: pw.TextStyle(font: ttf, fontSize: textSize)),
+              pw.Text('客戶名稱： $customName', style: pw.TextStyle(font: ttf, fontSize: textSize)),
+              pw.Text('送貨地址： $address', style: pw.TextStyle(font: ttf, fontSize: textSize)),
               pw.Row(children: [
-                pw.Text('聯絡人： ${contactPerson}', style: pw.TextStyle(font: ttf, fontSize: textSize)),
+                pw.Text('聯絡人： $contactPerson', style: pw.TextStyle(font: ttf, fontSize: textSize)),
                 pw.SizedBox(width: 10),
-                pw.Text('電話： ${phone}', style: pw.TextStyle(font: ttf, fontSize: textSize)),
+                pw.Text('電話： $phone', style: pw.TextStyle(font: ttf, fontSize: textSize)),
               ]),
             ],
           ),

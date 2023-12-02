@@ -49,7 +49,7 @@ class InventoryItem extends Item {
         ),
       ),
       title: Text(name),
-      subtitle: Text('Price: $price'),
+      subtitle: Text('單價: $price'),
       trailing: Text('Quantity: $quantity'),
     );
   }

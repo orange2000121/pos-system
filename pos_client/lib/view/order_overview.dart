@@ -87,7 +87,7 @@ class _OrderOverviewState extends State<OrderOverview> {
                                     if (allCustomerSnapshot.data![index].id == null) {
                                       return null;
                                     }
-                                    return await orderProvider.getAllFromCustomerIdandDateRange(
+                                    return await orderProvider.getAllFromCustomerIdAndDateRange(
                                         allCustomerSnapshot.data![index].id!, startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
                                   }(),
                                   builder: (context, ordersSnapshot) {

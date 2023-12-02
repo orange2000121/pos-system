@@ -1,15 +1,14 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-class DatePickerfield extends StatefulWidget {
+class DatePickerField extends StatefulWidget {
   final Function(DateTime? date)? onChanged;
   final DateTime? selectedDate;
-  const DatePickerfield({super.key, this.selectedDate, this.onChanged});
+  const DatePickerField({super.key, this.selectedDate, this.onChanged});
   @override
-  State<DatePickerfield> createState() => _DatePickerfieldState();
+  State<DatePickerField> createState() => _DatePickerFieldState();
 }
 
-class _DatePickerfieldState extends State<DatePickerfield> {
+class _DatePickerFieldState extends State<DatePickerField> {
   DateTime? _selectedDate;
   Future<void> _selectDate() async {
     final DateTime? selected = await showDatePicker(
@@ -35,7 +34,7 @@ class _DatePickerfieldState extends State<DatePickerfield> {
   }
 
   @override
-  void didUpdateWidget(covariant DatePickerfield oldWidget) {
+  void didUpdateWidget(covariant DatePickerField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedDate != oldWidget.selectedDate) {
       _selectedDate = widget.selectedDate;
@@ -104,7 +103,7 @@ Widget filterBar({
         ValueListenableBuilder(
             valueListenable: startDateNotifier,
             builder: (context, startDate, child) {
-              return DatePickerfield(
+              return DatePickerField(
                 selectedDate: startDate,
                 onChanged: (date) {
                   startDateNotifier.value = date;
@@ -118,7 +117,7 @@ Widget filterBar({
         ValueListenableBuilder(
             valueListenable: endDateNotifier,
             builder: (context, endDate, child) {
-              return DatePickerfield(
+              return DatePickerField(
                 selectedDate: endDate,
                 onChanged: (date) {
                   endDateNotifier.value = date;

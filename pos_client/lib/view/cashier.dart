@@ -510,7 +510,8 @@ class _CashierState extends State<Cashier> {
                 customerProvider.update(customerValueNotifier.value.id!, customerValueNotifier.value);
               }
               customerValueNotifier.notifyListeners();
-              await receiptSample.upatePdf;
+              // ignore: await_only_futures
+              await receiptSample.updatePdf;
               // pdf存檔
               Uint8List bytes = await receiptSample.pdf.save();
               await file.writeAsBytes(bytes);

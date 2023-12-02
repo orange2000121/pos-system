@@ -2,6 +2,7 @@ import 'package:pos/store/model/order.dart';
 import 'package:pos/store/model/sell.dart';
 
 class BugFixes {
+  // ignore: non_constant_identifier_names
   static void fix_version0_0_2_database() async {
     OrderProvider orderProvider = OrderProvider();
     SellProvider sellProvider = SellProvider();
