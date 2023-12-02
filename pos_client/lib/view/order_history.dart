@@ -49,8 +49,15 @@ class _OrderHistoryState extends State<OrderHistory> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Order History'),
-      ),
+          title: FutureBuilder(
+              future: customerProvider.getItem(customerId!),
+              builder: (context, AsyncSnapshot<Customer> snapshot) {
+                if (snapshot.hasData) {
+                  return Text('『${snapshot.data!.name}』歷史訂單');
+                } else {
+                  return const Text('歷史訂單');
+                }
+              })),
       body: Column(
         children: [
           filterBar(),
@@ -79,6 +86,7 @@ class _OrderHistoryState extends State<OrderHistory> {
   }
 
   Widget filterBar() {
+    /// 選擇日期範圍
     return Container(
       margin: const EdgeInsets.all(10),
       child: Row(
@@ -189,8 +197,6 @@ class _OrderHistoryState extends State<OrderHistory> {
                     Text(e),
                     Expanded(
                       child: ListView(
-                        // mainAxisAlignment: MainAxisAlignment.center,
-                        // crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('${(sellMap[e]!['quantity']! / totalQuantity * 100).toStringAsFixed(2)}%' '  ' '銷售數量：${sellMap[e]?['quantity']}'),
                           Text('${(sellMap[e]!['totalPrice']! / totalPrice * 100).toStringAsFixed(2)}%' '  ' '總銷售額：${sellMap[e]?['totalPrice']}'),
@@ -206,35 +212,6 @@ class _OrderHistoryState extends State<OrderHistory> {
       ),
     );
   }
-
-  // Widget orderContent(int orderId) {
-  //   return AlertDialog(
-  //     title: const Text('Order Content'),
-  //     content: SizedBox(
-  //       width: MediaQuery.of(context).size.height * 0.8,
-  //       height: MediaQuery.of(context).size.height * 0.8,
-  //       child: FutureBuilder(
-  //         future: sellProvider.getItemByOrderId(orderId),
-  //         builder: (context, snapshot) {
-  //           if (snapshot.hasData) {
-  //             return ListView.builder(
-  //               itemCount: snapshot.data!.length,
-  //               itemBuilder: (context, index) {
-  //                 return ListTile(
-  //                   title: Text(snapshot.data![index].name),
-  //                   subtitle: Text('${snapshot.data![index].sugar} ${snapshot.data![index].ice}'),
-  //                   trailing: Text(snapshot.data![index].quantity.toString()),
-  //                 );
-  //               },
-  //             );
-  //           } else {
-  //             return const Center(child: CircularProgressIndicator());
-  //           }
-  //         },
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget ordersListView(Map<OrderItem, List<SellItem>> orderMap) {
     return ListView.builder(
