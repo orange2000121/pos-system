@@ -10,7 +10,6 @@ class CashierLogic {
   OrderProvider orderProvider = OrderProvider();
   ValueNotifier<List<ShopItem>> shopItemsNotifier = ValueNotifier<List<ShopItem>>([]);
   ValueNotifier<double> totalPriceNotifier = ValueNotifier<double>(0);
-  int? customerId;
 
   CashierLogic() {
     shopItemsNotifier.addListener(() {
@@ -39,13 +38,35 @@ class CashierLogic {
     shopItemsNotifier.notifyListeners();
   }
 
-  Future settleAccount() async {
+  Future settleAccount(int? customerId) async {
     if (shopItemsNotifier.value.isEmpty) return;
     double total = 0;
     for (var i = 0; i < shopItemsNotifier.value.length; i++) {
       total += shopItemsNotifier.value[i].price * shopItemsNotifier.value[i].quantity;
     }
     int orderId = await orderProvider.insert(OrderItem(total, customerId: customerId));
+    for (var i = 0; i < shopItemsNotifier.value.length; i++) {
+      SellItem item = SellItem(
+        orderId,
+        shopItemsNotifier.value[i].name,
+        shopItemsNotifier.value[i].price,
+        shopItemsNotifier.value[i].ice ?? '',
+        shopItemsNotifier.value[i].sugar ?? '',
+        shopItemsNotifier.value[i].quantity,
+      );
+      sellProvider.insert(item);
+    }
+    shopItemsNotifier.value = [];
+  }
+
+  Future editOrder(int orderId, int? customerId, DateTime createAt) async {
+    if (shopItemsNotifier.value.isEmpty) return;
+    double total = 0;
+    for (var i = 0; i < shopItemsNotifier.value.length; i++) {
+      total += shopItemsNotifier.value[i].price * shopItemsNotifier.value[i].quantity;
+    }
+    await orderProvider.update(orderId, OrderItem(total, customerId: customerId, createAt: createAt));
+    await sellProvider.deleteByOrderId(orderId);
     for (var i = 0; i < shopItemsNotifier.value.length; i++) {
       SellItem item = SellItem(
         orderId,

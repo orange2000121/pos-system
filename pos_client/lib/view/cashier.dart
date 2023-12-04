@@ -1,6 +1,7 @@
 // ignore_for_file: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member, no_leading_underscores_for_local_identifiers
 
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -25,13 +26,39 @@ class CashierInit {
     Navigator.push(context, MaterialPageRoute(builder: (context) => Cashier(init: this)));
     return true;
   }
+
+  Future<bool> initEdit(ShopItemEditData editShopItems) async {
+    await sharedPreferenceHelper.init();
+    if (!context.mounted) return false;
+    await Navigator.push(context, MaterialPageRoute(builder: (context) => Cashier(init: this, isEditMode: true, editShopItems: editShopItems)));
+    return true;
+  }
 }
 
+class ShopItemEditData {
+  final int customerId;
+  final int orderId;
+  final List<ShopItem> shopItems;
+  final DateTime createAt;
+  ShopItemEditData({
+    required this.createAt,
+    required this.customerId,
+    required this.shopItems,
+    required this.orderId,
+  });
+}
+
+/// 收銀員畫面。<br>
+/// 如果要編輯訂單，請將 [isEditMode] 設置為 `true`，並傳入 [editShopItems]。
 class Cashier extends StatefulWidget {
   final CashierInit init;
+  final bool isEditMode;
+  final ShopItemEditData? editShopItems;
   const Cashier({
     super.key,
     required this.init,
+    this.isEditMode = false,
+    this.editShopItems,
   });
 
   @override
@@ -45,6 +72,9 @@ class _CashierState extends State<Cashier> {
   void initState() {
     super.initState();
     cashierLogic = CashierLogic();
+    if (widget.isEditMode && widget.editShopItems != null) {
+      cashierLogic.shopItemsNotifier.value = widget.editShopItems!.shopItems;
+    }
   }
 
   @override
@@ -330,10 +360,11 @@ class _CashierState extends State<Cashier> {
           itemCount: shopItems.length,
           itemBuilder: (context, index) {
             return Dismissible(
-              key: Key(shopItems[index].name),
+              key: UniqueKey(),
               onDismissed: (direction) {
                 cashierLogic.shopItemsNotifier.value.removeAt(index);
                 cashierLogic.shopItemsNotifier.notifyListeners();
+                setState(() {});
               },
               child: ListTile(
                 title: Text(shopItems[index].name),
@@ -359,13 +390,14 @@ class _CashierState extends State<Cashier> {
     );
   }
 
+  /// 顯示收銀員畫面左側的結帳區域。
   Widget settleAccount() {
     ValueNotifier<String> receivedCashNotifier = ValueNotifier('');
-
-    return Row(
+    double h = MediaQuery.of(context).size.height;
+    return Column(
       children: [
         Expanded(
-            flex: 1,
+            flex: 4,
             child: Column(
               children: [
                 // Row(
@@ -405,73 +437,51 @@ class _CashierState extends State<Cashier> {
                 // ),
               ],
             )),
-        Expanded(
-          flex: 2,
-          child: Column(
-            children: [
-              // Expanded(
-              //   child: GridView(
-              //     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4),
-              //     children: [
-              //       for (var i = 1; i <= 9; i++)
-              //         ElevatedButton(
-              //           onPressed: () {
-              //             receivedCashNotifier.value += i.toString();
-              //           },
-              //           child: Text(i.toString()),
-              //         ),
-              //       ElevatedButton(
-              //         onPressed: () {
-              //           receivedCashNotifier.value += '0';
-              //         },
-              //         child: const Text('0'),
-              //       ),
-              //       ElevatedButton(
-              //         onPressed: () {
-              //           receivedCashNotifier.value = '';
-              //         },
-              //         child: const Text('C'),
-              //       ),
-              //     ],
-              //   ),
-              // ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: () async {
-                      int? isSettle;
-                      if (widget.init.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
-                        isSettle = await showDialog(context: context, builder: (context) => receiptOption());
-                      }
-                      if (isSettle != -1) {
-                        cashierLogic.customerId = isSettle;
-                        cashierLogic.settleAccount();
-                        receivedCashNotifier.value = '';
-                      }
-                      if (isSettle == -1) {
-                        cashierLogic.clear();
-                        receivedCashNotifier.value = '';
-                      }
-                    },
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      alignment: Alignment.center,
-                      child: const Text(
-                        '現金\n結帳',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                ],
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () async {
+                if (!widget.isEditMode) {
+                  int? isSettle;
+                  if (widget.init.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
+                    isSettle = await showDialog(context: context, builder: (context) => receiptOption());
+                  }
+                  if (isSettle != -1) {
+                    // cashierLogic.customerId = isSettle;
+                    cashierLogic.settleAccount(isSettle);
+                    receivedCashNotifier.value = '';
+                  }
+                  if (isSettle == -1) {
+                    cashierLogic.clear();
+                    receivedCashNotifier.value = '';
+                  }
+                } else if (widget.isEditMode && widget.editShopItems != null) {
+                  await cashierLogic.editOrder(
+                    widget.editShopItems!.orderId,
+                    widget.editShopItems!.customerId,
+                    widget.editShopItems!.createAt,
+                  );
+                  if (!context.mounted) {
+                    return;
+                  }
+                  Navigator.pop(context);
+                }
+              },
+              child: Container(
+                // width: 100,
+                height: 50,
+                alignment: Alignment.center,
+                child: Text(
+                  widget.isEditMode ? '完成編輯' : '現金結帳',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 20),
+                ),
               ),
-              const SizedBox(height: 20),
-            ],
-          ),
+            ),
+          ],
         ),
+        SizedBox(height: min(15, h * 0.015)),
       ],
     );
   }

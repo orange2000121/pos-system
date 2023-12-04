@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
+import 'package:pos/logic/cashier_logic.dart';
 import 'package:pos/store/model/customer.dart';
 import 'package:pos/store/model/goods.dart';
 import 'package:pos/store/model/order.dart';
@@ -13,6 +14,7 @@ import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:pos/template/data_retrieval_widget.dart';
 import 'package:pos/template/date_picker.dart';
+import 'package:pos/view/cashier.dart';
 import 'package:shipment/sample.dart';
 
 class OrderHistory extends StatefulWidget {
@@ -154,14 +156,14 @@ class _OrderHistoryState extends State<OrderHistory> {
         return SmallItemCard(
           title: ValueListenableBuilder(
               valueListenable: editSwitchNotifier,
-              builder: (context, value, child) {
-                return value
+              builder: (context, isEdit, child) {
+                return isEdit
                     ? DatePickerField(
                         selectedDate: order.createAt,
                         onChanged: (date) => order.createAt = date,
                       )
                     : Text(
-                        order.createAt.toString(),
+                        order.createAt.toString().split('.')[0],
                         textAlign: TextAlign.center,
                       );
               }),
@@ -197,6 +199,32 @@ class _OrderHistoryState extends State<OrderHistory> {
                 });
           }).toList(),
           dialogAction: [
+            ElevatedButton(
+              onPressed: () async {
+                List<ShopItem> shopItems = [];
+                for (var element in sellItems) {
+                  shopItems.add(ShopItem(
+                    element.id!,
+                    element.name,
+                    element.price,
+                    element.quantity,
+                    '',
+                    ice: element.ice,
+                    sugar: element.sugar,
+                  ));
+                }
+                ShopItemEditData shopItemEditData = ShopItemEditData(
+                  customerId: order.customerId ?? 0,
+                  orderId: order.id!,
+                  createAt: order.createAt ?? DateTime.now(),
+                  shopItems: shopItems,
+                );
+                Navigator.of(context).pop();
+                await CashierInit(context).initEdit(shopItemEditData);
+                setState(() {});
+              },
+              child: const Text('編輯'),
+            ),
             ValueListenableBuilder(
               valueListenable: editSwitchNotifier,
               builder: (context, value, child) => Switch(

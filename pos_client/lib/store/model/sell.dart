@@ -134,6 +134,11 @@ class SellProvider {
     await db!.delete(tableName, where: 'id = ?', whereArgs: [id]);
   }
 
+  Future deleteByOrderId(int orderId) async {
+    db ??= await open();
+    await db!.delete(tableName, where: 'orderId = ?', whereArgs: [orderId]);
+  }
+
   Future deleteAll() async {
     db ??= await open();
     await db!.delete(tableName);
