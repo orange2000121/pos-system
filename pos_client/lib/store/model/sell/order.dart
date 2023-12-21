@@ -1,4 +1,6 @@
-import 'package:pos/store/model/sell.dart';
+/// 訂單紀錄，包含訂單編號、顧客編號、總金額、建立時間
+
+import 'package:pos/store/model/sell/sell.dart';
 import 'package:sqflite/sqflite.dart';
 
 class OrderItem {

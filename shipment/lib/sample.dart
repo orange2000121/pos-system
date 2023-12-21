@@ -36,6 +36,7 @@ class ReceiptSample extends StatefulWidget {
   late Future<pw.Document> Function() updatePdf;
   late Future<pw.Document> Function() layout;
   final PdfPageFormat? pdfPageFormat;
+  late bool showPrice;
 
   ///```
   ///const ReceiptSample(
@@ -60,6 +61,7 @@ class ReceiptSample extends StatefulWidget {
     required this.data,
     this.pdfPageFormat,
     this.taxRate = 0,
+    this.showPrice = true,
   });
 
   @override
@@ -80,6 +82,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
         data: widget.data,
         taxRate: widget.taxRate,
         formattedDate: DateTime.now().toString().split(' ')[0],
+        showPrice: widget.showPrice,
       );
     } else {
       createReceipt = CreateReceipt(
@@ -92,6 +95,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
         taxRate: widget.taxRate,
         formattedDate: DateTime.now().toString().split(' ')[0],
         pdfPageFormat: widget.pdfPageFormat!,
+        showPrice: widget.showPrice,
       );
     }
 
@@ -137,6 +141,7 @@ class CreateReceipt {
   final double taxRate;
   final List<SaleItemData> data;
   final String formattedDate;
+  final bool showPrice;
 
   CreateReceipt({
     required this.userName,
@@ -148,6 +153,7 @@ class CreateReceipt {
     required this.data,
     this.pdfPageFormat = const PdfPageFormat(190 * PdfPageFormat.mm, 139.7 * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm),
     this.taxRate = 0,
+    this.showPrice = true,
   });
 
   pw.Widget companyInfo(pw.Font ttf) {
@@ -229,8 +235,8 @@ class CreateReceipt {
                 pw.Text(item.name, style: pw.TextStyle(font: ttf, fontSize: textSize)),
                 pw.Text(item.num.toString(), style: pw.TextStyle(font: ttf, fontSize: textSize)),
                 pw.Text(item.unit, style: pw.TextStyle(font: ttf, fontSize: textSize)),
-                pw.Text(item.price.toString(), style: pw.TextStyle(font: ttf, fontSize: textSize)),
-                pw.Text(subtotal.toString(), style: pw.TextStyle(font: ttf, fontSize: textSize)),
+                showPrice ? pw.Text(item.price.toString(), style: pw.TextStyle(font: ttf, fontSize: textSize)) : pw.Container(),
+                showPrice ? pw.Text(subtotal.toString(), style: pw.TextStyle(font: ttf, fontSize: textSize)) : pw.Container(),
                 pw.Text(item.note ?? '', style: pw.TextStyle(font: ttf, fontSize: textSize)),
               ],
             );
@@ -291,7 +297,7 @@ class CreateReceipt {
                 ]),
                 pw.Expanded(child: salesItem(ttf, page: page)),
                 pw.Column(children: [
-                  total(ttf),
+                  showPrice ? total(ttf) : pw.Divider(),
                   pw.SizedBox(height: 20),
                   footer(ttf),
                 ]),

@@ -10,9 +10,9 @@ import 'package:pdf/pdf.dart';
 import 'package:pos/logic/cashier_logic.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
-import 'package:pos/store/model/customer.dart';
-import 'package:pos/store/model/goods.dart';
-import 'package:pos/store/model/goods_group.dart';
+import 'package:pos/store/model/sell/customer.dart';
+import 'package:pos/store/model/sell/goods.dart';
+import 'package:pos/store/model/sell/goods_group.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:shipment/sample.dart';
 
@@ -493,8 +493,26 @@ class _CashierState extends State<Cashier> {
     TextEditingController _name = TextEditingController(), _phone = TextEditingController(), _contactPerson = TextEditingController(), _address = TextEditingController();
     FocusNode _nameFocusNode = FocusNode(), _phoneFocusNode = FocusNode(), _contactPersonFocusNode = FocusNode(), _addressFocusNode = FocusNode();
     List dropdownItems = [];
+    ValueNotifier<bool> showPriceNotifier = ValueNotifier<bool>(true);
     return AlertDialog(
+      title: const Text('發票'),
       actions: [
+        ValueListenableBuilder(
+          valueListenable: showPriceNotifier,
+          builder: (context, showPrice, child) => Switch(
+              value: showPriceNotifier.value,
+              thumbIcon: MaterialStateProperty.resolveWith<Icon?>((Set<MaterialState> states) {
+                print(states);
+                if (states.contains(MaterialState.selected)) {
+                  return const Icon(Icons.attach_money);
+                }
+                return const Icon(Icons.money_off);
+              }),
+              onChanged: (value) {
+                showPriceNotifier.value = value;
+                receiptSample.showPrice = value;
+              }),
+        ),
         ElevatedButton(
             onPressed: () async {
               String receiptFolder = 'receipt';
@@ -541,123 +559,121 @@ class _CashierState extends State<Cashier> {
             },
             child: const Text('取消')),
       ],
-      title: const Text('發票'),
-      content: Column(
-        children: [
-          FutureBuilder(
-            future: customerProvider.getAll(),
-            builder: (context, snapshot) {
-              _nameFocusNode.addListener(() {
-                if (!_nameFocusNode.hasFocus) {
-                  customerValueNotifier.value.name = _name.text;
-                  receiptSample.customName = _name.text;
-                  customerValueNotifier.notifyListeners();
-                }
-              });
-              _phoneFocusNode.addListener(() {
-                if (!_phoneFocusNode.hasFocus) {
-                  customerValueNotifier.value.phone = _phone.text;
-                  receiptSample.phone = _phone.text;
-                  customerValueNotifier.notifyListeners();
-                }
-              });
-              _contactPersonFocusNode.addListener(() {
-                if (!_contactPersonFocusNode.hasFocus) {
-                  customerValueNotifier.value.contactPerson = _contactPerson.text;
-                  receiptSample.contactPerson = _contactPerson.text;
-                  customerValueNotifier.notifyListeners();
-                }
-              });
-              _addressFocusNode.addListener(() {
-                if (!_addressFocusNode.hasFocus) {
-                  customerValueNotifier.value.address = _address.text;
-                  receiptSample.address = _address.text;
-                  customerValueNotifier.notifyListeners();
-                }
-              });
-              dropdownItems = snapshot.data ?? [];
-              dropdownItems.add(Customer('新增客戶', '', '', ''));
-              customerValueNotifier.value = dropdownItems.first;
-              List<SaleItemData> data = [];
-              for (var i = 0; i < cashierLogic.shopItemsNotifier.value.length; i++) {
-                data.add(
-                  SaleItemData(
-                    id: cashierLogic.shopItemsNotifier.value[i].id.toString(),
-                    name: cashierLogic.shopItemsNotifier.value[i].name,
-                    price: cashierLogic.shopItemsNotifier.value[i].price.toInt(),
-                    num: cashierLogic.shopItemsNotifier.value[i].quantity.toInt(),
-                    unit: cashierLogic.shopItemsNotifier.value[i].unit,
-                    note: cashierLogic.shopItemsNotifier.value[i].note,
-                  ),
-                );
-              }
-              receiptSample.customName = dropdownItems.first.name;
-              receiptSample.contactPerson = dropdownItems.first.contactPerson;
-              receiptSample.phone = dropdownItems.first.phone;
-              receiptSample.address = dropdownItems.first.address;
-              receiptSample.data = data;
-              _name.text = customerValueNotifier.value.name;
-              _phone.text = customerValueNotifier.value.phone;
-              _contactPerson.text = customerValueNotifier.value.contactPerson;
-              _address.text = customerValueNotifier.value.address;
-              return Column(
+      content: FutureBuilder(
+        future: customerProvider.getAll(),
+        builder: (context, snapshot) {
+          _nameFocusNode.addListener(() {
+            if (!_nameFocusNode.hasFocus) {
+              customerValueNotifier.value.name = _name.text;
+              receiptSample.customName = _name.text;
+              customerValueNotifier.notifyListeners();
+            }
+          });
+          _phoneFocusNode.addListener(() {
+            if (!_phoneFocusNode.hasFocus) {
+              customerValueNotifier.value.phone = _phone.text;
+              receiptSample.phone = _phone.text;
+              customerValueNotifier.notifyListeners();
+            }
+          });
+          _contactPersonFocusNode.addListener(() {
+            if (!_contactPersonFocusNode.hasFocus) {
+              customerValueNotifier.value.contactPerson = _contactPerson.text;
+              receiptSample.contactPerson = _contactPerson.text;
+              customerValueNotifier.notifyListeners();
+            }
+          });
+          _addressFocusNode.addListener(() {
+            if (!_addressFocusNode.hasFocus) {
+              customerValueNotifier.value.address = _address.text;
+              receiptSample.address = _address.text;
+              customerValueNotifier.notifyListeners();
+            }
+          });
+          dropdownItems = snapshot.data ?? [];
+          dropdownItems.add(Customer('新增客戶', '', '', ''));
+          customerValueNotifier.value = dropdownItems.first;
+          List<SaleItemData> data = [];
+          for (var i = 0; i < cashierLogic.shopItemsNotifier.value.length; i++) {
+            data.add(
+              SaleItemData(
+                id: cashierLogic.shopItemsNotifier.value[i].id.toString(),
+                name: cashierLogic.shopItemsNotifier.value[i].name,
+                price: cashierLogic.shopItemsNotifier.value[i].price.toInt(),
+                num: cashierLogic.shopItemsNotifier.value[i].quantity.toInt(),
+                unit: cashierLogic.shopItemsNotifier.value[i].unit,
+                note: cashierLogic.shopItemsNotifier.value[i].note,
+              ),
+            );
+          }
+          receiptSample.customName = dropdownItems.first.name;
+          receiptSample.contactPerson = dropdownItems.first.contactPerson;
+          receiptSample.phone = dropdownItems.first.phone;
+          receiptSample.address = dropdownItems.first.address;
+          receiptSample.data = data;
+          _name.text = customerValueNotifier.value.name;
+          _phone.text = customerValueNotifier.value.phone;
+          _contactPerson.text = customerValueNotifier.value.contactPerson;
+          _address.text = customerValueNotifier.value.address;
+          return Column(
+            children: [
+              ValueListenableBuilder(
+                valueListenable: customerValueNotifier,
+                builder: (context, value, child) => DropdownButton<Customer>(
+                  value: customerValueNotifier.value, // 選擇的值
+                  isDense: true,
+                  items: List.generate(dropdownItems.length, (index) {
+                    return DropdownMenuItem<Customer>(
+                      value: dropdownItems[index], // 每個選項的值
+                      child: Text(dropdownItems[index].name),
+                    );
+                  }),
+                  onChanged: (newValue) {
+                    customerValueNotifier.value = newValue!;
+                    _name.text = newValue.name;
+                    _phone.text = newValue.phone;
+                    _contactPerson.text = newValue.contactPerson;
+                    _address.text = newValue.address;
+                  },
+                ),
+              ),
+              Table(
                 children: [
-                  ValueListenableBuilder(
-                    valueListenable: customerValueNotifier,
-                    builder: (context, value, child) => DropdownButton<Customer>(
-                      value: customerValueNotifier.value, // 選擇的值
-                      isDense: true,
-                      items: List.generate(dropdownItems.length, (index) {
-                        return DropdownMenuItem<Customer>(
-                          value: dropdownItems[index], // 每個選項的值
-                          child: Text(dropdownItems[index].name),
-                        );
-                      }),
-                      onChanged: (newValue) {
-                        setState(() {
-                          customerValueNotifier.value = newValue!;
-                          _name.text = newValue.name;
-                          _phone.text = newValue.phone;
-                          _contactPerson.text = newValue.contactPerson;
-                          _address.text = newValue.address;
-                        });
-                      },
+                  TableRow(children: [
+                    TextFormField(
+                      decoration: const InputDecoration(hintText: '客戶名稱'),
+                      controller: _name,
+                      focusNode: _nameFocusNode,
                     ),
-                  ),
-                  Table(
-                    children: [
-                      TableRow(children: [
-                        TextFormField(
-                          decoration: const InputDecoration(hintText: '客戶名稱'),
-                          controller: _name,
-                          focusNode: _nameFocusNode,
-                        ),
-                        TextFormField(
-                          decoration: const InputDecoration(hintText: '電話'),
-                          controller: _phone,
-                          focusNode: _phoneFocusNode,
-                        ),
-                      ]),
-                      TableRow(children: [
-                        TextFormField(
-                          decoration: const InputDecoration(hintText: '聯絡人'),
-                          controller: _contactPerson,
-                          focusNode: _contactPersonFocusNode,
-                        ),
-                        TextFormField(
-                          decoration: const InputDecoration(hintText: '地址'),
-                          controller: _address,
-                          focusNode: _addressFocusNode,
-                        ),
-                      ])
-                    ],
-                  ),
-                  SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.4,
-                      width: MediaQuery.of(context).size.height * 0.6,
-                      child: ValueListenableBuilder(
+                    TextFormField(
+                      decoration: const InputDecoration(hintText: '電話'),
+                      controller: _phone,
+                      focusNode: _phoneFocusNode,
+                    ),
+                  ]),
+                  TableRow(children: [
+                    TextFormField(
+                      decoration: const InputDecoration(hintText: '聯絡人'),
+                      controller: _contactPerson,
+                      focusNode: _contactPersonFocusNode,
+                    ),
+                    TextFormField(
+                      decoration: const InputDecoration(hintText: '地址'),
+                      controller: _address,
+                      focusNode: _addressFocusNode,
+                    ),
+                  ])
+                ],
+              ),
+              SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.4,
+                  width: MediaQuery.of(context).size.height * 0.6,
+                  child: ValueListenableBuilder(
+                    valueListenable: showPriceNotifier,
+                    builder: (context, showPrice, child) {
+                      return ValueListenableBuilder(
                         valueListenable: customerValueNotifier,
-                        builder: (context, value, child) {
+                        builder: (context, customer, child) {
                           double? shippingPaperWidth = widget.init.sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperWidth);
                           double? shippingPaperHeight = widget.init.sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperHeight);
                           PdfPageFormat? pdfPageFormat;
@@ -672,16 +688,17 @@ class _CashierState extends State<Cashier> {
                             address: customerValueNotifier.value.address,
                             data: receiptSample.data,
                             pdfPageFormat: pdfPageFormat,
+                            showPrice: showPriceNotifier.value,
                           );
 
                           return receiptSample; // 根据新值构建用户界面
                         },
-                      ))
-                ],
-              );
-            },
-          ),
-        ],
+                      );
+                    },
+                  ))
+            ],
+          );
+        },
       ),
     );
   }

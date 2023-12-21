@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:pos/store/model/goods.dart';
+import 'package:pos/store/model/sell/goods.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:pos/store/model/goods_group.dart';
+import 'package:pos/store/model/sell/goods_group.dart';
 
 class CreateProduct extends StatefulWidget {
   const CreateProduct({super.key});

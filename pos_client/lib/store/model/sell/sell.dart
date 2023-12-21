@@ -1,3 +1,5 @@
+/// 記錄單向商品訂單記錄，包含訂單編號、商品名稱、價格、冰塊、甜度、數量、建立時間
+
 import 'package:sqflite/sqflite.dart';
 
 class SellItem {

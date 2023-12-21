@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pos/store/model/customer.dart';
-import 'package:pos/store/model/order.dart';
+import 'package:pos/store/model/sell/customer.dart';
+import 'package:pos/store/model/sell/order.dart';
 import 'package:pos/template/date_picker.dart';
 import 'package:pos/view/order_history.dart';
 

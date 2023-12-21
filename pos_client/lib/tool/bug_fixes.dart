@@ -1,5 +1,5 @@
-import 'package:pos/store/model/order.dart';
-import 'package:pos/store/model/sell.dart';
+import 'package:pos/store/model/sell/order.dart';
+import 'package:pos/store/model/sell/sell.dart';
 
 class BugFixes {
   // ignore: non_constant_identifier_names

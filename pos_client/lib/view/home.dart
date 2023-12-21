@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // ignore: unused_import
-import 'package:pos/store/model/goods.dart';
+import 'package:pos/store/model/sell/goods.dart';
 import 'package:pos/tool/upgrade_app.dart';
 import 'package:pos/view/cashier.dart';
 import 'package:pos/view/create_product.dart';
@@ -85,19 +85,6 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
-          // Card(
-          //   child: InkWell(
-          //     onTap: () {
-          //       Navigator.push(context, MaterialPageRoute(builder: (context) => AddItem(item: InventoryItem('', 0), itemProvider: InventoryProvider(), title: '庫存')));
-          //     },
-          //     child: const Column(
-          //       children: [
-          //         Icon(Icons.add),
-          //         Text('庫存'),
-          //       ],
-          //     ),
-          //   ),
-          // ),
           Card(
             child: InkWell(
               onTap: () {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pos/logic/cashier_logic.dart';
-import 'package:pos/store/model/goods.dart';
-import 'package:pos/store/model/goods_group.dart';
+import 'package:pos/store/model/sell/goods.dart';
+import 'package:pos/store/model/sell/goods_group.dart';
 
 class GoodsTemplate {
   late CashierLogic cashierLogic = CashierLogic();

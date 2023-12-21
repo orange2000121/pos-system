@@ -1,3 +1,5 @@
+/// 販賣的商品，包含商品名稱、價格、單位、圖片
+
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
