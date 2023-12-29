@@ -502,7 +502,6 @@ class _CashierState extends State<Cashier> {
           builder: (context, showPrice, child) => Switch(
               value: showPriceNotifier.value,
               thumbIcon: MaterialStateProperty.resolveWith<Icon?>((Set<MaterialState> states) {
-                print(states);
                 if (states.contains(MaterialState.selected)) {
                   return const Icon(Icons.attach_money);
                 }

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -241,12 +242,39 @@ class _CreateProductState extends State<CreateProduct> {
     TextEditingController nameController = TextEditingController(text: good.name);
     TextEditingController priceController = TextEditingController(text: good.price.toString());
     TextEditingController unitController = TextEditingController(text: good.unit);
+    double width = MediaQuery.of(context).size.width;
+    ValueNotifier showImageNotifier = ValueNotifier<Uint8List?>(good.image);
     showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text('修改 ${good.name}'),
             content: Column(children: [
+              InkWell(
+                onTap: () async {
+                  XFile? image = await ImagePicker().pickImage(source: ImageSource.gallery);
+                  if (image != null) {
+                    good.image = await image.readAsBytes();
+                    showImageNotifier.value = good.image;
+                  }
+                },
+                child: SizedBox(
+                  width: min(width * 0.3, 100),
+                  height: min(width * 0.3, 100),
+                  child: ValueListenableBuilder(
+                      valueListenable: showImageNotifier,
+                      builder: (BuildContext context, showImage, Widget? child) {
+                        return Image.memory(
+                          showImage,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => const Icon(
+                            Icons.image,
+                            size: 80,
+                          ),
+                        );
+                      }),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: TextField(
@@ -277,34 +305,33 @@ class _CreateProductState extends State<CreateProduct> {
                   ),
                 ),
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  XFile? image = await ImagePicker().pickImage(source: ImageSource.gallery);
-                  if (image != null) {
-                    good.image = await image.readAsBytes();
-                  }
-                },
-                child: const Text('選擇產品圖片'),
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.all(3),
+                child: ElevatedButton(
+                  onPressed: () {
+                    good.name = nameController.text;
+                    good.price = double.parse(priceController.text);
+                    good.unit = unitController.text;
+                    goodsProvider.update(good);
+                    Navigator.pop(context);
+                    setState(() {});
+                  },
+                  child: const Text('修改產品'),
+                ),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  good.name = nameController.text;
-                  good.price = double.parse(priceController.text);
-                  good.unit = unitController.text;
-                  goodsProvider.update(good);
-                  Navigator.pop(context);
-                  setState(() {});
-                },
-                child: const Text('修改產品'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  goodsProvider.delete(good.id!);
-                  setState(() {});
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('刪除產品'),
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.all(3),
+                child: ElevatedButton(
+                  onPressed: () {
+                    goodsProvider.delete(good.id!);
+                    setState(() {});
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(foregroundColor: Colors.red),
+                  child: const Text('刪除產品'),
+                ),
               )
             ]),
           );
