@@ -8,5 +8,6 @@
         "sublist",
         "VERYSILENT",
         "wght"
-    ]
+    ],
+    "sqltools.useNodeRuntime": true
 }

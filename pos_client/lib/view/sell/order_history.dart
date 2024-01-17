@@ -14,7 +14,7 @@ import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:pos/template/data_retrieval_widget.dart';
 import 'package:pos/template/date_picker.dart';
-import 'package:pos/view/cashier.dart';
+import 'package:pos/view/sell/cashier.dart';
 import 'package:shipment/sample.dart';
 
 class OrderHistory extends StatefulWidget {

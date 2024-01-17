@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 // ignore: unused_import
 import 'package:pos/store/model/sell/goods.dart';
 import 'package:pos/tool/upgrade_app.dart';
-import 'package:pos/view/cashier.dart';
-import 'package:pos/view/create_product.dart';
-import 'package:pos/view/order_overview.dart';
+import 'package:pos/view/restock/restock_view.dart';
+import 'package:pos/view/restock/vendor_manage.dart';
+import 'package:pos/view/sell/cashier.dart';
+import 'package:pos/view/sell/create_product.dart';
+import 'package:pos/view/sell/order_overview.dart';
+import 'package:pos/view/restock/purchased_items_manage.dart';
 import 'package:pos/view/setting.dart';
 
 class Home extends StatefulWidget {
@@ -70,61 +73,59 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
-          Card(
-            child: SizedBox(
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateProduct()));
-                },
-                child: const Column(
-                  children: [
-                    Icon(Icons.add),
-                    Text('商品'),
-                  ],
-                ),
-              ),
-            ),
+          entryCard(
+            context,
+            title: '商品',
+            icon: const Icon(Icons.add),
+            page: const CreateProduct(),
           ),
-          Card(
-            child: InkWell(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const OrderOverview()));
-              },
-              child: const Column(
-                children: [
-                  Icon(Icons.history),
-                  Text('銷售紀錄'),
-                ],
-              ),
-            ),
+          entryCard(
+            context,
+            title: '銷售紀錄',
+            icon: const Icon(Icons.history),
+            page: const OrderOverview(),
           ),
-          // Card(
-          //   child: InkWell(
-          //     onTap: () {
-          //       Navigator.push(context, MaterialPageRoute(builder: (context) => const Receipt()));
-          //     },
-          //     child: const Column(
-          //       children: [
-          //         Icon(Icons.local_shipping_outlined),
-          //         Text('開立收據'),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-          Card(
-            child: InkWell(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const Setting()));
-              },
-              child: const Column(
-                children: [
-                  Icon(Icons.settings),
-                  Text('設定'),
-                ],
-              ),
-            ),
+          entryCard(
+            context,
+            title: '進貨',
+            icon: const Icon(Icons.trolley),
+            page: const RestockView(),
+          ),
+          entryCard(
+            context,
+            title: '貨物管理',
+            icon: const Icon(Icons.trolley),
+            page: const PurchasedItemsManage(),
+          ),
+          entryCard(
+            context,
+            title: '廠商管理',
+            icon: const Icon(Icons.factory),
+            page: const VendorManage(),
+          ),
+          entryCard(
+            context,
+            title: '設定',
+            icon: const Icon(Icons.settings),
+            page: const Setting(),
           ),
         ],
+      ),
+    );
+  }
+
+  Card entryCard(BuildContext context, {required String title, required Widget icon, required Widget page}) {
+    return Card(
+      child: InkWell(
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => page));
+        },
+        child: Column(
+          children: [
+            icon,
+            Text(title),
+          ],
+        ),
       ),
     );
   }
