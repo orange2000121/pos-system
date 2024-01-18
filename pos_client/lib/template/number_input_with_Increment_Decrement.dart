@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
 class NumberInputWithIncrementDecrement extends StatefulWidget {
-  final Function(int)? onChanged;
+  final Function(int number)? onChanged;
+  final Function? onEditingComplete;
+  final int initialNumber;
   const NumberInputWithIncrementDecrement({
     super.key,
+    this.initialNumber = 1,
     this.onChanged,
+    this.onEditingComplete,
   });
 
   @override
@@ -12,7 +16,13 @@ class NumberInputWithIncrementDecrement extends StatefulWidget {
 }
 
 class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncrementDecrement> {
-  TextEditingController quantity = TextEditingController(text: '1');
+  TextEditingController quantity = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    quantity.text = widget.initialNumber.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -22,6 +32,7 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
           height: 60,
           // margin: const EdgeInsets.all(10),
           child: TextField(
+            key: widget.key,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             controller: quantity,
@@ -30,6 +41,11 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
             onChanged: (value) {
               if (widget.onChanged != null) {
                 widget.onChanged!(int.parse(value));
+              }
+            },
+            onEditingComplete: () {
+              if (widget.onEditingComplete != null) {
+                widget.onEditingComplete!();
               }
             },
           ),
@@ -48,6 +64,9 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
                 if (widget.onChanged != null) {
                   widget.onChanged!(int.parse(quantity.text));
                 }
+                if (widget.onEditingComplete != null) {
+                  widget.onEditingComplete!();
+                }
               },
               child: const Icon(
                 Icons.arrow_drop_up,
@@ -65,6 +84,9 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
                   quantity.text = (int.parse(quantity.text) - 1).toString();
                   if (widget.onChanged != null) {
                     widget.onChanged!(int.parse(quantity.text));
+                  }
+                  if (widget.onEditingComplete != null) {
+                    widget.onEditingComplete!();
                   }
                 }
               },

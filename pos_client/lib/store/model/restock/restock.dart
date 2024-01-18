@@ -2,14 +2,14 @@ import 'package:sqflite/sqflite.dart';
 
 /// 進貨明細，包含明細編號、進貨單邊號、品項編號、進貨數量、進貨單價、進貨金額、進貨日期、備註
 class Restock {
-  final int? id;
-  final int? restockOrderId;
-  final int purchasedItemId;
-  final int quantity;
-  final double price;
-  final double amount;
-  final DateTime restockDate;
-  final String? note;
+  int? id;
+  int? restockOrderId;
+  int purchasedItemId;
+  int quantity;
+  double price;
+  double amount;
+  DateTime restockDate;
+  String? note;
 
   /// 進貨明細，包含明細編號、進貨單邊號、品項編號、進貨數量、進貨單價、進貨金額、進貨日期、備註
   Restock({
@@ -89,14 +89,17 @@ class RestockProvider {
             note text
           )
           ''');
+    return db;
   }
 
   Future<int> insert(Restock restock) async {
+    db ??= await open();
     int result = await db!.insert(tableName, restock.toMap());
     return result;
   }
 
   Future<Restock?> getItem(int id) async {
+    db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'id = ?', whereArgs: [id], limit: 1);
     if (maps.isNotEmpty) {
       return Restock.fromJson(maps.first);
@@ -105,6 +108,7 @@ class RestockProvider {
   }
 
   Future<List<Restock>> getAll() async {
+    db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName);
     List<Restock> result = [];
     for (var map in maps) {
@@ -114,6 +118,7 @@ class RestockProvider {
   }
 
   Future<List<Restock>> getAllByRestockOrderId(int restockOrderId) async {
+    db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'restockOrderId = ?', whereArgs: [restockOrderId]);
     List<Restock> result = [];
     for (var map in maps) {
@@ -123,10 +128,12 @@ class RestockProvider {
   }
 
   Future update(int id, Restock restock) async {
+    db ??= await open();
     await db!.update(tableName, restock.toMap(), where: 'id = ?', whereArgs: [id]);
   }
 
   Future delete(int id) async {
+    db ??= await open();
     await db!.delete(tableName, where: 'id = ?', whereArgs: [id]);
   }
 }

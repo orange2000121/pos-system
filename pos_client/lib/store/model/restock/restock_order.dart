@@ -1,6 +1,11 @@
 import 'package:sqflite/sqflite.dart';
 
-/// 進貨訂單，包含進貨單邊號、廠商編號、進貨日期、進貨總金額、備註
+/// 進貨訂單，包含進貨單邊號、廠商編號、進貨日期、進貨總金額、備註<br>
+/// final int? id;<br>
+/// final int vendorId;<br>
+/// final DateTime date;<br>
+/// final double total;<br>
+/// final String? note;<br>
 
 class RestockOrder {
   final int? id;
@@ -31,7 +36,7 @@ class RestockOrder {
     return {
       if (id != null) 'id': id,
       'vendorId': vendorId,
-      'date': date.toIso8601String(),
+      'date': date.toString(),
       'total': total,
       if (note != null) 'note': note,
     };
@@ -71,16 +76,17 @@ class RestockOrderProvider {
             note text
           )
           ''');
+    return db;
   }
 
   Future<int> insert(RestockOrder restockOrder) async {
-    await open();
+    db ?? await open();
     int result = await db!.insert(tableName, restockOrder.toJson());
     return result;
   }
 
   Future<RestockOrder?> getItem(int id) async {
-    await open();
+    db ?? await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'id = ?', whereArgs: [id], limit: 1);
     if (maps.isNotEmpty) {
       return RestockOrder.fromJson(maps.first);
@@ -89,7 +95,7 @@ class RestockOrderProvider {
   }
 
   Future<List<RestockOrder>> getAll() async {
-    await open();
+    db ?? await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName);
     List<RestockOrder> result = [];
     for (var map in maps) {
@@ -98,14 +104,24 @@ class RestockOrderProvider {
     return result;
   }
 
+  Future<List<RestockOrder>> getAllFromDateRange(DateTime startDate, DateTime endDate) async {
+    db ?? await open();
+    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'date BETWEEN ? AND ?', whereArgs: [startDate.toString(), endDate.toString()]);
+    List<RestockOrder> result = [];
+    for (var map in maps) {
+      result.add(RestockOrder.fromJson(map));
+    }
+    return result;
+  }
+
   Future<int> update(RestockOrder restockOrder) async {
-    await open();
+    db ?? await open();
     int result = await db!.update(tableName, restockOrder.toJson(), where: 'id = ?', whereArgs: [restockOrder.id]);
     return result;
   }
 
   Future<int> delete(int id) async {
-    await open();
+    db ?? await open();
     int result = await db!.delete(tableName, where: 'id = ?', whereArgs: [id]);
     return result;
   }

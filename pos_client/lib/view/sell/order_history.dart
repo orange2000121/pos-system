@@ -167,6 +167,9 @@ class _OrderHistoryState extends State<OrderHistory> {
                         textAlign: TextAlign.center,
                       );
               }),
+          subtitle: [
+            Text('總金額：${order.totalPrice}'),
+          ],
           simpleInfo: sellItems.map((e) {
             return Text('${e.name} x${e.quantity}');
           }).toList(),

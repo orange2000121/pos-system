@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 // ignore: unused_import
 import 'package:pos/store/model/sell/goods.dart';
 import 'package:pos/tool/upgrade_app.dart';
+import 'package:pos/view/restock/restock_overview.dart';
 import 'package:pos/view/restock/restock_view.dart';
 import 'package:pos/view/restock/vendor_manage.dart';
 import 'package:pos/view/sell/cashier.dart';
@@ -90,6 +91,12 @@ class _HomeState extends State<Home> {
             title: '進貨',
             icon: const Icon(Icons.trolley),
             page: const RestockView(),
+          ),
+          entryCard(
+            context,
+            title: '進貨歷史',
+            icon: const Icon(Icons.history),
+            page: const RestockOverview(),
           ),
           entryCard(
             context,
