@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class DatePickerField extends StatefulWidget {
   final Function(DateTime? date)? onChanged;
   final DateTime? selectedDate;
+
+  ///顯示挑選日期的欄位
   const DatePickerField({super.key, this.selectedDate, this.onChanged});
   @override
   State<DatePickerField> createState() => _DatePickerFieldState();

@@ -12,7 +12,7 @@ import 'package:pos/store/model/sell/sell.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
-import 'package:pos/template/data_retrieval_widget.dart';
+import 'package:pos/template/small_item_card.dart';
 import 'package:pos/template/date_picker.dart';
 import 'package:pos/view/sell/cashier.dart';
 import 'package:shipment/sample.dart';
@@ -153,7 +153,7 @@ class _OrderHistoryState extends State<OrderHistory> {
         List<SellItem> sellItems = orderMap.values.toList()[index];
         OrderItem order = orderMap.keys.toList()[index];
         ValueNotifier editSwitchNotifier = ValueNotifier(false);
-        return SmallItemCard(
+        return SimplAndDetailInfoCard(
           title: ValueListenableBuilder(
               valueListenable: editSwitchNotifier,
               builder: (context, isEdit, child) {

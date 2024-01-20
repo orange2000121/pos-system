@@ -3,6 +3,7 @@ import 'package:pos/store/model/restock/purchased_items.dart';
 import 'package:pos/store/model/restock/restock.dart';
 import 'package:pos/store/model/restock/restock_order.dart';
 import 'package:pos/template/number_input_with_Increment_Decrement.dart';
+import 'package:pos/template/product_card.dart';
 
 class RestockView extends StatefulWidget {
   const RestockView({super.key});
@@ -28,9 +29,12 @@ class _RestockViewState extends State<RestockView> {
                 children: [
                   Flexible(
                     flex: 1,
-                    child: purchasedItemSnapshot.hasData ? purchasedItemList(purchasedItemSnapshot) : const Center(child: CircularProgressIndicator()),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 120), // 限制最大寬度為 80
+                      child: purchasedItemSnapshot.hasData ? purchasedItemList(purchasedItemSnapshot) : const Center(child: CircularProgressIndicator()),
+                    ),
                   ),
-                  Flexible(
+                  Expanded(
                     flex: 5,
                     child: Column(
                       children: [
@@ -125,7 +129,14 @@ class _RestockViewState extends State<RestockView> {
     );
   }
 
-  Placeholder searchBar() => const Placeholder();
+  Placeholder searchBar() => Placeholder(
+        child: Center(
+          child: Container(
+            color: Colors.white,
+            child: const Text('SEARCH BAR'),
+          ),
+        ),
+      );
 
   ListView purchasedItemList(AsyncSnapshot<List<PurchasedItem>> purchasedItemSnapshot) {
     return ListView.builder(
@@ -146,17 +157,11 @@ class _RestockViewState extends State<RestockView> {
             // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
             restockItemsNotifier.notifyListeners();
           },
-          child: Card(
-            child: SizedBox(
-              height: 100,
-              width: 100,
-              child: Column(
-                children: [
-                  Text(purchasedItem.name),
-                  Text(purchasedItem.unit),
-                ],
-              ),
-            ),
+          child: ProductCard(
+            width: 100,
+            height: 100,
+            title: purchasedItem.name,
+            subtitle: '(${purchasedItem.unit})',
           ),
         );
       },
@@ -217,28 +222,41 @@ class _RestockViewState extends State<RestockView> {
                   decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey))),
                   child: Row(
                     children: [
+                      //name
                       Expanded(flex: 2, child: Text(purchasedItemMap[restockItems[index].purchasedItemId]!.name)),
+                      //unit
                       Expanded(flex: 1, child: Text(purchasedItemMap[restockItems[index].purchasedItemId]!.unit)),
+                      //quantity
                       Expanded(
                         flex: 2,
                         child: NumberInputWithIncrementDecrement(
-                          key: UniqueKey(),
+                          key: ValueKey(restockItems[index]),
                           initialNumber: restockItems[index].quantity,
-                          onChanged: (number) => restockItemsNotifier.value[index].quantity = number,
+                          onChanged: (number) {
+                            restockItemsNotifier.value[index].quantity = number;
+                            // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                            restockItemsNotifier.notifyListeners();
+                          },
                           // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
                           onEditingComplete: () => restockItemsNotifier.notifyListeners(),
                         ),
                       ),
+                      //price
                       Expanded(
                         flex: 2,
                         child: TextFormField(
-                          key: UniqueKey(),
+                          key: ValueKey(restockItems[index]),
                           initialValue: restockItems[index].price.toString(),
-                          onChanged: (value) => restockItemsNotifier.value[index].price = double.parse(value),
+                          onChanged: (value) {
+                            restockItemsNotifier.value[index].price = double.parse(value);
+                            // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                            restockItemsNotifier.notifyListeners();
+                          },
                           // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
                           onEditingComplete: () => restockItemsNotifier.notifyListeners(),
                         ),
                       ),
+                      //amount
                       Expanded(
                         flex: 2,
                         child: Text(
@@ -246,15 +264,14 @@ class _RestockViewState extends State<RestockView> {
                           textAlign: TextAlign.center,
                         ),
                       ),
+                      //note
                       Expanded(
                           flex: 4,
                           child: TextFormField(
-                            key: UniqueKey(),
+                            key: ValueKey(restockItems[index]),
                             textAlign: TextAlign.start,
                             initialValue: restockItems[index].note,
                             onChanged: (value) => restockItemsNotifier.value[index].note = value,
-                            // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-                            onEditingComplete: () => restockItemsNotifier.notifyListeners(),
                           )),
                       Expanded(
                         flex: 1,

@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 
-/// This is the stateful widget that the main application instantiates.
-class SmallItemCard extends StatefulWidget {
+class SimplAndDetailInfoCard extends StatefulWidget {
   final Widget title;
   final List<Widget>? subtitle;
   final List<Widget>? simpleInfo;
   final List<Widget>? detailedInfo;
   final List<Widget>? dialogAction;
   final Function(dynamic popValue)? onPop;
-  const SmallItemCard({super.key, required this.title, this.subtitle, this.simpleInfo, this.detailedInfo, this.dialogAction, this.onPop});
+
+  ///用於歷史紀錄的展示，可自定義標題、副標題、簡易資訊、詳細資訊、彈出視窗按鈕、彈出視窗關閉後的動作
+  const SimplAndDetailInfoCard({super.key, required this.title, this.subtitle, this.simpleInfo, this.detailedInfo, this.dialogAction, this.onPop});
 
   @override
-  State<SmallItemCard> createState() => _SmallItemCardState();
+  State<SimplAndDetailInfoCard> createState() => _SimplAndDetailInfoCardState();
 }
 
-class _SmallItemCardState extends State<SmallItemCard> {
+class _SimplAndDetailInfoCardState extends State<SimplAndDetailInfoCard> {
   /* -------------------------------------------------------------------------- */
   /*                                   Widgets                                  */
   /* -------------------------------------------------------------------------- */

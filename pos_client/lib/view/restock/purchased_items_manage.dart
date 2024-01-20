@@ -95,32 +95,38 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          FutureBuilder(
-              future: vendorProvider.getAll(),
-              initialData: const [],
-              builder: (context, snapshot) {
-                if (purchasedItem == null) {
-                  vendorIdNotifier.value = snapshot.data!.first.id!;
-                }
-                return ValueListenableBuilder<int>(
-                    valueListenable: vendorIdNotifier,
-                    builder: (context, value, child) {
-                      return DropdownButton(
-                        value: vendorIdNotifier.value,
-                        onChanged: (value) {
-                          setState(() {
-                            vendorIdNotifier.value = value!;
-                          });
-                        },
-                        items: snapshot.data!.map((e) {
-                          return DropdownMenuItem<int>(
-                            value: e.id,
-                            child: Text(e.name),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              const Text('供應商：'),
+              FutureBuilder(
+                  future: vendorProvider.getAll(),
+                  initialData: const [],
+                  builder: (context, snapshot) {
+                    if (purchasedItem == null) {
+                      vendorIdNotifier.value = snapshot.data!.first.id!;
+                    }
+                    return ValueListenableBuilder<int>(
+                        valueListenable: vendorIdNotifier,
+                        builder: (context, value, child) {
+                          return DropdownButton(
+                            value: vendorIdNotifier.value,
+                            onChanged: (value) {
+                              setState(() {
+                                vendorIdNotifier.value = value!;
+                              });
+                            },
+                            items: snapshot.data!.map((e) {
+                              return DropdownMenuItem<int>(
+                                value: e.id,
+                                child: Text(e.name),
+                              );
+                            }).toList(),
                           );
-                        }).toList(),
-                      );
-                    });
-              }),
+                        });
+                  }),
+            ],
+          ),
           TextFormField(
             decoration: const InputDecoration(
               labelText: '品項名稱',

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 // ignore: unused_import
 import 'package:pos/store/model/sell/goods.dart';
+import 'package:pos/template/routes_page.dart';
 import 'package:pos/tool/upgrade_app.dart';
-import 'package:pos/view/restock/restock_overview.dart';
+import 'package:pos/view/restock/restock_history.dart';
 import 'package:pos/view/restock/restock_view.dart';
 import 'package:pos/view/restock/vendor_manage.dart';
 import 'package:pos/view/sell/cashier.dart';
@@ -52,15 +53,12 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     showUpgrade();
-    return Scaffold(
-      appBar: AppBar(title: const Text('POS系統')),
-      body: GridView(
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 200,
-        ),
-        children: [
-          Card(
-            child: SizedBox(
+    return RoutesPage(
+      pageName: 'POS系統',
+      children: [
+        RoutesPageCard(
+            name: '收銀台',
+            page: SizedBox(
               child: InkWell(
                 onTap: () {
                   CashierInit(context).init();
@@ -72,52 +70,48 @@ class _HomeState extends State<Home> {
                   ],
                 ),
               ),
-            ),
-          ),
-          entryCard(
-            context,
-            title: '商品',
-            icon: const Icon(Icons.add),
-            page: const CreateProduct(),
-          ),
-          entryCard(
-            context,
-            title: '銷售紀錄',
-            icon: const Icon(Icons.history),
-            page: const OrderOverview(),
-          ),
-          entryCard(
-            context,
-            title: '進貨',
-            icon: const Icon(Icons.trolley),
-            page: const RestockView(),
-          ),
-          entryCard(
-            context,
-            title: '進貨歷史',
-            icon: const Icon(Icons.history),
-            page: const RestockOverview(),
-          ),
-          entryCard(
-            context,
-            title: '貨物管理',
-            icon: const Icon(Icons.trolley),
-            page: const PurchasedItemsManage(),
-          ),
-          entryCard(
-            context,
-            title: '廠商管理',
-            icon: const Icon(Icons.factory),
-            page: const VendorManage(),
-          ),
-          entryCard(
-            context,
-            title: '設定',
-            icon: const Icon(Icons.settings),
-            page: const Setting(),
-          ),
-        ],
-      ),
+            )),
+        // Card(
+        //   child: SizedBox(
+        //     child: InkWell(
+        //       onTap: () {
+        //         CashierInit(context).init();
+        //       },
+        //       child: const Column(
+        //         children: [
+        //           Icon(Icons.attach_money),
+        //           Text('收銀台'),
+        //         ],
+        //       ),
+        //     ),
+        //   ),
+        // ),
+        RoutesPageCard(
+          name: '商品',
+          icon: const Icon(Icons.add),
+          page: const CreateProduct(),
+        ),
+        RoutesPageCard(
+          name: '銷售紀錄',
+          icon: const Icon(Icons.history),
+          page: const OrderOverview(),
+        ),
+        RoutesPageCard(
+          name: '進貨管理',
+          icon: const Icon(Icons.input),
+          page: RoutesPage(children: [
+            RoutesPageCard(name: '進貨', icon: const Icon(Icons.trolley), page: const RestockView()),
+            RoutesPageCard(name: '進貨歷史', icon: const Icon(Icons.history), page: const RestockHistory()),
+            RoutesPageCard(name: '貨物管理', icon: const Icon(Icons.trolley), page: const PurchasedItemsManage()),
+            RoutesPageCard(name: '廠商管理', icon: const Icon(Icons.factory), page: const VendorManage()),
+          ]),
+        ),
+        RoutesPageCard(
+          name: '設定',
+          icon: const Icon(Icons.settings),
+          page: const Setting(),
+        ),
+      ],
     );
   }
 

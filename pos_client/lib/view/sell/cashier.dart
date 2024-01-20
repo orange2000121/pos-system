@@ -14,6 +14,7 @@ import 'package:pos/store/model/sell/customer.dart';
 import 'package:pos/store/model/sell/goods.dart';
 import 'package:pos/store/model/sell/goods_group.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
+import 'package:pos/template/product_card.dart';
 import 'package:shipment/sample.dart';
 
 class CashierInit {
@@ -80,7 +81,7 @@ class _CashierState extends State<Cashier> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Cashier')),
+      appBar: AppBar(title: const Text('收銀臺')),
       endDrawer: drawer(),
       body: Row(children: [
         Expanded(
@@ -132,25 +133,36 @@ class _CashierState extends State<Cashier> {
   ///
   /// [item] 是一個 [GoodsGroupItem] 對象，包含了分類的名稱、ID 和圖片。
   Widget cashierGroupItem(GoodsGroupItem item) {
-    double size = 100;
     return InkWell(
       onTap: () => groupIdNotifier.value = item.id!,
-      child: Card(
-        child: SizedBox(
-          width: size,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.memory(
-                width: 50,
-                height: 50,
-                fit: BoxFit.contain,
-                item.image ?? Uint8List(0),
-                errorBuilder: (context, error, stackTrace) => const FlutterLogo(size: 50),
-              ),
-              Text(item.name),
-            ],
+      child: SizedBox(
+        width: 100,
+        child: ProductCard(
+          width: 100,
+          height: 100,
+          title: item.name,
+          image: Image.memory(
+            // width: 50,
+            // height: 50,
+            fit: BoxFit.contain,
+            item.image ?? Uint8List(0),
+            errorBuilder: (context, error, stackTrace) => const FlutterLogo(size: 50),
           ),
+          // child: SizedBox(
+          //   width: size,
+          //   child: Column(
+          //     mainAxisAlignment: MainAxisAlignment.center,
+          //     children: [
+          //       Image.memory(
+          //         width: 50,
+          //         height: 50,
+          //         fit: BoxFit.contain,
+          //         item.image ?? Uint8List(0),
+          //         errorBuilder: (context, error, stackTrace) => const FlutterLogo(size: 50),
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ),
       ),
     );
@@ -196,27 +208,17 @@ class _CashierState extends State<Cashier> {
         if (tempItem == null) return;
         cashierLogic.addItem(tempItem.id, tempItem.name, tempItem.price, tempItem.ice ?? '', tempItem.sugar ?? '', tempItem.quantity, tempItem.unit, note: tempItem.note);
       },
-      child: Card(
-          child: SizedBox(
-        width: 80,
-        height: 80,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(item.name),
-            Text(item.price.toString()),
-            SizedBox(
-              width: 80,
-              height: 80,
-              child: Image.memory(
+      child: ProductCard(
+        title: item.name,
+        subtitle: '\$${item.price.toString()}',
+        image: item.image != null
+            ? Image.memory(
                 item.image!,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) => const FlutterLogo(size: 50),
-              ),
-            ),
-          ],
-        ),
-      )),
+              )
+            : null,
+      ),
     );
   }
 

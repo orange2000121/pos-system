@@ -4,6 +4,8 @@ class NumberInputWithIncrementDecrement extends StatefulWidget {
   final Function(int number)? onChanged;
   final Function? onEditingComplete;
   final int initialNumber;
+
+  ///有上下箭頭的數字輸入框
   const NumberInputWithIncrementDecrement({
     super.key,
     this.initialNumber = 1,
