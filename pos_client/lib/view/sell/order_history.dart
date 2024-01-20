@@ -223,7 +223,15 @@ class _OrderHistoryState extends State<OrderHistory> {
                   shopItems: shopItems,
                 );
                 Navigator.of(context).pop();
-                await CashierInit(context).initEdit(shopItemEditData);
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Cashier(
+                      isEditMode: true,
+                      editShopItems: shopItemEditData,
+                    ),
+                  ),
+                );
                 setState(() {});
               },
               child: const Text('編輯'),

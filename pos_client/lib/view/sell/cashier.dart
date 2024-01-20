@@ -17,21 +17,10 @@ import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:pos/template/product_card.dart';
 import 'package:shipment/sample.dart';
 
-class CashierInit {
+class CashierInitData {
   SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper.instance;
-  final BuildContext context;
-  CashierInit(this.context);
   Future<bool> init() async {
     await sharedPreferenceHelper.init();
-    if (!context.mounted) return false;
-    Navigator.push(context, MaterialPageRoute(builder: (context) => Cashier(init: this)));
-    return true;
-  }
-
-  Future<bool> initEdit(ShopItemEditData editShopItems) async {
-    await sharedPreferenceHelper.init();
-    if (!context.mounted) return false;
-    await Navigator.push(context, MaterialPageRoute(builder: (context) => Cashier(init: this, isEditMode: true, editShopItems: editShopItems)));
     return true;
   }
 }
@@ -52,12 +41,10 @@ class ShopItemEditData {
 /// 收銀員畫面。<br>
 /// 如果要編輯訂單，請將 [isEditMode] 設置為 `true`，並傳入 [editShopItems]。
 class Cashier extends StatefulWidget {
-  final CashierInit init;
   final bool isEditMode;
   final ShopItemEditData? editShopItems;
   const Cashier({
     super.key,
-    required this.init,
     this.isEditMode = false,
     this.editShopItems,
   });
@@ -68,6 +55,7 @@ class Cashier extends StatefulWidget {
 
 class _CashierState extends State<Cashier> {
   late CashierLogic cashierLogic;
+  CashierInitData cashierInit = CashierInitData();
   late ValueNotifier<int> groupIdNotifier = ValueNotifier(-1); // -1: 全部
   @override
   void initState() {
@@ -76,35 +64,44 @@ class _CashierState extends State<Cashier> {
     if (widget.isEditMode && widget.editShopItems != null) {
       cashierLogic.shopItemsNotifier.value = widget.editShopItems!.shopItems;
     }
+    if (widget.isEditMode) {
+      if (widget.editShopItems == null) {
+        throw Exception('editShopItems is null');
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('收銀臺')),
-      endDrawer: drawer(),
-      body: Row(children: [
-        Expanded(
-          flex: 1,
-          child: Column(children: [
-            Expanded(flex: 3, child: shoppingCart()),
-            const Divider(),
-            Expanded(flex: 2, child: settleAccount()),
-          ]),
-        ),
-        const VerticalDivider(),
-        Expanded(
-          flex: 2,
-          child: Column(
-            children: [
-              groupList(),
-              const Divider(),
-              goodsList(),
-            ],
-          ),
-        ),
-      ]),
-    );
+    return FutureBuilder(
+        future: cashierInit.init(),
+        builder: (context, cashierInitSnapshot) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('收銀臺')),
+            endDrawer: drawer(),
+            body: Row(children: [
+              Expanded(
+                flex: 1,
+                child: Column(children: [
+                  Expanded(flex: 3, child: shoppingCart()),
+                  const Divider(),
+                  Expanded(flex: 2, child: settleAccount()),
+                ]),
+              ),
+              const VerticalDivider(),
+              Expanded(
+                flex: 2,
+                child: Column(
+                  children: [
+                    groupList(),
+                    const Divider(),
+                    goodsList(),
+                  ],
+                ),
+              ),
+            ]),
+          );
+        });
   }
 
   /* -------------------------------------------------------------------------- */
@@ -116,9 +113,9 @@ class _CashierState extends State<Cashier> {
         ListTile(
           title: const Text('開立收據'),
           trailing: Switch(
-              value: widget.init.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false,
+              value: cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false,
               onChanged: (isAvailable) {
-                widget.init.sharedPreferenceHelper.setting.editSetting(isAvailable, BoolSettingKey.useReceiptPrinter);
+                cashierInit.sharedPreferenceHelper.setting.editSetting(isAvailable, BoolSettingKey.useReceiptPrinter);
                 setState(() {});
               }),
         )
@@ -446,7 +443,7 @@ class _CashierState extends State<Cashier> {
               onPressed: () async {
                 if (!widget.isEditMode) {
                   int? isSettle;
-                  if (widget.init.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
+                  if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
                     isSettle = await showDialog(context: context, builder: (context) => receiptOption());
                   }
                   if (isSettle != -1) {
@@ -675,14 +672,14 @@ class _CashierState extends State<Cashier> {
                       return ValueListenableBuilder(
                         valueListenable: customerValueNotifier,
                         builder: (context, customer, child) {
-                          double? shippingPaperWidth = widget.init.sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperWidth);
-                          double? shippingPaperHeight = widget.init.sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperHeight);
+                          double? shippingPaperWidth = cashierInit.sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperWidth);
+                          double? shippingPaperHeight = cashierInit.sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperHeight);
                           PdfPageFormat? pdfPageFormat;
                           if (shippingPaperWidth != null && shippingPaperHeight != null) {
                             pdfPageFormat = PdfPageFormat(shippingPaperWidth * PdfPageFormat.mm, shippingPaperHeight * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm);
                           }
                           receiptSample = ReceiptSample(
-                            userName: widget.init.sharedPreferenceHelper.userInfo.getUserInfo(UserInfoKey.userName) ?? '',
+                            userName: cashierInit.sharedPreferenceHelper.userInfo.getUserInfo(UserInfoKey.userName) ?? '',
                             customName: customerValueNotifier.value.name,
                             contactPerson: customerValueNotifier.value.contactPerson,
                             phone: customerValueNotifier.value.phone,
@@ -703,4 +700,7 @@ class _CashierState extends State<Cashier> {
       ),
     );
   }
+  /* -------------------------------------------------------------------------- */
+  /*                                  FUNCTION                                  */
+  /* -------------------------------------------------------------------------- */
 }

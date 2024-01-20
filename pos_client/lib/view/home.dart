@@ -56,36 +56,7 @@ class _HomeState extends State<Home> {
     return RoutesPage(
       pageName: 'POS系統',
       children: [
-        RoutesPageCard(
-            name: '收銀台',
-            page: SizedBox(
-              child: InkWell(
-                onTap: () {
-                  CashierInit(context).init();
-                },
-                child: const Column(
-                  children: [
-                    Icon(Icons.attach_money),
-                    Text('收銀台'),
-                  ],
-                ),
-              ),
-            )),
-        // Card(
-        //   child: SizedBox(
-        //     child: InkWell(
-        //       onTap: () {
-        //         CashierInit(context).init();
-        //       },
-        //       child: const Column(
-        //         children: [
-        //           Icon(Icons.attach_money),
-        //           Text('收銀台'),
-        //         ],
-        //       ),
-        //     ),
-        //   ),
-        // ),
+        RoutesPageCard(name: '收銀台', icon: const Icon(Icons.attach_money), page: const Cashier()),
         RoutesPageCard(
           name: '商品',
           icon: const Icon(Icons.add),
