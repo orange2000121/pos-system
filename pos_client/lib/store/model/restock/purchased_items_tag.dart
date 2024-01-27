@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 class PurchasedItemsTag {
   final int? id;
   final String name;
-  final String color;
+  final int color;
 
   PurchasedItemsTag({
     this.id,
@@ -46,7 +46,7 @@ class PurchasedItemsTagProvider {
           create table $tableName ( 
             id integer primary key autoincrement, 
             name text not null,
-            color text
+            color integer
           )
           ''');
       },
@@ -56,7 +56,7 @@ class PurchasedItemsTagProvider {
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
             name text not null,
-            color text
+            color integer
           )
           ''');
     return db;

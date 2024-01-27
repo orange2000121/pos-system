@@ -47,17 +47,17 @@ class _SettingState extends State<Setting> {
                         onPressed: () {
                           snapshot.data!.setting.editDoubleSetting(1.0, DoubleSettingKey.fontSizeScale);
                         },
-                        child: const Text('X1')),
+                        child: const Text('小')),
                     ElevatedButton(
                         onPressed: () {
                           snapshot.data!.setting.editDoubleSetting(1.5, DoubleSettingKey.fontSizeScale);
                         },
-                        child: const Text('X1.5')),
+                        child: const Text('中')),
                     ElevatedButton(
                         onPressed: () {
                           snapshot.data!.setting.editDoubleSetting(2.0, DoubleSettingKey.fontSizeScale);
                         },
-                        child: const Text('X2')),
+                        child: const Text('大')),
                   ]),
                   trailing: ElevatedButton(
                     onPressed: () {

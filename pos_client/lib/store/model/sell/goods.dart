@@ -154,4 +154,9 @@ class GoodsProvider {
   }
 
   void close() async => db != null ? await db!.close() : null;
+
+  void deleteByGroupId(int groupId) async {
+    db ??= await open();
+    db!.delete(tableName, where: 'group_id = ?', whereArgs: [groupId]);
+  }
 }

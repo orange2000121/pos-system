@@ -1,10 +1,10 @@
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:pos/store/model/sell/goods.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:pos/store/model/sell/goods_group.dart';
+import 'package:pos/template/item_edit.dart';
+import 'package:pos/tool/calculate_text_size.dart';
 
 class CreateProduct extends StatefulWidget {
   const CreateProduct({super.key});
@@ -15,9 +15,9 @@ class CreateProduct extends StatefulWidget {
 
 class _CreateProductState extends State<CreateProduct> {
   GoodsProvider goodsProvider = GoodsProvider();
-  TextEditingController nameController = TextEditingController();
-  TextEditingController priceController = TextEditingController();
-  TextEditingController unitController = TextEditingController();
+  // TextEditingController nameController = TextEditingController();
+  // TextEditingController priceController = TextEditingController();
+  // TextEditingController unitController = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -48,74 +48,6 @@ class _CreateProductState extends State<CreateProduct> {
   /* -------------------------------------------------------------------------- */
   /*                                   Widget                                   */
   /* -------------------------------------------------------------------------- */
-  Widget inputWidget(int groupId) {
-    Good good = Good(groupId, '', 0, '');
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            controller: nameController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: '產品名稱',
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            controller: unitController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: '產品單位',
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            controller: priceController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: '產品價格',
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: ElevatedButton(
-            onPressed: () async {
-              XFile? image = await ImagePicker().pickImage(source: ImageSource.gallery);
-              if (image != null) {
-                good.image = await image.readAsBytes();
-              }
-            },
-            child: const Text('選擇產品圖片'),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: ElevatedButton(
-            onPressed: () {
-              good.groupId = groupId;
-              good.name = nameController.text;
-              good.price = double.parse(priceController.text);
-              good.unit = unitController.text;
-              goodsProvider.insert(good);
-              good.image = null;
-              nameController.clear();
-              priceController.clear();
-              unitController.clear();
-              Navigator.pop(context);
-              setState(() {});
-            },
-            child: const Text('新增產品'),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget product(int groupId) {
     return FutureBuilder(
@@ -186,129 +118,169 @@ class _CreateProductState extends State<CreateProduct> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('新增群組'),
-          content: Column(
-            children: [
-              TextField(
+          content: ItemEdit(
+            choseImage: ChoseImage(
+              size: 100,
+              initialImage: image,
+              onImageChanged: (Uint8List? newImage) {
+                image = newImage;
+              },
+            ),
+            textFields: [
+              ItemEditTextField(
+                labelText: '群組名稱',
                 controller: groupNameController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '群組名稱',
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  XFile? imageFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-                  if (imageFile != null) {
-                    image = await imageFile.readAsBytes();
-                  }
-                },
-                child: const Text('照片上傳'),
               )
             ],
+            buttons: [
+              ItemEditButton(
+                name: '確定',
+                onPressed: () {
+                  GoodsGroupProvider().insert(GoodsGroupItem(groupNameController.text, image: image));
+                  setState(() {});
+                  Navigator.pop(context);
+                },
+              ),
+              ItemEditButton(
+                name: '取消',
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('取消'),
-            ),
-            TextButton(
-              onPressed: () {
-                GoodsGroupProvider().insert(GoodsGroupItem(groupNameController.text, image: image));
-                setState(() {});
-                Navigator.pop(context);
-              },
-              child: const Text('確定'),
-            ),
-          ],
         );
       },
     );
   }
 
-  void addProduct(GoodsGroupItem group) {
-    showDialog(
+  void addProduct(GoodsGroupItem group) async {
+    ValueNotifier<String> addProductGroupNameNotifier = ValueNotifier(group.name);
+    TextEditingController addProductNameController = TextEditingController();
+    TextEditingController addProductPriceController = TextEditingController();
+    TextEditingController addProductUnitController = TextEditingController();
+    TextEditingController addProductGroupNameController = TextEditingController(text: group.name);
+    GoodsGroupProvider goodsGroupProvider = GoodsGroupProvider();
+    Uint8List? image;
+    await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('新增商品至 『${group.name}』'),
-            content: inputWidget(group.id!),
+            title: Row(
+              children: [
+                const Text('新增商品至 『'),
+                ValueListenableBuilder(
+                    valueListenable: addProductGroupNameNotifier,
+                    builder: (context, groupName, child) {
+                      return SizedBox(
+                        width: calculateTextSize(context, groupName).width + 10,
+                        child: TextField(
+                          key: const Key('addProductGroupName'),
+                          controller: addProductGroupNameController,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                          ),
+                          onChanged: (value) {
+                            addProductGroupNameNotifier.value = value;
+                            group.name = value;
+                            goodsGroupProvider.update(group.id!, group);
+                          },
+                        ),
+                      );
+                    }),
+                const Text('』'),
+              ],
+            ),
+            content: ItemEdit(
+              choseImage: ChoseImage(
+                size: 100,
+                onImageChanged: (img) => image = img,
+              ),
+              textFields: [
+                ItemEditTextField(
+                  labelText: '產品名稱',
+                  controller: addProductNameController,
+                ),
+                ItemEditTextField(
+                  labelText: '產品單位',
+                  controller: addProductUnitController,
+                ),
+                ItemEditTextField(
+                  labelText: '產品價格',
+                  controller: addProductPriceController,
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+              buttons: [
+                ItemEditButton(
+                  name: '確定',
+                  onPressed: () {
+                    Good good = Good(group.id!, addProductNameController.text, double.parse(addProductPriceController.text), addProductUnitController.text, image: image);
+                    goodsProvider.insert(good);
+                    Navigator.pop(context);
+                    setState(() {});
+                  },
+                ),
+                ItemEditButton(
+                  name: '取消',
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                ItemEditButton(
+                  name: '刪除群組',
+                  onPressed: () {
+                    goodsProvider.deleteByGroupId(group.id!);
+                    GoodsGroupProvider().delete(group.id!);
+                    Navigator.pop(context);
+                    setState(() {});
+                  },
+                  foregroundColor: Colors.red,
+                ),
+              ],
+            ),
           );
         });
+    setState(() {});
   }
 
   void editProduct(Good good) {
     TextEditingController nameController = TextEditingController(text: good.name);
     TextEditingController priceController = TextEditingController(text: good.price.toString());
     TextEditingController unitController = TextEditingController(text: good.unit);
-    double width = MediaQuery.of(context).size.width;
     ValueNotifier showImageNotifier = ValueNotifier<Uint8List?>(good.image);
     showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text('修改 ${good.name}'),
-            content: Column(children: [
-              InkWell(
-                onTap: () async {
-                  XFile? image = await ImagePicker().pickImage(source: ImageSource.gallery);
-                  if (image != null) {
-                    good.image = await image.readAsBytes();
-                    showImageNotifier.value = good.image;
-                  }
+            content: ItemEdit(
+              choseImage: ChoseImage(
+                size: 100,
+                initialImage: good.image,
+                onImageChanged: (img) {
+                  good.image = img;
+                  showImageNotifier.value = good.image;
                 },
-                child: SizedBox(
-                  width: min(width * 0.3, 100),
-                  height: min(width * 0.3, 100),
-                  child: ValueListenableBuilder(
-                      valueListenable: showImageNotifier,
-                      builder: (BuildContext context, showImage, Widget? child) {
-                        return Image.memory(
-                          showImage,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
-                            Icons.image,
-                            size: 80,
-                          ),
-                        );
-                      }),
-                ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: TextField(
+              textFields: [
+                ItemEditTextField(
+                  labelText: '產品名稱',
                   controller: nameController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '產品名稱',
-                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: TextField(
-                  controller: priceController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '單價金額',
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: TextField(
+                ItemEditTextField(
+                  labelText: '產品單位',
                   controller: unitController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '單位',
-                  ),
                 ),
-              ),
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.all(3),
-                child: ElevatedButton(
+                ItemEditTextField(
+                  labelText: '產品單價',
+                  controller: priceController,
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+              buttons: [
+                ItemEditButton(
+                  name: '修改產品',
                   onPressed: () {
                     good.name = nameController.text;
                     good.price = double.parse(priceController.text);
@@ -317,23 +289,24 @@ class _CreateProductState extends State<CreateProduct> {
                     Navigator.pop(context);
                     setState(() {});
                   },
-                  child: const Text('修改產品'),
                 ),
-              ),
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.all(3),
-                child: ElevatedButton(
+                ItemEditButton(
+                  name: '刪除產品',
                   onPressed: () {
                     goodsProvider.delete(good.id!);
                     setState(() {});
                     Navigator.pop(context);
                   },
-                  style: ElevatedButton.styleFrom(foregroundColor: Colors.red),
-                  child: const Text('刪除產品'),
+                  foregroundColor: Colors.red,
                 ),
-              )
-            ]),
+                ItemEditButton(
+                  name: '取消',
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
           );
         });
   }

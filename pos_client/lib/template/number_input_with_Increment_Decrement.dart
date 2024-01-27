@@ -29,7 +29,7 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
+        SizedBox(
           width: 30,
           height: 60,
           // margin: const EdgeInsets.all(10),

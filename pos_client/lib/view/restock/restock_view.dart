@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:pos/store/model/restock/purchased_items.dart';
+import 'package:pos/store/model/restock/purchased_items_tag.dart';
 import 'package:pos/store/model/restock/restock.dart';
 import 'package:pos/store/model/restock/restock_order.dart';
-import 'package:pos/template/number_input_with_Increment_Decrement.dart';
+import 'package:pos/store/model/restock/tag_purchased_item_relationship.dart';
+import 'package:pos/template/number_input_with_increment_decrement.dart';
 import 'package:pos/template/product_card.dart';
+import 'package:pos/template/tags_grid_view.dart';
+import 'package:pos/tool/calculate_text_size.dart';
 
 class RestockView extends StatefulWidget {
   const RestockView({super.key});
@@ -15,6 +19,7 @@ class RestockView extends StatefulWidget {
 class _RestockViewState extends State<RestockView> {
   PurchasedItemProvider purchasedItemProvider = PurchasedItemProvider();
   ValueNotifier<List<Restock>> restockItemsNotifier = ValueNotifier<List<Restock>>([]);
+  ValueNotifier<List<PurchasedItem>> purchasedItemsNotifier = ValueNotifier<List<PurchasedItem>>([]);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,21 +29,27 @@ class _RestockViewState extends State<RestockView> {
           builder: (context, purchasedItemSnapshot) {
             if (purchasedItemSnapshot.hasData) {
               Map<int, PurchasedItem> purchasedItemMap = {for (var e in purchasedItemSnapshot.data!) e.id!: e};
-
+              purchasedItemsNotifier.value = purchasedItemSnapshot.data!;
               return Row(
                 children: [
                   Flexible(
                     flex: 1,
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 120), // 限制最大寬度為 80
-                      child: purchasedItemSnapshot.hasData ? purchasedItemList(purchasedItemSnapshot) : const Center(child: CircularProgressIndicator()),
+                      child: purchasedItemSnapshot.hasData
+                          ? ValueListenableBuilder(
+                              valueListenable: purchasedItemsNotifier,
+                              builder: (context, purchasedItems, child) {
+                                return purchasedItemList(purchasedItems);
+                              })
+                          : const Center(child: CircularProgressIndicator()),
                     ),
                   ),
                   Expanded(
                     flex: 5,
                     child: Column(
                       children: [
-                        SizedBox(height: 50, child: searchBar()),
+                        SizedBox(height: 50, child: searchBar(purchasedItemMap)),
                         tableTitle(),
                         restockItemsTable(purchasedItemMap),
                         restockOrderSave(),
@@ -54,10 +65,10 @@ class _RestockViewState extends State<RestockView> {
     );
   }
 
-  Container restockOrderSave() {
+  Widget restockOrderSave() {
     TextEditingController restockOrderNoteController = TextEditingController();
-    return Container(
-      height: 100,
+    return SizedBox(
+      height: calculateTextSize(context, '總計', style: Theme.of(context).textTheme.titleLarge).height + 100,
       child: Column(
         children: [
           const Divider(),
@@ -129,20 +140,48 @@ class _RestockViewState extends State<RestockView> {
     );
   }
 
-  Placeholder searchBar() => Placeholder(
-        child: Center(
-          child: Container(
-            color: Colors.white,
-            child: const Text('SEARCH BAR'),
-          ),
-        ),
-      );
+  Widget searchBar(Map<int, PurchasedItem> purchasedItemSnapshot) {
+    return FutureBuilder(
+        future: PurchasedItemsTagProvider().getAll(),
+        builder: (context, purchasedItemsTagsSnapshot) {
+          List<TagsGridViewTag> gridViewTags = [];
+          Future<List<TagPurchasedItemRelationship>> tagPurchasedItemRelationships = Future.value([]);
+          tagPurchasedItemRelationships = TagPurchasedItemRelationshipProvider().getAll();
+          gridViewTags.add(TagsGridViewTag(
+            name: '全部',
+            color: Colors.grey,
+            onTap: () {
+              purchasedItemsNotifier.value = purchasedItemSnapshot.values.toList();
+            },
+            showDeleteIcon: false,
+          ));
+          for (var purchasedItemsTag in purchasedItemsTagsSnapshot.data!) {
+            gridViewTags.add(TagsGridViewTag(
+              name: purchasedItemsTag.name,
+              color: Color(purchasedItemsTag.color),
+              onTap: () async {
+                List<PurchasedItem> purchasedItems = [];
+                await tagPurchasedItemRelationships.then((value) {
+                  for (var tagPurchasedItemRelationship in value) {
+                    if (tagPurchasedItemRelationship.tagId == purchasedItemsTag.id) {
+                      purchasedItems.add(purchasedItemSnapshot[tagPurchasedItemRelationship.purchasedItemId]!);
+                    }
+                  }
+                });
+                purchasedItemsNotifier.value = purchasedItems;
+              },
+              showDeleteIcon: false,
+            ));
+          }
+          return TagsGridView(tags: gridViewTags);
+        });
+  }
 
-  ListView purchasedItemList(AsyncSnapshot<List<PurchasedItem>> purchasedItemSnapshot) {
+  ListView purchasedItemList(List<PurchasedItem> purchasedItems) {
     return ListView.builder(
-      itemCount: purchasedItemSnapshot.data!.length,
+      itemCount: purchasedItems.length,
       itemBuilder: (context, index) {
-        PurchasedItem purchasedItem = purchasedItemSnapshot.data![index];
+        PurchasedItem purchasedItem = purchasedItems[index];
         return InkWell(
           onTap: () {
             restockItemsNotifier.value.add(

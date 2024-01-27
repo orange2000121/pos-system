@@ -43,6 +43,7 @@ class _ProductCardState extends State<ProductCard> {
                       child: Text(
                         widget.title,
                         textAlign: TextAlign.center,
+                        maxLines: 2,
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),
@@ -59,6 +60,7 @@ class _ProductCardState extends State<ProductCard> {
                         child: Text(
                           widget.subtitle ?? '',
                           textAlign: TextAlign.center,
+                          maxLines: 1,
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),
