@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:pos/store/model/sell/customer.dart';
 import 'package:pos/store/model/sell/order.dart';
 import 'package:pos/template/date_picker.dart';
+import 'package:pos/tool/calculate_text_size.dart';
 import 'package:pos/view/sell/order_history.dart';
 
 class OrderOverview extends StatefulWidget {
@@ -46,7 +47,7 @@ class _OrderOverviewState extends State<OrderOverview> {
               builder: (context, AsyncSnapshot<List<Customer>> allCustomerSnapshot) {
                 if (allCustomerSnapshot.hasData) {
                   return Column(
-                    // crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(
                         height: 200,
@@ -135,27 +136,11 @@ class _OrderOverviewState extends State<OrderOverview> {
                             if (ordersSnapshot.hasData) {
                               return Wrap(
                                 children: [
-                                  SizedBox(
-                                    height: 200,
-                                    width: 200,
-                                    child: ValueListenableBuilder(
-                                        valueListenable: touchedIndexNotifier,
-                                        builder: (context, touchedIndex, child) {
-                                          return PieChart(PieChartData(
-                                            pieTouchData: PieTouchData(
-                                              touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                                                if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
-                                                  touchedIndexNotifier.value = -1;
-                                                  return;
-                                                }
-                                                touchedIndexNotifier.value = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                                              },
-                                            ),
-                                            centerSpaceRadius: 20,
-                                            sections: showSections(ordersSnapshot, allCustomerSnapshot, touchedIndexNotifier),
-                                          ));
-                                        }),
-                                  ),
+                                  ValueListenableBuilder(
+                                      valueListenable: touchedIndexNotifier,
+                                      builder: (context, touchedIndex, child) {
+                                        return customerChartCard(touchedIndexNotifier, ordersSnapshot, allCustomerSnapshot);
+                                      }),
                                 ],
                               );
                             } else {
@@ -171,6 +156,86 @@ class _OrderOverviewState extends State<OrderOverview> {
                 }
               }),
         ],
+      ),
+    );
+  }
+
+  Widget customerChartCard(ValueNotifier<dynamic> touchedIndexNotifier, AsyncSnapshot<List<OrderItem>> ordersSnapshot, AsyncSnapshot<List<Customer>> allCustomerSnapshot) {
+    List<PieChartSectionData> pieChartSectionDataList = [];
+    List<Widget> customerInfo = [];
+    double w = MediaQuery.of(context).size.width;
+    double maxTextWidth = 0;
+    List<Color> colors = [Colors.red, Colors.blue, Colors.green, Colors.yellow, Colors.purple, Colors.orange, Colors.pink, Colors.teal, Colors.indigo, Colors.lime];
+    double total = ordersSnapshot.data!.fold(0, (previousValue, element) => (previousValue + element.totalPrice));
+    allCustomerSnapshot.data!.asMap().forEach((index, customer) {
+      double customerTotal = 0;
+      for (OrderItem order in ordersSnapshot.data!) {
+        if (order.customerId == customer.id) {
+          customerTotal += order.totalPrice;
+        }
+      }
+      pieChartSectionDataList.add(PieChartSectionData(
+        color: colors[index % colors.length],
+        value: customerTotal,
+        title: '${(customerTotal / total * 100).toStringAsFixed(2)}%',
+        radius: index == touchedIndexNotifier.value ? 100 : 80,
+        titleStyle: const TextStyle(fontSize: 20),
+      ));
+      customerInfo.add(Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          children: [
+            Container(
+              width: 20,
+              height: 20,
+              color: colors[index % colors.length],
+            ),
+            Text('${customer.name}：\$$customerTotal'),
+          ],
+        ),
+      ));
+      maxTextWidth = min(max(maxTextWidth, calculateTextSize(context, '${customer.name}：\$$customerTotal').width), w * 0.3) + 50;
+    });
+    return SizedBox(
+      width: w * 0.5,
+      height: w * 0.5 * 9 / 16,
+      child: Card(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(30),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: PieChart(
+                    PieChartData(
+                      pieTouchData: PieTouchData(
+                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                          if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
+                            touchedIndexNotifier.value = -1;
+                            return;
+                          }
+                          touchedIndexNotifier.value = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                        },
+                      ),
+                      // centerSpaceRadius: w * 0.05,
+                      sectionsSpace: 3,
+                      sections: pieChartSectionDataList,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              height: w * 0.20,
+              width: maxTextWidth,
+              child: ListView(
+                children: customerInfo,
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
