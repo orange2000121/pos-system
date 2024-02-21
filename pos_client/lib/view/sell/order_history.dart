@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pos/logic/cashier_logic.dart';
 import 'package:pos/store/model/sell/customer.dart';
-import 'package:pos/store/model/sell/goods.dart';
+import 'package:pos/store/model/sell/good_providers/goods.dart';
 import 'package:pos/store/model/sell/order.dart';
 import 'package:pos/store/model/sell/sell.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';

@@ -11,9 +11,11 @@ import 'package:pos/logic/cashier_logic.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:pos/store/model/sell/customer.dart';
-import 'package:pos/store/model/sell/goods.dart';
-import 'package:pos/store/model/sell/goods_group.dart';
+import 'package:pos/store/model/sell/good_providers/goods.dart';
+import 'package:pos/store/model/sell/good_providers/goods_group.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
+import 'package:pos/template/button/text_icon_button.dart';
+import 'package:pos/template/number_input_with_increment_decrement.dart';
 import 'package:pos/template/product_card.dart';
 import 'package:shipment/sample.dart';
 
@@ -265,11 +267,23 @@ class _CashierState extends State<Cashier> {
   Widget abacus(ShopItem item, {int num = 1, String ice = '', String sugar = ''}) {
     List<Widget> sugarChoseWidgets = [];
     List<Widget> iceChoseWidgets = [];
+    double w = MediaQuery.of(context).size.width;
     List<String> sugarList = ['正常糖', '少糖', '半糖', '微糖', '無糖'];
     List<String> iceList = ['正常冰', '少冰', '半冰', '微冰', '去冰'];
     String chosenSugar = sugar, chosenIce = ice;
     TextEditingController quantity = TextEditingController(text: num.toString());
     TextEditingController noteEditingController = TextEditingController(text: item.note);
+    TextEditingController discountEditingController = TextEditingController();
+    ValueNotifier<List<Widget>> annotationOptions = ValueNotifier([
+      TextField(
+        keyboardType: TextInputType.number,
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: '%off',
+        ),
+        controller: discountEditingController,
+      ),
+    ]); // 備註選項
     for (var i = 0; i < sugarList.length; i++) {
       sugarChoseWidgets.add(ElevatedButton(
         onPressed: () {
@@ -286,67 +300,112 @@ class _CashierState extends State<Cashier> {
         child: Text(iceList[i]),
       ));
     }
-    return Column(
-      children: [
-        const Text('糖度'),
-        Row(children: sugarChoseWidgets),
-        const Text('冰塊'),
-        Row(children: iceChoseWidgets),
-        const Text('數量'),
-        Row(
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                if (int.parse(quantity.text) > 1) {
-                  quantity.text = (int.parse(quantity.text) - 1).toString();
-                }
-              },
-              child: const Text('-'),
+    print('w: ${w * 0.4}');
+    return SizedBox(
+      height: 300,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          SizedBox(
+            width: max(400, w * 0.4),
+            height: 200,
+            child: Row(
+              children: [
+                Flexible(
+                  flex: 1,
+                  child: Column(
+                    children: [
+                      TextIconButton(
+                        onPressed: () {
+                          annotationOptions.value = [
+                            TextField(
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: '%off',
+                              ),
+                              controller: discountEditingController,
+                            ),
+                          ];
+                        },
+                        text: '折扣',
+                        icon: Icons.arrow_right,
+                      ),
+                      TextIconButton(
+                        onPressed: () {
+                          annotationOptions.value = [
+                            TextField(
+                              controller: noteEditingController,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: '備註',
+                              ),
+                            ),
+                          ];
+                        },
+                        text: '備註',
+                        icon: Icons.arrow_right,
+                      ),
+                    ],
+                  ),
+                ),
+                const VerticalDivider(),
+                Expanded(
+                  flex: 2,
+                  child: ValueListenableBuilder(
+                      valueListenable: annotationOptions,
+                      builder: (context, options, child) {
+                        return GridView(
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 150,
+                          ),
+                          children: options,
+                        );
+                      }),
+                ),
+              ],
             ),
-            Container(
-              width: 50,
-              height: 60,
-              margin: const EdgeInsets.all(10),
-              child: TextField(
-                keyboardType: TextInputType.number,
-                controller: quantity,
-                onTap: () => quantity.value = TextEditingValue.empty,
-                decoration: const InputDecoration(border: OutlineInputBorder()),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                quantity.text = (int.parse(quantity.text) + 1).toString();
-              },
-              child: const Text('+'),
-            ),
-          ],
-        ),
-        TextField(
-          controller: noteEditingController,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            labelText: '備註',
           ),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(
-                context,
-                ShopItem(
-                  item.id,
-                  item.name,
-                  item.price,
-                  int.parse(quantity.text),
-                  item.unit,
-                  ice: chosenIce,
-                  sugar: chosenSugar,
-                  note: noteEditingController.text,
-                ));
-          },
-          child: const Text('確定'),
-        ),
-      ],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Row(
+                children: [
+                  const Text('數量'),
+                  const SizedBox(width: 8),
+                  NumberInputWithIncrementDecrement(
+                    initialNumber: int.parse(quantity.text),
+                    onChanged: (value) {
+                      quantity.text = value.toString();
+                    },
+                  )
+                ],
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (discountEditingController.text.isNotEmpty) {
+                    item.price = item.price * (1 - double.parse(discountEditingController.text) / 100);
+                    item.note = '${noteEditingController.text}${noteEditingController.text.isEmpty ? '' : ', '}折扣${discountEditingController.text}%';
+                  }
+                  Navigator.pop(
+                      context,
+                      ShopItem(
+                        item.id,
+                        item.name,
+                        item.price,
+                        int.parse(quantity.text),
+                        item.unit,
+                        ice: chosenIce,
+                        sugar: chosenSugar,
+                        note: item.note,
+                      ));
+                },
+                child: const Text('加入'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -363,12 +422,13 @@ class _CashierState extends State<Cashier> {
               onDismissed: (direction) {
                 cashierLogic.shopItemsNotifier.value.removeAt(index);
                 cashierLogic.shopItemsNotifier.notifyListeners();
-                setState(() {});
+                // setState(() {});
               },
               child: ListTile(
+                leading: Text(shopItems[index].quantity.toString()),
                 title: Text(shopItems[index].name),
-                subtitle: Text('${shopItems[index].ice} ${shopItems[index].sugar}'),
-                trailing: Text(shopItems[index].quantity.toString()),
+                subtitle: shopItems[index].note == null ? null : Text(shopItems[index].note!),
+                trailing: Text('${shopItems[index].price * shopItems[index].quantity}'),
                 onTap: () async {
                   ShopItem? item = await showDialog(
                       context: context,

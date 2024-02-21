@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:pos/store/model/sell/goods.dart';
-import 'package:pos/store/model/sell/goods_group.dart';
+import 'package:pos/store/model/sell/good_providers/goods.dart';
+import 'package:pos/store/model/sell/good_providers/goods_group.dart';
 import 'package:pos/template/item_edit.dart';
 import 'package:pos/tool/calculate_text_size.dart';
 
