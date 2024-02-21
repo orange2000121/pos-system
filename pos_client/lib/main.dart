@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
                 final MediaQueryData data = MediaQuery.of(context);
                 double scale = snapshot.data?.getDoubleSetting(DoubleSettingKey.fontSizeScale) ?? 1.0;
                 return MediaQuery(
-                  data: data.copyWith(textScaleFactor: data.textScaleFactor * scale),
+                  data: data.copyWith(textScaler: TextScaler.linear(data.textScaleFactor * scale)),
                   child: child!,
                 );
               },

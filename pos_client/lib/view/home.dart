@@ -67,16 +67,16 @@ class _HomeState extends State<Home> {
           icon: const Icon(Icons.history),
           page: const OrderOverview(),
         ),
-        // RoutesPageCard(
-        //   name: '進貨管理',
-        //   icon: const Icon(Icons.input),
-        //   page: RoutesPage(pageName: '進貨管理', children: [
-        //     RoutesPageCard(name: '進貨', icon: const Icon(Icons.trolley), page: const RestockView()),
-        //     RoutesPageCard(name: '進貨歷史', icon: const Icon(Icons.history), page: const RestockHistory()),
-        //     RoutesPageCard(name: '貨物管理', icon: const Icon(Icons.trolley), page: const PurchasedItemsManage()),
-        //     RoutesPageCard(name: '廠商管理', icon: const Icon(Icons.factory), page: const VendorManage()),
-        //   ]),
-        // ),
+        RoutesPageCard(
+          name: '進貨管理',
+          icon: const Icon(Icons.input),
+          page: RoutesPage(pageName: '進貨管理', children: [
+            RoutesPageCard(name: '進貨', icon: const Icon(Icons.trolley), page: const RestockView()),
+            RoutesPageCard(name: '進貨歷史', icon: const Icon(Icons.history), page: const RestockHistory()),
+            RoutesPageCard(name: '貨物管理', icon: const Icon(Icons.trolley), page: const PurchasedItemsManage()),
+            RoutesPageCard(name: '廠商管理', icon: const Icon(Icons.factory), page: const VendorManage()),
+          ]),
+        ),
         RoutesPageCard(
           name: '設定',
           icon: const Icon(Icons.settings),

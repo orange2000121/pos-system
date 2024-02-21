@@ -91,7 +91,8 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
 
   AlertDialog purchasedDetail(BuildContext context, {PurchasedItem? purchasedItem}) {
     ValueNotifier<int> vendorIdNotifier = ValueNotifier(0);
-    ValueNotifier<TagsGridViewTag> tagNotifier = ValueNotifier(const TagsGridViewTag(name: '', color: Color(-1)));
+    ValueNotifier<TagsGridViewTag> tagNotifier = ValueNotifier(const TagsGridViewTag(id: 0, name: '', color: Color(-1)));
+    List<TagsGridViewTag> tagGridViewTags = [];
     String name = '';
     String unit = '';
     if (purchasedItem != null) {
@@ -162,9 +163,9 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
               }
               return tags;
             }(), builder: (context, tagsSnapshot) {
-              List<TagsGridViewTag> tagGridViewTags = [];
               for (PurchasedItemsTag tag in tagsSnapshot.data ?? []) {
                 tagGridViewTags.add(TagsGridViewTag(
+                    id: tag.id!,
                     name: tag.name,
                     color: Color(tag.color),
                     onDeleted: () async {
@@ -195,7 +196,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
         ),
       ),
       actions: [
-        if (purchasedItem != null) addTag(context, purchasedItem, tagNotifier),
+        if (purchasedItem != null) addTag(context, purchasedItem, tagNotifier, tagGridViewTags),
         if (purchasedItem != null)
           TextButton(
             onPressed: () {
@@ -222,6 +223,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
     BuildContext context,
     PurchasedItem purchasedItem,
     ValueNotifier<TagsGridViewTag> tagNotifier,
+    List tagsData,
   ) {
     return TextButton(
       onPressed: () {
@@ -250,18 +252,21 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                               purchasedItemsTagProvider.insert(purchasedItemsTag).then((value) async {
                                 tagPurchasedItemRelationshipProvider
                                     .insert(
-                                      TagPurchasedItemRelationship(tagId: value, purchasedItemId: purchasedItem.id!),
+                                      TagPurchasedItemRelationship(tagId: value, purchasedItemId: purchasedItem.id!), // 新增貨物和標籤的關係
                                     )
                                     .then(
                                       (value) => setState(() {
+                                        // 這邊的value是插入關係生成的id
                                         //新增一個顯示的標籤到顯示的標籤列表
                                         tagNotifier.value = TagsGridViewTag(
+                                          id: purchasedItemsTag.id!,
                                           name: purchasedItemsTag.name,
                                           color: Color(purchasedItemsTag.color),
                                           onDeleted: () async {
-                                            var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItem.id!);
+                                            var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItem.id!); //找出所有和這個貨物有關的標籤
                                             for (var relate in tagPurchasedRelates) {
                                               if (relate.tagId == value) {
+                                                //在這些標籤中有和要刪掉的標籤一樣的id，將其刪除
                                                 tagPurchasedItemRelationshipProvider.delete(relate.id!);
                                                 break;
                                               }
@@ -287,32 +292,43 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                         builder: (context, tagsSnapshot) {
                           List<TagsGridViewTag> tagGridViewTags = [];
                           for (PurchasedItemsTag tag in tagsSnapshot.data ?? []) {
+                            if (tagsData.any((element) {
+                              print('element id: ${element.id}, tag id: ${tag.id}');
+                              return element.id == tag.id;
+                            })) {
+                              print('重複的標籤 id=${tag.id} name=${tag.name}');
+                              continue;
+                            }
                             //轉換成顯示用的標籤
-                            tagGridViewTags.add(TagsGridViewTag(
-                                name: tag.name,
-                                color: Color(tag.color),
-                                showDeleteIcon: false,
-                                onTap: () {
-                                  tagPurchasedItemRelationshipProvider.insert(
-                                    TagPurchasedItemRelationship(tagId: tag.id!, purchasedItemId: purchasedItem.id!),
-                                  );
-                                  //點擊標籤時，將標籤加入到顯示的標籤列表
-                                  tagNotifier.value = TagsGridViewTag(
-                                    name: tag.name,
-                                    color: Color(tag.color),
-                                    onDeleted: () async {
-                                      //刪除標籤時，將標籤從顯示的標籤列表中刪除
-                                      var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItem.id!);
-                                      for (var relate in tagPurchasedRelates) {
-                                        if (relate.tagId == tag.id) {
-                                          tagPurchasedItemRelationshipProvider.delete(relate.id!);
-                                          break;
+                            tagGridViewTags.add(
+                              TagsGridViewTag(
+                                  id: tag.id!,
+                                  name: tag.name,
+                                  color: Color(tag.color),
+                                  showDeleteIcon: false,
+                                  onTap: () {
+                                    tagPurchasedItemRelationshipProvider.insert(
+                                      TagPurchasedItemRelationship(tagId: tag.id!, purchasedItemId: purchasedItem.id!),
+                                    );
+                                    //點擊標籤時，將標籤加入到顯示的標籤列表
+                                    tagNotifier.value = TagsGridViewTag(
+                                      id: tag.id!,
+                                      name: tag.name,
+                                      color: Color(tag.color),
+                                      onDeleted: () async {
+                                        //刪除標籤時，將標籤從顯示的標籤列表中刪除
+                                        var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItem.id!);
+                                        for (var relate in tagPurchasedRelates) {
+                                          if (relate.tagId == tag.id) {
+                                            tagPurchasedItemRelationshipProvider.delete(relate.id!);
+                                            break;
+                                          }
                                         }
-                                      }
-                                    },
-                                  );
-                                  Navigator.pop(context);
-                                }));
+                                      },
+                                    );
+                                    Navigator.pop(context);
+                                  }),
+                            );
                           }
                           return TagsGridView(
                             tags: tagGridViewTags,

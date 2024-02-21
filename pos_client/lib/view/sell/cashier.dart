@@ -300,7 +300,6 @@ class _CashierState extends State<Cashier> {
         child: Text(iceList[i]),
       ));
     }
-    print('w: ${w * 0.4}');
     return SizedBox(
       height: 300,
       child: Column(

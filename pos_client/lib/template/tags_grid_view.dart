@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 class TagsGridViewTag {
+  final int id;
   final String name;
   final Color color;
   final Function? onDeleted;
   final bool showDeleteIcon;
   final Function()? onTap;
   const TagsGridViewTag({
+    required this.id,
     required this.name,
     required this.color,
     this.onDeleted,

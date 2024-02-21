@@ -148,6 +148,7 @@ class _RestockViewState extends State<RestockView> {
           Future<List<TagPurchasedItemRelationship>> tagPurchasedItemRelationships = Future.value([]);
           tagPurchasedItemRelationships = TagPurchasedItemRelationshipProvider().getAll();
           gridViewTags.add(TagsGridViewTag(
+            id: 0,
             name: '全部',
             color: Colors.grey,
             onTap: () {
@@ -157,6 +158,7 @@ class _RestockViewState extends State<RestockView> {
           ));
           for (var purchasedItemsTag in purchasedItemsTagsSnapshot.data!) {
             gridViewTags.add(TagsGridViewTag(
+              id: purchasedItemsTag.id!,
               name: purchasedItemsTag.name,
               color: Color(purchasedItemsTag.color),
               onTap: () async {
