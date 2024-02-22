@@ -26,7 +26,20 @@ class Vendor {
     required this.status,
     this.note,
   });
-
+  factory Vendor.initial() {
+    return Vendor(
+      id: 0,
+      name: '',
+      address: '',
+      phone: '',
+      fax: '',
+      contactPerson: '',
+      contactPersonPhone: '',
+      contactPersonEmail: '',
+      status: '',
+      note: '',
+    );
+  }
   factory Vendor.fromJson(Map<String, dynamic> json) {
     return Vendor(
       id: json['id'],

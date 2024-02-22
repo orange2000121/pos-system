@@ -4,6 +4,7 @@ import 'package:pos/store/model/restock/purchased_items_tag.dart';
 import 'package:pos/store/model/restock/restock.dart';
 import 'package:pos/store/model/restock/restock_order.dart';
 import 'package:pos/store/model/restock/tag_purchased_item_relationship.dart';
+import 'package:pos/store/model/restock/vendor.dart';
 import 'package:pos/template/number_input_with_increment_decrement.dart';
 import 'package:pos/template/product_card.dart';
 import 'package:pos/template/tags_grid_view.dart';
@@ -18,8 +19,19 @@ class RestockView extends StatefulWidget {
 
 class _RestockViewState extends State<RestockView> {
   PurchasedItemProvider purchasedItemProvider = PurchasedItemProvider();
-  ValueNotifier<List<Restock>> restockItemsNotifier = ValueNotifier<List<Restock>>([]);
-  ValueNotifier<List<PurchasedItem>> purchasedItemsNotifier = ValueNotifier<List<PurchasedItem>>([]);
+  ValueNotifier<List<Restock>> restockItemsNotifier = ValueNotifier<List<Restock>>([]); //訂貨清單
+  ValueNotifier<List<PurchasedItem>> purchasedItemsNotifier = ValueNotifier<List<PurchasedItem>>([]); //可進貨的商品
+  ValueNotifier<Vendor> restockOrderVendorNotifier = ValueNotifier<Vendor>(Vendor.initial()); //此次進貨的供應商
+  @override
+  void initState() {
+    super.initState();
+    restockItemsNotifier.addListener(() {
+      if (restockItemsNotifier.value.isEmpty) {
+        restockOrderVendorNotifier.value = Vendor.initial();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,69 +84,138 @@ class _RestockViewState extends State<RestockView> {
       child: Column(
         children: [
           const Divider(),
-          const Row(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(flex: 5, child: SizedBox()),
+              const Expanded(flex: 5, child: const SizedBox()),
               Expanded(
                 flex: 2,
-                child: Text('總計', textAlign: TextAlign.center),
+                child: Column(children: [
+                  const Text('廠商', textAlign: TextAlign.center),
+                  const SizedBox(height: 20),
+                  ValueListenableBuilder(
+                      valueListenable: restockOrderVendorNotifier,
+                      builder: (context, vendor, child) {
+                        return Text(
+                          vendor.name,
+                          textAlign: TextAlign.center,
+                        );
+                      }),
+                ]),
+              ),
+              Expanded(
+                flex: 2,
+                child: Column(
+                  children: [
+                    const Text('總計', textAlign: TextAlign.center),
+                    const SizedBox(height: 20),
+                    ValueListenableBuilder(
+                        valueListenable: restockItemsNotifier,
+                        builder: (context, restockItems, child) {
+                          return Text(
+                            '${restockItemsNotifier.value.fold(0.0, (previousValue, element) {
+                              return previousValue + element.amount;
+                            })}',
+                            textAlign: TextAlign.center,
+                          );
+                        }),
+                  ],
+                ),
               ),
               Expanded(
                 flex: 5,
-                child: Text('備註'),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              const Expanded(flex: 5, child: SizedBox()),
-              Expanded(
-                flex: 2,
-                child: ValueListenableBuilder(
-                    valueListenable: restockItemsNotifier,
-                    builder: (context, restockItems, child) {
-                      return Text(
-                        '${restockItemsNotifier.value.fold(0.0, (previousValue, element) {
-                          return previousValue + element.amount;
-                        })}',
-                        textAlign: TextAlign.center,
-                      );
-                    }),
-              ),
-              Expanded(
-                flex: 4,
-                child: TextFormField(
-                  textAlign: TextAlign.start,
-                  controller: restockOrderNoteController,
+                child: Column(
+                  children: [
+                    const Text('備註'),
+                    TextFormField(
+                      textAlign: TextAlign.start,
+                      controller: restockOrderNoteController,
+                    ),
+                  ],
                 ),
               ),
               Expanded(
                 flex: 1,
-                child: IconButton(
-                  onPressed: () async {
-                    RestockOrderProvider restockOrderProvider = RestockOrderProvider();
-                    int orderId = await restockOrderProvider.insert(RestockOrder(
-                      vendorId: 1,
-                      date: DateTime.now(),
-                      total: restockItemsNotifier.value.fold(0.0, (previousValue, element) {
-                        return previousValue + element.amount;
-                      }),
-                      note: restockOrderNoteController.text,
-                    ));
-                    RestockProvider restockProvider = RestockProvider();
-                    for (var restock in restockItemsNotifier.value) {
-                      restock.restockOrderId = orderId;
-                      restock.restockDate = DateTime.now();
-                      await restockProvider.insert(restock);
-                    }
-                    restockItemsNotifier.value = [];
-                    restockOrderNoteController.text = '';
-                  },
-                  icon: const Icon(Icons.save),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    IconButton(
+                      onPressed: () async {
+                        RestockOrderProvider restockOrderProvider = RestockOrderProvider();
+                        int orderId = await restockOrderProvider.insert(RestockOrder(
+                          vendorId: restockOrderVendorNotifier.value.id!,
+                          date: DateTime.now(),
+                          total: restockItemsNotifier.value.fold(0.0, (previousValue, element) {
+                            return previousValue + element.amount;
+                          }),
+                          note: restockOrderNoteController.text,
+                        ));
+                        RestockProvider restockProvider = RestockProvider();
+                        for (var restock in restockItemsNotifier.value) {
+                          restock.restockOrderId = orderId;
+                          restock.restockDate = DateTime.now();
+                          await restockProvider.insert(restock);
+                        }
+                        restockItemsNotifier.value = [];
+                        restockOrderNoteController.text = '';
+                      },
+                      icon: const Icon(Icons.save),
+                    ),
+                  ],
                 ),
               ),
             ],
-          )
+          ),
+          // Row(
+          //   children: [
+          //     const Expanded(flex: 5, child: SizedBox()),
+          //     Expanded(
+          //       flex: 2,
+          //       child: ValueListenableBuilder(
+          //           valueListenable: restockItemsNotifier,
+          //           builder: (context, restockItems, child) {
+          //             return Text(
+          //               '${restockItemsNotifier.value.fold(0.0, (previousValue, element) {
+          //                 return previousValue + element.amount;
+          //               })}',
+          //               textAlign: TextAlign.center,
+          //             );
+          //           }),
+          //     ),
+          //     Expanded(
+          //       flex: 4,
+          //       child: TextFormField(
+          //         textAlign: TextAlign.start,
+          //         controller: restockOrderNoteController,
+          //       ),
+          //     ),
+          //     Expanded(
+          //       flex: 1,
+          //       child: IconButton(
+          //         onPressed: () async {
+          //           RestockOrderProvider restockOrderProvider = RestockOrderProvider();
+          //           int orderId = await restockOrderProvider.insert(RestockOrder(
+          //             vendorId: 1,
+          //             date: DateTime.now(),
+          //             total: restockItemsNotifier.value.fold(0.0, (previousValue, element) {
+          //               return previousValue + element.amount;
+          //             }),
+          //             note: restockOrderNoteController.text,
+          //           ));
+          //           RestockProvider restockProvider = RestockProvider();
+          //           for (var restock in restockItemsNotifier.value) {
+          //             restock.restockOrderId = orderId;
+          //             restock.restockDate = DateTime.now();
+          //             await restockProvider.insert(restock);
+          //           }
+          //           restockItemsNotifier.value = [];
+          //           restockOrderNoteController.text = '';
+          //         },
+          //         icon: const Icon(Icons.save),
+          //       ),
+          //     ),
+          //   ],
+          // )
         ],
       ),
     );
@@ -179,34 +260,53 @@ class _RestockViewState extends State<RestockView> {
         });
   }
 
-  ListView purchasedItemList(List<PurchasedItem> purchasedItems) {
-    return ListView.builder(
-      itemCount: purchasedItems.length,
-      itemBuilder: (context, index) {
-        PurchasedItem purchasedItem = purchasedItems[index];
-        return InkWell(
-          onTap: () {
-            restockItemsNotifier.value.add(
-              Restock(
-                purchasedItemId: purchasedItem.id!,
-                quantity: 1,
-                price: 0,
-                amount: 0,
-                restockDate: DateTime.now(),
-              ),
-            );
-            // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-            restockItemsNotifier.notifyListeners();
-          },
-          child: ProductCard(
-            width: 100,
-            height: 100,
-            title: purchasedItem.name,
-            subtitle: '(${purchasedItem.unit})',
-          ),
-        );
-      },
-    );
+  Widget purchasedItemList(List<PurchasedItem> purchasedItems) {
+    return ValueListenableBuilder(
+        valueListenable: restockOrderVendorNotifier,
+        builder: (context, vendor, child) {
+          List<PurchasedItem> purchasedItemsCopy = [];
+          print('vendor.id: ${vendor.id}, purchasedItemsCopy: $purchasedItemsCopy');
+          if (vendor.id != Vendor.initial().id) {
+            for (var purchasedItem in purchasedItems) {
+              print('vendor.id: ${vendor.id}, purchasedItem.vendorId: ${purchasedItem.vendorId}');
+              if (purchasedItem.vendorId == vendor.id) {
+                purchasedItemsCopy.add(purchasedItem);
+              }
+            }
+          } else {
+            purchasedItemsCopy = purchasedItems;
+          }
+          return ListView.builder(
+            itemCount: purchasedItemsCopy.length,
+            itemBuilder: (context, index) {
+              PurchasedItem purchasedItem = purchasedItemsCopy[index];
+              return InkWell(
+                onTap: () async {
+                  restockItemsNotifier.value.add(
+                    Restock(
+                      purchasedItemId: purchasedItem.id!,
+                      quantity: 1,
+                      price: 0,
+                      amount: 0,
+                      restockDate: DateTime.now(),
+                    ),
+                  );
+                  if (restockItemsNotifier.value.length == 1) {
+                    restockOrderVendorNotifier.value = await VendorProvider().getItem(purchasedItem.vendorId);
+                  }
+                  // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                  restockItemsNotifier.notifyListeners();
+                },
+                child: ProductCard(
+                  width: 100,
+                  height: 100,
+                  title: purchasedItem.name,
+                  subtitle: '(${purchasedItem.unit})',
+                ),
+              );
+            },
+          );
+        });
   }
 
   Container tableTitle() {
@@ -214,35 +314,42 @@ class _RestockViewState extends State<RestockView> {
       height: 50,
       margin: const EdgeInsets.fromLTRB(5, 0, 5, 0),
       padding: const EdgeInsets.all(0),
-      child: const Row(
+      child: Row(
         children: [
-          Expanded(
+          const Expanded(
             flex: 2,
             child: Text('品項'),
           ),
-          Expanded(
+          const Expanded(
             flex: 1,
             child: Text('單位'),
           ),
-          Expanded(
+          const Expanded(
             flex: 2,
             child: Text('數量'),
           ),
-          Expanded(
+          const Expanded(
             flex: 2,
             child: Text('單價'),
           ),
-          Expanded(
+          const Expanded(
             flex: 2,
             child: Text('小計', textAlign: TextAlign.center),
           ),
-          Expanded(
+          const Expanded(
             flex: 4,
             child: Text('備註'),
           ),
           Expanded(
             flex: 1,
-            child: SizedBox(),
+            child: IconButton(
+              onPressed: () {
+                restockItemsNotifier.value = [];
+                // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                restockItemsNotifier.notifyListeners();
+              },
+              icon: const Icon(Icons.delete, color: Colors.red),
+            ),
           ),
         ],
       ),

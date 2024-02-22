@@ -9,7 +9,15 @@ class SimplAndDetailInfoCard extends StatefulWidget {
   final Function(dynamic popValue)? onPop;
 
   ///用於歷史紀錄的展示，可自定義標題、副標題、簡易資訊、詳細資訊、彈出視窗按鈕、彈出視窗關閉後的動作
-  const SimplAndDetailInfoCard({super.key, required this.title, this.subtitle, this.simpleInfo, this.detailedInfo, this.dialogAction, this.onPop});
+  const SimplAndDetailInfoCard({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.simpleInfo,
+    this.detailedInfo,
+    this.dialogAction,
+    this.onPop,
+  });
 
   @override
   State<SimplAndDetailInfoCard> createState() => _SimplAndDetailInfoCardState();
@@ -19,7 +27,7 @@ class _SimplAndDetailInfoCardState extends State<SimplAndDetailInfoCard> {
   /* -------------------------------------------------------------------------- */
   /*                                   Widgets                                  */
   /* -------------------------------------------------------------------------- */
-  Widget dialog(BuildContext context) {
+  Widget detailInfoDialog(BuildContext context) {
     return AlertDialog(
         title: widget.title,
         content: Column(
@@ -56,7 +64,7 @@ class _SimplAndDetailInfoCardState extends State<SimplAndDetailInfoCard> {
         var popValue = await showDialog(
           context: context,
           builder: (BuildContext context) {
-            return dialog(context);
+            return detailInfoDialog(context);
           },
         );
         if (widget.onPop != null) {
@@ -67,7 +75,6 @@ class _SimplAndDetailInfoCardState extends State<SimplAndDetailInfoCard> {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         decoration: const BoxDecoration(
           border: Border(bottom: BorderSide(color: Colors.grey)),
-          // borderRadius: BorderRadius.circular(8),
         ),
         child: ListTile(
           leading: widget.title,

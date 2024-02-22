@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pos/store/model/restock/purchased_items.dart';
 import 'package:pos/store/model/restock/restock.dart';
 import 'package:pos/store/model/restock/restock_order.dart';
+import 'package:pos/store/model/restock/vendor.dart';
 import 'package:pos/template/small_item_card.dart';
 import 'package:pos/template/date_picker.dart';
 
@@ -61,7 +62,11 @@ class _RestockHistoryState extends State<RestockHistory> {
                               Text('總金額：${order.total}'),
                             ],
                             simpleInfo: [
-                              Text('廠商編號：${order.vendorId}'),
+                              FutureBuilder(
+                                  future: VendorProvider().getItem(order.vendorId),
+                                  builder: (context, AsyncSnapshot<Vendor> vendorSnapshot) {
+                                    return Text('訂購廠商：${vendorSnapshot.hasData ? vendorSnapshot.data!.name : '未知廠商'}');
+                                  }),
                               Text('備註：${order.note}'),
                             ],
                             detailedInfo: [

@@ -52,7 +52,7 @@ class _OrderHistoryState extends State<OrderHistory> {
     return Scaffold(
       appBar: AppBar(
           title: FutureBuilder(
-              future: customerProvider.getItem(customerId!),
+              future: customerProvider.getItem(customerId),
               builder: (context, AsyncSnapshot<Customer> snapshot) {
                 if (snapshot.hasData) {
                   return Text('『${snapshot.data!.name}』歷史訂單');
@@ -423,11 +423,7 @@ class _OrderHistoryState extends State<OrderHistory> {
   Future<Map<OrderItem, List<SellItem>>> getOrders() async {
     List orders;
 
-    if (customerId != null) {
-      orders = await orderProvider.getAllFromCustomerIdAndDateRange(customerId!, startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
-    } else {
-      orders = await orderProvider.getAllFromDateRange(startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
-    }
+    orders = await orderProvider.getAllFromCustomerIdAndDateRange(customerId, startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
     Map<OrderItem, List<SellItem>> orderMap = {};
     for (var i = 0; i < orders.length; i++) {
       orderMap[orders[i]] = await sellProvider.getItemByOrderId(orders[i].id!);

@@ -49,82 +49,7 @@ class _OrderOverviewState extends State<OrderOverview> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        height: 200,
-                        child: ListView.builder(
-                          itemCount: allCustomerSnapshot.data!.length,
-                          scrollDirection: Axis.horizontal,
-                          itemBuilder: (context, index) {
-                            return SizedBox(
-                              width: 200,
-                              child: Card(
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => OrderHistory(
-                                                  customerId: allCustomerSnapshot.data![index].id,
-                                                  startDate: startDateNotifier.value ?? DateTime(2000),
-                                                  endDate: endDateNotifier.value ?? DateTime(2100),
-                                                )));
-                                  },
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            allCustomerSnapshot.data![index].name,
-                                            style: const TextStyle(fontSize: 20),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Text(
-                                            allCustomerSnapshot.data![index].phone,
-                                            style: const TextStyle(fontSize: 20),
-                                          ),
-                                        ],
-                                      ),
-                                      Text(
-                                        allCustomerSnapshot.data![index].address,
-                                        style: const TextStyle(fontSize: 20),
-                                      ),
-                                      FutureBuilder(
-                                        future: () async {
-                                          if (allCustomerSnapshot.data![index].id == null) {
-                                            return null;
-                                          }
-                                          return await orderProvider.getAllFromCustomerIdAndDateRange(
-                                              allCustomerSnapshot.data![index].id!, startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
-                                        }(),
-                                        builder: (context, ordersSnapshot) {
-                                          if (ordersSnapshot.hasData) {
-                                            return Column(
-                                              children: [
-                                                Text(
-                                                  '訂單數: ${ordersSnapshot.data!.length.toString()}',
-                                                  style: const TextStyle(fontSize: 20),
-                                                ),
-                                                Text(
-                                                  '總金額: ${ordersSnapshot.data!.fold(0, (previousValue, element) => (previousValue + element.totalPrice).toInt())}',
-                                                  style: const TextStyle(fontSize: 20),
-                                                ),
-                                              ],
-                                            );
-                                          } else {
-                                            return const SizedBox();
-                                          }
-                                        },
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                      customerOrderHorList(allCustomerSnapshot),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: FutureBuilder(
@@ -160,14 +85,105 @@ class _OrderOverviewState extends State<OrderOverview> {
     );
   }
 
+  SizedBox customerOrderHorList(AsyncSnapshot<List<Customer>> allCustomerSnapshot) {
+    //列出所有的客戶，並顯示他們的訂單數量與總金額，點擊後進入訂單紀錄
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+        itemCount: allCustomerSnapshot.data!.length + 1,
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          try {
+            return SizedBox(
+              width: 200,
+              child: customerInfoCard(context, allCustomerSnapshot.data![index]),
+            );
+          } catch (e) {
+            return SizedBox(
+              width: 200,
+              child: customerInfoCard(context, Customer('未選擇客戶', '', '', '')),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  Card customerInfoCard(BuildContext context, Customer customer) {
+    return Card(
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => OrderHistory(
+                        customerId: customer.id,
+                        startDate: startDateNotifier.value ?? DateTime(2000),
+                        endDate: endDateNotifier.value ?? DateTime(2100),
+                      )));
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  customer.name,
+                  style: const TextStyle(fontSize: 20),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  customer.phone,
+                  style: const TextStyle(fontSize: 20),
+                ),
+              ],
+            ),
+            Text(
+              customer.address,
+              style: const TextStyle(fontSize: 20),
+            ),
+            FutureBuilder(
+              future: () async {
+                return await orderProvider.getAllFromCustomerIdAndDateRange(customer.id, startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
+              }(),
+              builder: (context, ordersSnapshot) {
+                if (ordersSnapshot.hasData) {
+                  return Column(
+                    children: [
+                      Text(
+                        '訂單數: ${ordersSnapshot.data!.length.toString()}',
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                      Text(
+                        '總金額: ${ordersSnapshot.data!.fold(0, (previousValue, element) => (previousValue + element.totalPrice).toInt())}',
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    ],
+                  );
+                } else {
+                  return const SizedBox();
+                }
+              },
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget customerChartCard(ValueNotifier<dynamic> touchedIndexNotifier, AsyncSnapshot<List<OrderItem>> ordersSnapshot, AsyncSnapshot<List<Customer>> allCustomerSnapshot) {
+    //包含圓餅圖與客戶資訊的卡片
     List<PieChartSectionData> pieChartSectionDataList = [];
     List<Widget> customerInfo = [];
     double w = MediaQuery.of(context).size.width;
     double maxTextWidth = 0;
     List<Color> colors = [Colors.red, Colors.blue, Colors.green, Colors.yellow, Colors.purple, Colors.orange, Colors.pink, Colors.teal, Colors.indigo, Colors.lime];
     double total = ordersSnapshot.data!.fold(0, (previousValue, element) => (previousValue + element.totalPrice));
-    allCustomerSnapshot.data!.asMap().forEach((index, customer) {
+    List<Customer> customers = [];
+    customers += allCustomerSnapshot.data!;
+    customers.add(Customer('未選擇客戶', '', '', ''));
+    customers.asMap().forEach((index, customer) {
       double customerTotal = 0;
       for (OrderItem order in ordersSnapshot.data!) {
         if (order.customerId == customer.id) {
@@ -194,11 +210,13 @@ class _OrderOverviewState extends State<OrderOverview> {
           ],
         ),
       ));
-      maxTextWidth = min(max(maxTextWidth, calculateTextSize(context, '${customer.name}：\$$customerTotal').width), w * 0.3) + 50;
+      maxTextWidth = max(maxTextWidth, calculateTextSize(context, '${customer.name}：\$$customerTotal').width);
+      // maxTextWidth = min(max(maxTextWidth, calculateTextSize(context, '${customer.name}：\$$customerTotal').width), w * 0.3) + 50;
     });
+    print('windows width: $w');
     return SizedBox(
-      width: w * 0.5,
-      height: w * 0.5 * 9 / 16,
+      width: max(700, w * 0.5),
+      height: max(700, w * 0.5) * 9 / 16,
       child: Card(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -227,12 +245,17 @@ class _OrderOverviewState extends State<OrderOverview> {
                 ),
               ),
             ),
-            SizedBox(
-              height: w * 0.20,
-              width: maxTextWidth,
-              child: ListView(
-                children: customerInfo,
-              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                SizedBox(
+                  height: max(350, w * 0.25),
+                  width: maxTextWidth + 50,
+                  child: ListView(
+                    children: customerInfo,
+                  ),
+                ),
+              ],
             )
           ],
         ),
