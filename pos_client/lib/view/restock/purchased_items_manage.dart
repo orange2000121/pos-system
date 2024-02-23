@@ -116,20 +116,27 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                     future: vendorProvider.getAll(),
                     initialData: [Vendor.initial()],
                     builder: (context, snapshot) {
-                      if (purchasedItem == null && snapshot.data!.isNotEmpty) {
-                        vendorIdNotifier.value = snapshot.data!.first.id!;
-                      }
+                      // if (purchasedItem == null && snapshot.data!.isNotEmpty) {
+                      //   vendorIdNotifier.value = snapshot.data!.first.id!;
+                      //   print('vendor id: ${vendorIdNotifier.value}');
+                      // }
                       return ValueListenableBuilder<int>(
                           valueListenable: vendorIdNotifier,
                           builder: (context, value, child) {
                             return DropdownButton(
                               value: vendorIdNotifier.value,
                               onChanged: (value) {
-                                setState(() {
-                                  vendorIdNotifier.value = value!;
-                                });
+                                // setState(() {
+                                //   vendorIdNotifier.value = value!;
+                                // });
+                                vendorIdNotifier.value = value!;
+                                // vendorIdNotifier.notifyListeners();
                               },
                               items: [
+                                DropdownMenuItem<int>(
+                                  value: Vendor.initial().id,
+                                  child: const Text('請選擇供應商'),
+                                ),
                                 ...snapshot.data!.map((e) {
                                   return DropdownMenuItem<int>(
                                     value: e.id,
@@ -275,23 +282,23 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                             name: '新增標籤',
                             onPressed: () {
                               PurchasedItemsTag purchasedItemsTag = PurchasedItemsTag(name: tagNameController.text, color: Random().nextInt(0xFF051B2B)); //製作一個隨機顏色的標籤，用於存入資料庫
-                              purchasedItemsTagProvider.insert(purchasedItemsTag).then((value) async {
+                              purchasedItemsTagProvider.insert(purchasedItemsTag).then((tagId) async {
                                 tagPurchasedItemRelationshipProvider
                                     .insert(
-                                      TagPurchasedItemRelationship(tagId: value, purchasedItemId: purchasedItem.id!), // 新增貨物和標籤的關係
+                                      TagPurchasedItemRelationship(tagId: tagId, purchasedItemId: purchasedItem.id!), // 新增貨物和標籤的關係
                                     )
                                     .then(
-                                      (value) => setState(() {
+                                      (relationshipId) => setState(() {
                                         // 這邊的value是插入關係生成的id
                                         //新增一個顯示的標籤到顯示的標籤列表
                                         tagNotifier.value = TagsGridViewTag(
-                                          id: purchasedItemsTag.id!,
+                                          id: tagId,
                                           name: purchasedItemsTag.name,
                                           color: Color(purchasedItemsTag.color),
                                           onDeleted: () async {
                                             var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItem.id!); //找出所有和這個貨物有關的標籤
                                             for (var relate in tagPurchasedRelates) {
-                                              if (relate.tagId == value) {
+                                              if (relate.tagId == relationshipId) {
                                                 //在這些標籤中有和要刪掉的標籤一樣的id，將其刪除
                                                 tagPurchasedItemRelationshipProvider.delete(relate.id!);
                                                 break;
