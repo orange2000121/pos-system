@@ -7,6 +7,7 @@ import 'package:pos/store/model/restock/tag_purchased_item_relationship.dart';
 import 'package:pos/store/model/restock/vendor.dart';
 import 'package:pos/template/item_edit.dart';
 import 'package:pos/template/tags_grid_view.dart';
+import 'package:pos/view/restock/vendor_manage.dart';
 
 class PurchasedItemsManage extends StatefulWidget {
   const PurchasedItemsManage({super.key});
@@ -113,9 +114,9 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                 const Text('供應商：'),
                 FutureBuilder(
                     future: vendorProvider.getAll(),
-                    initialData: const [],
+                    initialData: [Vendor.initial()],
                     builder: (context, snapshot) {
-                      if (purchasedItem == null) {
+                      if (purchasedItem == null && snapshot.data!.isNotEmpty) {
                         vendorIdNotifier.value = snapshot.data!.first.id!;
                       }
                       return ValueListenableBuilder<int>(
@@ -128,12 +129,31 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                                   vendorIdNotifier.value = value!;
                                 });
                               },
-                              items: snapshot.data!.map((e) {
-                                return DropdownMenuItem<int>(
-                                  value: e.id,
-                                  child: Text(e.name),
-                                );
-                              }).toList(),
+                              items: [
+                                ...snapshot.data!.map((e) {
+                                  return DropdownMenuItem<int>(
+                                    value: e.id,
+                                    child: Text(e.name),
+                                  );
+                                }).toList(),
+                                if (snapshot.data!.isEmpty)
+                                  DropdownMenuItem<int>(
+                                    value: Vendor.initial().id,
+                                    child: const Text('無供應商'),
+                                  ),
+                                // DropdownMenuItem<int>(
+                                //   value: Vendor.initial().id,
+                                //   child: TextButton(
+                                //       onPressed: () {
+                                //         Navigator.push(context, MaterialPageRoute(builder: (context) => VendorDetail(vendor: Vendor.initial(), isCreate: true))).then((value) {
+                                //           if (value != null) {
+                                //             setState(() {});
+                                //           }
+                                //         });
+                                //       },
+                                //       child: Text('新增供應商')),
+                                // ),
+                              ],
                             );
                           });
                     }),
@@ -207,14 +227,20 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
             },
             child: const Text('刪除', style: TextStyle(color: Colors.red)),
           ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(
-              PurchasedItem(vendorId: vendorIdNotifier.value, name: name, unit: unit),
-            );
-          },
-          child: purchasedItem == null ? const Text('新增') : const Text('修改'),
-        ),
+        ValueListenableBuilder(
+            valueListenable: vendorIdNotifier,
+            builder: (context, value, child) {
+              return TextButton(
+                onPressed: vendorIdNotifier.value != Vendor.initial().id
+                    ? () {
+                        Navigator.of(context).pop(
+                          PurchasedItem(vendorId: vendorIdNotifier.value, name: name, unit: unit),
+                        );
+                      }
+                    : null,
+                child: purchasedItem == null ? const Text('新增') : const Text('修改'),
+              );
+            }),
       ],
     );
   }
