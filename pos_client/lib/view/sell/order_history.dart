@@ -159,7 +159,7 @@ class _OrderHistoryState extends State<OrderHistory> {
               builder: (context, isEdit, child) {
                 return isEdit
                     ? DatePickerField(
-                        selectedDate: order.createAt,
+                        initialDate: order.createAt,
                         onChanged: (date) => order.createAt = date,
                       )
                     : Text(

@@ -1,11 +1,9 @@
-import 'dart:math';
-
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:pos/store/model/sell/customer.dart';
 import 'package:pos/store/model/sell/order.dart';
+import 'package:pos/template/charts/pie_chart_and_detail.dart';
 import 'package:pos/template/date_picker.dart';
-import 'package:pos/tool/calculate_text_size.dart';
 import 'package:pos/view/sell/order_history.dart';
 
 class OrderOverview extends StatefulWidget {
@@ -26,7 +24,7 @@ class _OrderOverviewState extends State<OrderOverview> {
     DateTime now = DateTime.now();
     //這個月的起始日期與結束日期
     startDateNotifier.value = DateTime(now.year, now.month, 1);
-    endDateNotifier.value = DateTime(now.year, now.month + 1, 0);
+    endDateNotifier.value = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
   }
 
   @override
@@ -44,12 +42,12 @@ class _OrderOverviewState extends State<OrderOverview> {
           ),
           FutureBuilder(
               future: customerProvider.getAll(),
-              builder: (context, AsyncSnapshot<List<Customer>> allCustomerSnapshot) {
-                if (allCustomerSnapshot.hasData) {
+              builder: (context, AsyncSnapshot<List<Customer>> customersSnapshot) {
+                if (customersSnapshot.hasData) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      customerOrderHorList(allCustomerSnapshot),
+                      customerOrderHorList(customersSnapshot),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: FutureBuilder(
@@ -57,16 +55,18 @@ class _OrderOverviewState extends State<OrderOverview> {
                             return await orderProvider.getAllFromDateRange(startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
                           }(),
                           builder: (context, ordersSnapshot) {
-                            ValueNotifier touchedIndexNotifier = ValueNotifier(-1);
                             if (ordersSnapshot.hasData) {
-                              return Wrap(
-                                children: [
-                                  ValueListenableBuilder(
-                                      valueListenable: touchedIndexNotifier,
-                                      builder: (context, touchedIndex, child) {
-                                        return customerChartCard(touchedIndexNotifier, ordersSnapshot, allCustomerSnapshot);
-                                      }),
-                                ],
+                              return SizedBox(
+                                height: MediaQuery.of(context).size.height - 200 - 138,
+                                child: ListView(
+                                  children: [
+                                    Wrap(
+                                      children: [
+                                        customerChartCard(ordersSnapshot, customersSnapshot),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               );
                             } else {
                               return const SizedBox();
@@ -172,14 +172,10 @@ class _OrderOverviewState extends State<OrderOverview> {
     );
   }
 
-  Widget customerChartCard(ValueNotifier<dynamic> touchedIndexNotifier, AsyncSnapshot<List<OrderItem>> ordersSnapshot, AsyncSnapshot<List<Customer>> allCustomerSnapshot) {
+  Widget customerChartCard(AsyncSnapshot<List<OrderItem>> ordersSnapshot, AsyncSnapshot<List<Customer>> allCustomerSnapshot) {
     //包含圓餅圖與客戶資訊的卡片
-    List<PieChartSectionData> pieChartSectionDataList = [];
-    List<Widget> customerInfo = [];
-    double w = MediaQuery.of(context).size.width;
-    double maxTextWidth = 0;
-    List<Color> colors = [Colors.red, Colors.blue, Colors.green, Colors.yellow, Colors.purple, Colors.orange, Colors.pink, Colors.teal, Colors.indigo, Colors.lime];
-    double total = ordersSnapshot.data!.fold(0, (previousValue, element) => (previousValue + element.totalPrice));
+    List<String> customerNames = [];
+    List<double> customerValues = [];
     List<Customer> customers = [];
     customers += allCustomerSnapshot.data!;
     customers.add(Customer('未選擇客戶', '', '', ''));
@@ -190,77 +186,10 @@ class _OrderOverviewState extends State<OrderOverview> {
           customerTotal += order.totalPrice;
         }
       }
-      pieChartSectionDataList.add(PieChartSectionData(
-        color: colors[index % colors.length],
-        value: customerTotal,
-        title: '${(customerTotal / total * 100).toStringAsFixed(2)}%',
-        radius: index == touchedIndexNotifier.value ? 100 : 80,
-        titleStyle: const TextStyle(fontSize: 20),
-      ));
-      customerInfo.add(Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              color: colors[index % colors.length],
-            ),
-            Text('${customer.name}：\$$customerTotal'),
-          ],
-        ),
-      ));
-      maxTextWidth = max(maxTextWidth, calculateTextSize(context, '${customer.name}：\$$customerTotal').width);
-      // maxTextWidth = min(max(maxTextWidth, calculateTextSize(context, '${customer.name}：\$$customerTotal').width), w * 0.3) + 50;
+      customerNames.add(customer.name);
+      customerValues.add(customerTotal);
     });
-    print('windows width: $w');
-    return SizedBox(
-      width: max(700, w * 0.5),
-      height: max(700, w * 0.5) * 9 / 16,
-      child: Card(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(30),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: PieChart(
-                    PieChartData(
-                      pieTouchData: PieTouchData(
-                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                          if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
-                            touchedIndexNotifier.value = -1;
-                            return;
-                          }
-                          touchedIndexNotifier.value = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                        },
-                      ),
-                      // centerSpaceRadius: w * 0.05,
-                      sectionsSpace: 3,
-                      sections: pieChartSectionDataList,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                SizedBox(
-                  height: max(350, w * 0.25),
-                  width: maxTextWidth + 50,
-                  child: ListView(
-                    children: customerInfo,
-                  ),
-                ),
-              ],
-            )
-          ],
-        ),
-      ),
-    );
+    return PieChartAndDetail(title: '客戶', itemNames: customerNames, itemValues: customerValues);
   }
 
   List<PieChartSectionData> showSections(AsyncSnapshot<List<OrderItem>> ordersSnapshot, AsyncSnapshot<List<Customer>> allCustomerSnapshot, ValueNotifier<dynamic> touchedIndexNotifier) {

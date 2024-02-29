@@ -3,6 +3,7 @@ import 'package:pos/store/model/restock/purchased_items.dart';
 import 'package:pos/store/model/restock/restock.dart';
 import 'package:pos/store/model/restock/restock_order.dart';
 import 'package:pos/store/model/restock/vendor.dart';
+import 'package:pos/template/charts/pie_chart_and_detail.dart';
 import 'package:pos/template/small_item_card.dart';
 import 'package:pos/template/date_picker.dart';
 
@@ -19,18 +20,23 @@ class _RestockHistoryState extends State<RestockHistory> {
   final RestockOrderProvider restockOrderProvider = RestockOrderProvider();
   final RestockProvider restockProvider = RestockProvider();
   final PurchasedItemProvider purchasedItemProvider = PurchasedItemProvider();
-  Future<Map<int, PurchasedItem>> purchasedItems = Future.value({});
+  ValueNotifier<Map<int, PurchasedItem>> purchasedItemsNotifier = ValueNotifier({}); //Map<purchasedItemId, PurchasedItem>
+  ValueNotifier<List<RestockOrder>> restockOrdersNotifier = ValueNotifier([]);
+  ValueNotifier<Map<int, List<Restock>>> allRestocksNotifier = ValueNotifier({}); //Map<restockOrderId, List<Restock>>
+  ValueNotifier<Map<int, Vendor>> vendorsNotifier = ValueNotifier({}); //Map<vendorId, Vendor>
+
   @override
   void initState() {
     super.initState();
     DateTime now = DateTime.now();
     startDateNotifier.value = DateTime(now.year, now.month, 1);
-    endDateNotifier.value = DateTime(now.year, now.month + 1, 0);
-    purchasedItems = getPurchasedItemsToMap();
+    endDateNotifier.value = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+    asyncInit();
   }
 
   @override
   Widget build(BuildContext context) {
+    getRestockData();
     return Scaffold(
       appBar: AppBar(title: const Text('進貨總覽')),
       body: Column(children: [
@@ -42,30 +48,42 @@ class _RestockHistoryState extends State<RestockHistory> {
           },
         ),
         Expanded(
-          child: FutureBuilder(
-              future: restockOrderProvider.getAllFromDateRange(startDateNotifier.value ?? DateTime.now(), endDateNotifier.value ?? DateTime.now()),
-              builder: (context, restockOrdersSnapshot) {
-                if (!restockOrdersSnapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
+          child: ListView(
+            // gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            //   crossAxisCount: 2,
+            // ),
+            children: [
+              Wrap(children: [
+                vendorPieChart(),
+                purchasePieChart(),
+              ])
+            ],
+          ),
+        ),
+        Expanded(
+          child: ValueListenableBuilder(
+              valueListenable: restockOrdersNotifier,
+              // future: restockOrderProvider.getAllFromDateRange(startDateNotifier.value ?? DateTime.now(), endDateNotifier.value ?? DateTime.now()),
+              builder: (context, restockOrders, child) {
                 return ListView.builder(
-                  itemCount: restockOrdersSnapshot.data!.length,
+                  itemCount: restockOrders.length,
                   itemBuilder: (context, index) {
-                    RestockOrder order = restockOrdersSnapshot.data![index];
-                    return FutureBuilder(
-                        future: restockProvider.getAllByRestockOrderId(order.id!),
-                        builder: (context, AsyncSnapshot<List<Restock>> restocksSnapshot) {
+                    RestockOrder order = restockOrders[index];
+                    return ValueListenableBuilder(
+                        valueListenable: allRestocksNotifier,
+                        // future: restockProvider.getAllByRestockOrderId(order.id!),
+                        builder: (context, allRestocks, child) {
+                          List<Restock> restocks = allRestocks[order.id!] ?? [];
                           return SimplAndDetailInfoCard(
                             title: Text('訂單時間  ${order.date.toString().split('.')[0]}'),
                             subtitle: [
                               Text('總金額：${order.total}'),
                             ],
                             simpleInfo: [
-                              FutureBuilder(
-                                  future: VendorProvider().getItem(order.vendorId),
-                                  builder: (context, AsyncSnapshot<Vendor> vendorSnapshot) {
-                                    return Text('訂購廠商：${vendorSnapshot.hasData ? vendorSnapshot.data!.name : '未知廠商'}');
+                              ValueListenableBuilder(
+                                  valueListenable: vendorsNotifier,
+                                  builder: (context, vendors, child) {
+                                    return Text('訂購廠商：${vendors[order.vendorId]?.name ?? '未知廠商'}');
                                   }),
                               Text('備註：${order.note}'),
                             ],
@@ -79,25 +97,25 @@ class _RestockHistoryState extends State<RestockHistory> {
                                   Expanded(flex: 4, child: Text('備註')),
                                 ],
                               ),
-                              restocksSnapshot.hasData
+                              allRestocksNotifier.value.isNotEmpty
                                   ? ListView.builder(
                                       shrinkWrap: true,
-                                      itemCount: restocksSnapshot.data!.length,
+                                      itemCount: restocks.length,
                                       itemBuilder: (context, index) {
-                                        Restock restock = restocksSnapshot.data![index];
+                                        Restock restock = restocks[index];
                                         return Column(
                                           children: [
                                             Row(
                                               children: [
                                                 Expanded(
                                                   flex: 2,
-                                                  child: FutureBuilder(
-                                                    future: purchasedItems,
-                                                    builder: (context, AsyncSnapshot<Map<int, PurchasedItem>> purchasedItemsSnapshot) {
-                                                      if (!purchasedItemsSnapshot.hasData) {
+                                                  child: ValueListenableBuilder(
+                                                    valueListenable: purchasedItemsNotifier,
+                                                    builder: (context, purchasedItems, child) {
+                                                      if (purchasedItems.isEmpty) {
                                                         return const SizedBox();
                                                       }
-                                                      return Text('${purchasedItemsSnapshot.data![restock.purchasedItemId]?.name ?? restock.purchasedItemId}');
+                                                      return Text(purchasedItems[restock.purchasedItemId]?.name ?? '已刪除貨物');
                                                     },
                                                   ),
                                                 ),
@@ -161,15 +179,71 @@ class _RestockHistoryState extends State<RestockHistory> {
       ]),
     );
   }
+
   /* -------------------------------------------------------------------------- */
   /*                                   WIDGET                                   */
   /* -------------------------------------------------------------------------- */
+  Widget vendorPieChart() {
+    return ValueListenableBuilder(
+        valueListenable: restockOrdersNotifier,
+        builder: (context, restockOrders, child) {
+          return ValueListenableBuilder(
+              valueListenable: vendorsNotifier,
+              builder: (context, vendors, child) {
+                if (restockOrders.isEmpty || vendors.isEmpty) {
+                  return const SizedBox();
+                }
+                Map<String, double> vendorTotal = {};
+                for (RestockOrder restockOrder in restockOrders) {
+                  vendorTotal[vendors[restockOrder.vendorId]?.name ?? '未知廠商'] = (vendorTotal[vendors[restockOrder.vendorId]?.name ?? '未知廠商'] ?? 0) + restockOrder.total;
+                }
+
+                return PieChartAndDetail(title: '廠商', itemNames: vendorTotal.keys.toList(), itemValues: vendorTotal.values.toList());
+              });
+        });
+  }
+
+  Widget purchasePieChart() {
+    return ValueListenableBuilder(
+        valueListenable: allRestocksNotifier,
+        builder: (context, allRestocks, child) {
+          return ValueListenableBuilder(
+              valueListenable: purchasedItemsNotifier,
+              builder: (context, purchasedItem, child) {
+                if (allRestocks.isEmpty || purchasedItem.isEmpty) {
+                  return const SizedBox();
+                }
+                Map<String, double> purchaseTotal = {};
+                for (List<Restock> restocks in allRestocks.values.toList()) {
+                  for (Restock restock in restocks) {
+                    purchaseTotal[purchasedItem[restock.purchasedItemId]?.name ?? '已刪除貨物'] = (purchaseTotal[purchasedItem[restock.purchasedItemId]?.name ?? '已刪除貨物'] ?? 0) + restock.amount;
+                  }
+                }
+
+                return PieChartAndDetail(
+                  title: '進貨',
+                  itemNames: purchaseTotal.keys.toList(),
+                  itemValues: purchaseTotal.values.toList(),
+                  showPercentages: true,
+                );
+              });
+        });
+  }
 
   /* -------------------------------------------------------------------------- */
   /*                                  Function                                  */
   /* -------------------------------------------------------------------------- */
-  Future<Map<int, PurchasedItem>> getPurchasedItemsToMap() async {
-    var purchasedItems = await purchasedItemProvider.queryAll();
-    return {for (var purchasedItem in purchasedItems) purchasedItem.id!: purchasedItem};
+  void asyncInit() async {
+    purchasedItemsNotifier.value = {for (var purchasedItem in await purchasedItemProvider.queryAll()) purchasedItem.id!: purchasedItem};
+    vendorsNotifier.value = {for (var vendor in await VendorProvider().getAll()) vendor.id!: vendor};
+  }
+
+  void getRestockData() async {
+    restockOrdersNotifier.value = await restockOrderProvider.getAllFromDateRange(startDateNotifier.value ?? DateTime.now(), endDateNotifier.value ?? DateTime.now());
+    var restocksTemp = <int, List<Restock>>{};
+    for (RestockOrder restockOrder in restockOrdersNotifier.value) {
+      restocksTemp[restockOrder.id!] = await restockProvider.getAllByRestockOrderId(restockOrder.id!);
+    }
+    allRestocksNotifier.value = restocksTemp;
   }
 }

@@ -101,7 +101,10 @@ class _CreateProductState extends State<CreateProduct> {
         child: Container(
           alignment: Alignment.center,
           margin: const EdgeInsets.all(10),
-          child: Text(title),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [Text(title), const Icon(Icons.add)],
+          ),
         ),
       ),
     );

@@ -7,7 +7,6 @@ import 'package:pos/store/model/restock/tag_purchased_item_relationship.dart';
 import 'package:pos/store/model/restock/vendor.dart';
 import 'package:pos/template/item_edit.dart';
 import 'package:pos/template/tags_grid_view.dart';
-import 'package:pos/view/restock/vendor_manage.dart';
 
 class PurchasedItemsManage extends StatefulWidget {
   const PurchasedItemsManage({super.key});
@@ -326,10 +325,8 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                           List<TagsGridViewTag> tagGridViewTags = [];
                           for (PurchasedItemsTag tag in tagsSnapshot.data ?? []) {
                             if (tagsData.any((element) {
-                              print('element id: ${element.id}, tag id: ${tag.id}');
                               return element.id == tag.id;
                             })) {
-                              print('重複的標籤 id=${tag.id} name=${tag.name}');
                               continue;
                             }
                             //轉換成顯示用的標籤

@@ -5,6 +5,7 @@ import 'package:pos/store/model/restock/restock.dart';
 import 'package:pos/store/model/restock/restock_order.dart';
 import 'package:pos/store/model/restock/tag_purchased_item_relationship.dart';
 import 'package:pos/store/model/restock/vendor.dart';
+import 'package:pos/template/date_picker.dart';
 import 'package:pos/template/number_input_with_increment_decrement.dart';
 import 'package:pos/template/product_card.dart';
 import 'package:pos/template/tags_grid_view.dart';
@@ -35,7 +36,14 @@ class _RestockViewState extends State<RestockView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('進貨')),
+      appBar: AppBar(
+        title: const Text('進貨'),
+        actions: [
+          DatePickerField(
+            initialDate: DateTime.now(),
+          ),
+        ],
+      ),
       body: FutureBuilder(
           future: purchasedItemProvider.queryAll(),
           builder: (context, purchasedItemSnapshot) {
@@ -87,7 +95,7 @@ class _RestockViewState extends State<RestockView> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Expanded(flex: 5, child: const SizedBox()),
+              const Expanded(flex: 5, child: SizedBox()),
               Expanded(
                 flex: 2,
                 child: Column(children: [
@@ -265,10 +273,8 @@ class _RestockViewState extends State<RestockView> {
         valueListenable: restockOrderVendorNotifier,
         builder: (context, vendor, child) {
           List<PurchasedItem> purchasedItemsCopy = [];
-          print('vendor.id: ${vendor.id}, purchasedItemsCopy: $purchasedItemsCopy');
           if (vendor.id != Vendor.initial().id) {
             for (var purchasedItem in purchasedItems) {
-              print('vendor.id: ${vendor.id}, purchasedItem.vendorId: ${purchasedItem.vendorId}');
               if (purchasedItem.vendorId == vendor.id) {
                 purchasedItemsCopy.add(purchasedItem);
               }

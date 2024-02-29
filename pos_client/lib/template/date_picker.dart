@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class DatePickerField extends StatefulWidget {
   final Function(DateTime? date)? onChanged;
-  final DateTime? selectedDate;
+  final DateTime? initialDate;
 
   ///顯示挑選日期的欄位
-  const DatePickerField({super.key, this.selectedDate, this.onChanged});
+  const DatePickerField({super.key, this.initialDate, this.onChanged});
   @override
   State<DatePickerField> createState() => _DatePickerFieldState();
 }
@@ -15,7 +15,7 @@ class _DatePickerFieldState extends State<DatePickerField> {
   Future<void> _selectDate() async {
     final DateTime? selected = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
@@ -32,14 +32,14 @@ class _DatePickerFieldState extends State<DatePickerField> {
   @override
   void initState() {
     super.initState();
-    _selectedDate = widget.selectedDate;
+    _selectedDate = widget.initialDate;
   }
 
   @override
   void didUpdateWidget(covariant DatePickerField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.selectedDate != oldWidget.selectedDate) {
-      _selectedDate = widget.selectedDate;
+    if (widget.initialDate != oldWidget.initialDate) {
+      _selectedDate = widget.initialDate;
     }
   }
 
@@ -90,7 +90,7 @@ Widget filterBar({
             onPressed: () {
               DateTime now = DateTime.now();
               startDateNotifier.value = DateTime(now.year, now.month, 1);
-              endDateNotifier.value = DateTime(now.year, now.month + 1, 0);
+              endDateNotifier.value = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
               onChanged();
             },
             child: const Text('這個月')),
@@ -98,7 +98,7 @@ Widget filterBar({
             onPressed: () {
               DateTime now = DateTime.now();
               startDateNotifier.value = DateTime(now.year, 1, 1);
-              endDateNotifier.value = DateTime(now.year, 12, 31);
+              endDateNotifier.value = DateTime(now.year, 12, 31, 23, 59, 59);
               onChanged();
             },
             child: const Text('今年')),
@@ -106,7 +106,7 @@ Widget filterBar({
             valueListenable: startDateNotifier,
             builder: (context, startDate, child) {
               return DatePickerField(
-                selectedDate: startDate,
+                initialDate: startDate,
                 onChanged: (date) {
                   startDateNotifier.value = date;
                 },
@@ -120,7 +120,7 @@ Widget filterBar({
             valueListenable: endDateNotifier,
             builder: (context, endDate, child) {
               return DatePickerField(
-                selectedDate: endDate,
+                initialDate: endDate,
                 onChanged: (date) {
                   endDateNotifier.value = date;
                 },
