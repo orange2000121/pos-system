@@ -57,8 +57,20 @@ class _CreateProductState extends State<CreateProduct> {
         if (snapshot.hasData) {
           List<Widget> widgets = [];
           for (Good item in snapshot.data ?? []) {
-            widgets.add(item.toWidget(
-              onTap: () => editProduct(item),
+            widgets.add(ListTile(
+              leading: Image.memory(
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
+                item.image!,
+                errorBuilder: (context, error, stackTrace) => const FlutterLogo(size: 50),
+              ),
+              title: Text(item.name),
+              subtitle: Text('單價: ${item.price}'),
+              trailing: IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () => editProduct(item),
+              ),
             ));
           }
           return Column(children: widgets);

@@ -265,6 +265,7 @@ class _CashierState extends State<Cashier> {
   }
 
   Widget abacus(ShopItem item, {int num = 1, String ice = '', String sugar = ''}) {
+    /* -------------------------------- variable -------------------------------- */
     List<Widget> sugarChoseWidgets = [];
     List<Widget> iceChoseWidgets = [];
     double w = MediaQuery.of(context).size.width;
@@ -274,16 +275,27 @@ class _CashierState extends State<Cashier> {
     TextEditingController quantity = TextEditingController(text: num.toString());
     TextEditingController noteEditingController = TextEditingController(text: item.note);
     TextEditingController discountEditingController = TextEditingController();
-    ValueNotifier<List<Widget>> annotationOptions = ValueNotifier([
-      TextField(
-        keyboardType: TextInputType.number,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: '%off',
-        ),
-        controller: discountEditingController,
-      ),
-    ]); // 備註選項
+    ValueNotifier<List<Widget>> annotationOptions = ValueNotifier(
+        [TextField(keyboardType: TextInputType.number, decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '%off'), controller: discountEditingController)]); // 備註選項
+    finishEdit() {
+      if (discountEditingController.text.isNotEmpty) {
+        item.price = item.price * (1 - double.parse(discountEditingController.text) / 100);
+        item.note = '${noteEditingController.text}${noteEditingController.text.isEmpty ? '' : ', '}折扣${discountEditingController.text}%';
+      }
+      Navigator.pop(
+          context,
+          ShopItem(
+            item.id,
+            item.name,
+            item.price,
+            int.parse(quantity.text),
+            item.unit,
+            ice: chosenIce,
+            sugar: chosenSugar,
+            note: item.note,
+          ));
+    }
+
     for (var i = 0; i < sugarList.length; i++) {
       sugarChoseWidgets.add(ElevatedButton(
         onPressed: () {
@@ -377,27 +389,29 @@ class _CashierState extends State<Cashier> {
                     onChanged: (value) {
                       quantity.text = value.toString();
                     },
+                    onEditingComplete: finishEdit,
                   )
                 ],
               ),
               ElevatedButton(
                 onPressed: () {
-                  if (discountEditingController.text.isNotEmpty) {
-                    item.price = item.price * (1 - double.parse(discountEditingController.text) / 100);
-                    item.note = '${noteEditingController.text}${noteEditingController.text.isEmpty ? '' : ', '}折扣${discountEditingController.text}%';
-                  }
-                  Navigator.pop(
-                      context,
-                      ShopItem(
-                        item.id,
-                        item.name,
-                        item.price,
-                        int.parse(quantity.text),
-                        item.unit,
-                        ice: chosenIce,
-                        sugar: chosenSugar,
-                        note: item.note,
-                      ));
+                  // if (discountEditingController.text.isNotEmpty) {
+                  //   item.price = item.price * (1 - double.parse(discountEditingController.text) / 100);
+                  //   item.note = '${noteEditingController.text}${noteEditingController.text.isEmpty ? '' : ', '}折扣${discountEditingController.text}%';
+                  // }
+                  // Navigator.pop(
+                  //     context,
+                  //     ShopItem(
+                  //       item.id,
+                  //       item.name,
+                  //       item.price,
+                  //       int.parse(quantity.text),
+                  //       item.unit,
+                  //       ice: chosenIce,
+                  //       sugar: chosenSugar,
+                  //       note: item.note,
+                  //     ));
+                  finishEdit();
                 },
                 child: const Text('加入'),
               ),

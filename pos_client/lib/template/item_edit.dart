@@ -140,10 +140,14 @@ class ItemEdit extends StatefulWidget {
 class _ItemEditState extends State<ItemEdit> {
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      if (widget.choseImage != null) widget.choseImage!,
-      ...widget.textFields,
-      ...widget.buttons,
-    ]);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (widget.choseImage != null) widget.choseImage!,
+        ...widget.textFields,
+        const SizedBox(height: 10),
+        ...widget.buttons,
+      ],
+    );
   }
 }

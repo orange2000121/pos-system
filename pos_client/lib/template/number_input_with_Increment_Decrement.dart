@@ -46,6 +46,7 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
               }
             },
             onEditingComplete: () {
+              print('onEditingComplete');
               if (widget.onEditingComplete != null) {
                 widget.onEditingComplete!();
               }
@@ -66,9 +67,9 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
                 if (widget.onChanged != null) {
                   widget.onChanged!(int.parse(quantity.text));
                 }
-                if (widget.onEditingComplete != null) {
-                  widget.onEditingComplete!();
-                }
+                // if (widget.onEditingComplete != null) {
+                //   widget.onEditingComplete!();
+                // }
               },
               child: const Icon(
                 Icons.arrow_drop_up,
@@ -87,9 +88,9 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
                   if (widget.onChanged != null) {
                     widget.onChanged!(int.parse(quantity.text));
                   }
-                  if (widget.onEditingComplete != null) {
-                    widget.onEditingComplete!();
-                  }
+                  // if (widget.onEditingComplete != null) {
+                  //   widget.onEditingComplete!();
+                  // }
                 }
               },
               child: const Icon(
