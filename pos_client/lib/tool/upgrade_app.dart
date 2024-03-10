@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:pos/tool/database_backup.dart';
 
 class UpgradeApp {
   Map? latestVersionInfo;
@@ -10,6 +12,7 @@ class UpgradeApp {
     SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper();
     await sharedPreferenceHelper.init();
     if (executeSetup) {
+      if (!await DataBaseBackup().backup()) return;
       if (await executeSetupEXE(sharedPreferenceHelper.appInfo.getUpdateExePath())) {
         return;
       } else {}

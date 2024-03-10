@@ -3,6 +3,7 @@ import 'package:pos/main.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
+import 'package:pos/tool/database_backup.dart';
 
 class Setting extends StatefulWidget {
   const Setting({super.key});
@@ -87,6 +88,42 @@ class _SettingState extends State<Setting> {
                   actionHint: '輸入商店電話',
                   onEditFinished: (controller) => snapshot.data!.userInfo.editUserInfo(controller.text, UserInfoKey.phone),
                 ),
+                ListTile(
+                  title: const Text('載入資料備份'),
+                  trailing: ElevatedButton(
+                    onPressed: () async {
+                      bool isRestore = await showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text('警告'),
+                              content: const Text('載入資料備份將會覆蓋現有資料，確定要載入嗎？'),
+                              actions: [
+                                ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context, true);
+                                    },
+                                    child: const Text('確定')),
+                                ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context, false);
+                                    },
+                                    child: const Text('取消'))
+                              ],
+                            );
+                          });
+                      if (!isRestore) return;
+                      var restoreResult = await DataBaseBackup().restore();
+                      if (!context.mounted) return;
+                      if (restoreResult) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('載入成功')));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('載入失敗')));
+                      }
+                    },
+                    child: const Text('載入'),
+                  ),
+                )
               ],
             );
           },
