@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:pos/main.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';
@@ -123,7 +124,16 @@ class _SettingState extends State<Setting> {
                     },
                     child: const Text('載入'),
                   ),
-                )
+                ),
+                ListTile(
+                    title: Text('匯出資料'),
+                    trailing: ElevatedButton(
+                      onPressed: () async {
+                        await DataBaseBackup().backup(exportPath: await FilePicker.platform.getDirectoryPath());
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('匯出成功')));
+                      },
+                      child: const Text('匯出'),
+                    ))
               ],
             );
           },
