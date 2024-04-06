@@ -25,7 +25,10 @@ class DataBaseBackup {
 
   Future<bool> restore() async {
     String dbPath = await getDatabasesPath() + dbName;
-    FilePickerResult? backupFile = await FilePicker.platform.pickFiles();
+    FilePickerResult? backupFile = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['db'],
+    );
     if (backupFile == null) return false;
     if (backupFile.files.length != 1) return false;
     if (backupFile.files.single.name.split('.')[1] != 'db') return false;
