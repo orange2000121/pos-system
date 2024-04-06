@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_launcher_icons/logger.dart';
 // ignore: unused_import
 import 'package:pos/store/model/sell/good_providers/goods.dart';
 import 'package:pos/template/routes_page.dart';
@@ -23,25 +24,48 @@ class _HomeState extends State<Home> {
   void showUpgrade() async {
     UpgradeApp upgradeAppHelper = UpgradeApp();
     if (await upgradeAppHelper.isNeedUpgrade() == false) return;
-    if (await upgradeAppHelper.isUpgradeExeExist() == false) return;
     if (!context.mounted) return;
-    showDialog(
+    await showDialog(
       context: context,
       builder: (context) {
+        ValueNotifier<double> progressNotifier = ValueNotifier(0);
         return AlertDialog(
           title: const Text('更新'),
           content: const Text('請更新至最新版本'),
           actions: [
             ElevatedButton(
               onPressed: () {
-                upgradeAppHelper.upgradeApp(executeSetup: true);
-                Navigator.pop(context);
+                upgradeAppHelper.upgradeApp(
+                  progress: (percentageValue) {
+                    return progressNotifier.value = percentageValue;
+                  },
+                );
+                Navigator.pop(context, true);
+                showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('下載更新檔'),
+                        content: SizedBox(
+                          height: 100,
+                          child: Center(
+                            child: ValueListenableBuilder(
+                              valueListenable: progressNotifier,
+                              builder: (context, double value, child) {
+                                if (value == 1.0) Navigator.pop(context, true);
+                                return LinearProgressIndicator(value: value);
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    });
               },
               child: const Text('更新'),
             ),
             ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.pop(context, false);
                 },
                 child: const Text('取消更新', style: TextStyle(color: Colors.red)))
           ],

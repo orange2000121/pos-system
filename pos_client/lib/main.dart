@@ -4,15 +4,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
-import 'package:pos/tool/upgrade_app.dart';
 import 'package:pos/view/home.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   databaseFactory = databaseFactoryFfi;
-  UpgradeApp upgradeApp = UpgradeApp();
-  upgradeApp.upgradeApp();
   if (Platform.isWindows || Platform.isLinux) {
     sqfliteFfiInit();
   }

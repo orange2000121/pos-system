@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
@@ -8,22 +9,18 @@ import 'package:pos/tool/database_backup.dart';
 class UpgradeApp {
   Map? latestVersionInfo;
 
-  void upgradeApp({bool executeSetup = false}) async {
-    SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper();
-    await sharedPreferenceHelper.init();
-    if (executeSetup) {
-      if (!await DataBaseBackup().backup()) return;
-      if (await executeSetupEXE(sharedPreferenceHelper.appInfo.getUpdateExePath())) {
-        return;
-      } else {}
-    }
+  Future<bool> upgradeApp({Function(double percentageValue)? progress}) async {
     if (await isNeedUpgrade()) {
       String? downloadUrl = latestVersionInfo?['downloadUrl'];
       if (downloadUrl != null) {
-        final tempFilePath = await downloadFile(downloadUrl);
-        sharedPreferenceHelper.appInfo.setUpdateExePath(tempFilePath ?? '');
+        if (!await DataBaseBackup().backup()) return false; // 備份資料庫
+        final tempFilePath = await downloadFile(downloadUrl, progress: progress); // 下載安裝檔
+        if (!await executeSetupEXE(tempFilePath)) return false; // 執行安裝檔
+      } else {
+        return false;
       }
     }
+    return true;
   }
 
   Future<bool> isNeedUpgrade() async {
@@ -66,11 +63,22 @@ class UpgradeApp {
     return null;
   }
 
-  Future<String?> downloadFile(String url) async {
-    final response = await Dio().get(url, options: Options(responseType: ResponseType.bytes));
+  Future<String?> downloadFile(String url, {Function(double percentageValue)? progress}) async {
+    final tempDir = Directory.systemTemp;
+    final tempFile = File('${tempDir.path}/setupPOS.exe');
+
+    final response = await Dio().get(
+      url,
+      options: Options(responseType: ResponseType.bytes),
+      onReceiveProgress: (received, total) {
+        if (total != -1) {
+          if (progress != null) progress(received / total);
+          print((received / total * 100).toStringAsFixed(0) + '%' + ' received');
+        }
+      },
+    );
+
     if (response.statusCode == 200) {
-      final tempDir = Directory.systemTemp;
-      final tempFile = File('${tempDir.path}/setupPOS.exe');
       await tempFile.writeAsBytes(response.data);
       return tempFile.path;
     }
