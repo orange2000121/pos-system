@@ -233,6 +233,9 @@ class _RestockViewState extends State<RestockView> {
     return FutureBuilder(
         future: PurchasedItemsTagProvider().getAll(),
         builder: (context, purchasedItemsTagsSnapshot) {
+          if (!purchasedItemsTagsSnapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
           List<TagsGridViewTag> gridViewTags = [];
           Future<List<TagPurchasedItemRelationship>> tagPurchasedItemRelationships = Future.value([]);
           tagPurchasedItemRelationships = TagPurchasedItemRelationshipProvider().getAll();
@@ -370,7 +373,7 @@ class _RestockViewState extends State<RestockView> {
             return ListView.builder(
               itemCount: restockItems.length,
               itemBuilder: (context, index) {
-                restockItemsNotifier.value[index].amount = restockItemsNotifier.value[index].quantity * restockItemsNotifier.value[index].price;
+                restockItemsNotifier.value[index].amount = double.parse((restockItemsNotifier.value[index].quantity * restockItemsNotifier.value[index].price).toStringAsFixed(2));
                 return Container(
                   margin: const EdgeInsets.all(5),
                   decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey))),
@@ -385,7 +388,7 @@ class _RestockViewState extends State<RestockView> {
                         flex: 2,
                         child: NumberInputWithIncrementDecrement(
                           key: ValueKey(restockItems[index]),
-                          initialNumber: restockItems[index].quantity,
+                          initialNumber: restockItems[index].quantity.toDouble(),
                           onChanged: (number) {
                             restockItemsNotifier.value[index].quantity = number;
                             // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
@@ -414,7 +417,7 @@ class _RestockViewState extends State<RestockView> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '${restockItems[index].quantity * restockItems[index].price}',
+                          restockItemsNotifier.value[index].amount.toString(),
                           textAlign: TextAlign.center,
                         ),
                       ),

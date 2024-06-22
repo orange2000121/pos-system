@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class NumberInputWithIncrementDecrement extends StatefulWidget {
-  final Function(int number)? onChanged;
+  final Function(double number)? onChanged;
   final Function? onEditingComplete;
-  final int initialNumber;
+  final double initialNumber;
 
   ///有上下箭頭的數字輸入框
   const NumberInputWithIncrementDecrement({
@@ -25,6 +25,14 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
     quantity.text = widget.initialNumber.toString();
   }
 
+  double str2double(String str) {
+    try {
+      return double.parse(str);
+    } catch (e) {
+      return 0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -42,7 +50,7 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
             decoration: const InputDecoration(border: UnderlineInputBorder()),
             onChanged: (value) {
               if (widget.onChanged != null) {
-                widget.onChanged!(int.parse(value));
+                widget.onChanged!(str2double(value));
               }
             },
             onEditingComplete: () {
@@ -63,9 +71,9 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               onPressed: () {
-                quantity.text = (int.parse(quantity.text) + 1).toString();
+                quantity.text = (str2double(quantity.text) + 1).toString();
                 if (widget.onChanged != null) {
-                  widget.onChanged!(int.parse(quantity.text));
+                  widget.onChanged!(str2double(quantity.text));
                 }
                 // if (widget.onEditingComplete != null) {
                 //   widget.onEditingComplete!();
@@ -83,10 +91,10 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               onPressed: () {
-                if (int.parse(quantity.text) > 1) {
-                  quantity.text = (int.parse(quantity.text) - 1).toString();
+                if (str2double(quantity.text) > 1) {
+                  quantity.text = (str2double(quantity.text) - 1).toString();
                   if (widget.onChanged != null) {
-                    widget.onChanged!(int.parse(quantity.text));
+                    widget.onChanged!(str2double(quantity.text));
                   }
                   // if (widget.onEditingComplete != null) {
                   //   widget.onEditingComplete!();

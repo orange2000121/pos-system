@@ -385,7 +385,7 @@ class _CashierState extends State<Cashier> {
                   const Text('數量'),
                   const SizedBox(width: 8),
                   NumberInputWithIncrementDecrement(
-                    initialNumber: int.parse(quantity.text),
+                    initialNumber: double.parse(quantity.text),
                     onChanged: (value) {
                       quantity.text = value.toString();
                     },

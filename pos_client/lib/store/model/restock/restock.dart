@@ -6,7 +6,7 @@ class Restock {
   int? id;
   int? restockOrderId;
   int purchasedItemId;
-  int quantity;
+  double quantity;
   double price;
   double amount;
   DateTime restockDate;
@@ -61,7 +61,7 @@ class RestockProvider extends DatabaseHandler {
             id integer primary key autoincrement, 
             restockOrderId integer not null,
             purchasedItemId integer not null,
-            quantity integer not null,
+            quantity real not null,
             price real not null,
             amount real not null,
             restockDate TIMESTAMP not null,
