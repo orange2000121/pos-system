@@ -2,6 +2,7 @@
 
 import 'dart:typed_data';
 
+import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
 class GoodsGroupItem {
@@ -33,23 +34,11 @@ class GoodsGroupItem {
   GoodsGroupItem(this.name, {this.image, this.id});
 }
 
-class GoodsGroupProvider {
-  // ignore: avoid_init_to_null
-  late Database? db = null;
+class GoodsGroupProvider extends DatabaseHandler {
   String tableName = 'goods_group';
-  String dbName = 'pos.db';
-  Future open() async {
-    var databasesPath = await getDatabasesPath();
-    String path = databasesPath + dbName;
-    db = await openDatabase(path, version: 1, onCreate: (Database db, int version) async {
-      await db.execute('''
-          create table $tableName ( 
-            id integer primary key autoincrement,
-            name text not null, 
-            image blob
-          )
-          ''');
-    });
+  @override
+  Future<Database> open() async {
+    db = await super.open();
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement,
@@ -57,7 +46,7 @@ class GoodsGroupProvider {
             image blob
           )
           ''');
-    return db;
+    return db!;
   }
 
   Future<int> insert(GoodsGroupItem item) async {

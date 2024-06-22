@@ -1,6 +1,7 @@
 /// 顧客資料，包含名稱、電話、聯絡人、地址
 
 import 'package:flutter/material.dart';
+import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
 class Customer {
@@ -42,37 +43,14 @@ class Customer {
     return Customer(name, phone, contactPerson, address, id: id);
   }
 
-  Widget toWidget() {
-    return const FlutterLogo(
-      size: 50,
-    );
-  }
-
   Customer(this.name, this.phone, this.contactPerson, this.address, {this.id});
 }
 
-class CustomerProvider {
-  // ignore: avoid_init_to_null
-  late Database? db = null;
+class CustomerProvider extends DatabaseHandler {
   String tableName = 'customer';
-  String dbName = 'pos.db';
-  // CustomerProvider() {
-  //   open();
-  // }
-
-  Future open() async {
-    var path = await getDatabasesPath() + dbName;
-    db = await openDatabase(path, version: 1, onCreate: (Database db, int version) async {
-      await db.execute('''
-          create table $tableName ( 
-            id integer primary key autoincrement, 
-            name text not null,
-            phone text not null,
-            contactPerson text not null,
-            address text not null,
-            createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
-          ''');
-    });
+  @override
+  Future<Database> open() async {
+    db = await super.open();
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
@@ -82,7 +60,7 @@ class CustomerProvider {
             address text not null,
             createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
           ''');
-    return db;
+    return db!;
   }
 
   Future<Customer> insert(Customer item) async {

@@ -1,3 +1,4 @@
+import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
 ///廠商，包含廠商編號、廠商名稱、廠商地址、廠商電話、廠商傳真、廠商聯絡人、廠商聯絡人電話、廠商聯絡人Email、廠商狀態、備註
@@ -84,35 +85,11 @@ class Vendor {
   }
 }
 
-class VendorProvider {
-  // ignore: avoid_init_to_null
-  late Database? db = null;
+class VendorProvider extends DatabaseHandler {
   String tableName = 'vendor';
-  String dbName = 'pos.db';
-  Future open() async {
-    var databasesPath = await getDatabasesPath();
-    String path = databasesPath + dbName;
-    db = await openDatabase(
-      path,
-      version: 1,
-      onCreate: (Database db, int version) async {
-        await db.execute('''
-          create table $tableName ( 
-            id integer primary key autoincrement, 
-            name text not null,
-            address text not null,
-            phone text not null,
-            fax text not null,
-            contactPerson text not null,
-            contactPersonPhone text not null,
-            contactPersonEmail text not null,
-            status text not null,
-            note text
-          )
-          ''');
-      },
-      onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
-    );
+  @override
+  Future<Database> open() async {
+    db = await super.open();
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
@@ -127,7 +104,7 @@ class VendorProvider {
             note text
           )
           ''');
-    return db;
+    return db!;
   }
 
   Future<int> insert(Vendor item) async {

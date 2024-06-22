@@ -3,6 +3,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
 class Good {
@@ -12,6 +13,7 @@ class Good {
   late double price;
   late String unit;
   late Uint8List? image;
+  double? amount;
   int length = 0;
   Map<String, dynamic> toMap() {
     var map = <String, Object>{};
@@ -20,6 +22,7 @@ class Good {
     map['price'] = price;
     map['unit'] = unit;
     map['image'] = image ?? Uint8List(0);
+    map['amount'] = amount ?? 0;
     return map;
   }
 
@@ -31,6 +34,7 @@ class Good {
       map['unit'] as String,
       image: map['image'] as Uint8List?,
       id: map['id'] as int?,
+      amount: map['amount'] ?? 0,
     );
   }
 
@@ -41,60 +45,58 @@ class Good {
     price = double.parse(map['price'].toString());
     unit = map['unit'] as String;
     image = map['image'] as Uint8List?;
+    amount = (map['amount'] ?? 0) as double;
     return this;
   }
 
-  Widget toWidget({Function()? onTap}) {
-    return ListTile(
-      leading: Image.memory(
-        image!,
-        errorBuilder: (context, error, stackTrace) => const FlutterLogo(size: 50),
-      ),
-      title: Text(name),
-      subtitle: Text('單價: $price'),
-      trailing: IconButton(
-        icon: const Icon(Icons.edit),
-        onPressed: onTap,
-      ),
-    );
-  }
+  // Widget toWidget({Function()? onTap}) {
+  //   return ListTile(
+  //     leading: Image.memory(
+  //       image!,
+  //       errorBuilder: (context, error, stackTrace) => const FlutterLogo(size: 50),
+  //     ),
+  //     title: Text(name),
+  //     subtitle: Text('單價: $price'),
+  //     trailing: IconButton(
+  //       icon: const Icon(Icons.edit),
+  //       onPressed: onTap,
+  //     ),
+  //   );
+  // }
 
-  Good(this.groupId, this.name, this.price, this.unit, {this.image, this.id}) {
+  Good(
+    this.groupId,
+    this.name,
+    this.price,
+    this.unit, {
+    this.image,
+    this.id,
+    this.amount = 0,
+  }) {
     length = toMap().length;
   }
 }
 
-class GoodsProvider {
+class GoodsProvider extends DatabaseHandler {
   // ignore: avoid_init_to_null
-  late Database? db = null;
+  // late Database? db = null;
   String tableName = 'goods';
   String dbName = 'pos.db';
-
-  Future open() async {
-    var path = await getDatabasesPath() + dbName;
-    db = await openDatabase(path, version: 1, onCreate: (Database db, int version) async {
-      await db.execute('''
-          create table $tableName ( 
-            id integer primary key autoincrement, 
-            group_id integer not null,
-            name text not null,
-            price real not null,
-            unit text not null,
-            image blob,
-            foreign key (group_id) references goods_group(id) on delete cascade on update cascade)
-          ''');
-    });
+  @override
+  Future<Database> open() async {
+    db = await super.open();
     await db!.execute('''
-          create table if not exists $tableName ( 
-            id integer primary key autoincrement, 
+          create table if not exists $tableName (
+            id integer primary key autoincrement,
             group_id integer not null,
             name text not null,
             price real not null,
             unit text not null,
             image blob,
+            amount real not null,
             foreign key (group_id) references goods_group(id) on delete cascade on update cascade)
           ''');
-    return db;
+    return db!;
   }
 
   Future<int> insert(Good item) async {
@@ -120,6 +122,7 @@ class GoodsProvider {
 
   Future<List<Good>> getItemsByGroupId(int groupId) async {
     db ??= await open();
+    print('db version: ${await db!.getVersion()}');
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'group_id = ?', whereArgs: [groupId]);
     List<Good> items = [];
     for (var map in maps) {

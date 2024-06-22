@@ -1,3 +1,4 @@
+import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
 /// 進貨明細，包含明細編號、進貨單邊號、品項編號、進貨數量、進貨單價、進貨金額、進貨日期、備註
@@ -50,33 +51,11 @@ class Restock {
   }
 }
 
-class RestockProvider {
-  // ignore: avoid_init_to_null
-  late Database? db = null;
+class RestockProvider extends DatabaseHandler {
   String tableName = 'restock';
-  String dbName = 'pos.db';
-  Future open() async {
-    var databasesPath = await getDatabasesPath();
-    String path = databasesPath + dbName;
-    db = await openDatabase(
-      path,
-      version: 1,
-      onCreate: (Database db, int version) async {
-        await db.execute('''
-          create table $tableName ( 
-            id integer primary key autoincrement, 
-            restockOrderId integer not null,
-            purchasedItemId integer not null,
-            quantity integer not null,
-            price real not null,
-            amount real not null,
-            restockDate TIMESTAMP not null,
-            note text
-          )
-          ''');
-      },
-      onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
-    );
+  @override
+  Future<Database> open() async {
+    db = await super.open();
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
@@ -89,7 +68,7 @@ class RestockProvider {
             note text
           )
           ''');
-    return db;
+    return db!;
   }
 
   Future<int> insert(Restock restock) async {
