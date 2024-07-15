@@ -1,6 +1,3 @@
-/// 顧客資料，包含名稱、電話、聯絡人、地址
-
-import 'package:flutter/material.dart';
 import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 

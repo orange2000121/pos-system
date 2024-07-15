@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:pos/tool/calculate_text_size.dart';
+import 'package:intl/intl.dart';
 
 class PieChartAndDetail extends StatefulWidget {
   final String title;
@@ -63,7 +64,7 @@ class _PieChartAndDetailState extends State<PieChartAndDetail> {
                 height: 20,
                 color: colors[index % colors.length],
               ),
-              Text('${widget.itemNames[index]}：\$$customerTotal'),
+              Text('${widget.itemNames[index]}：\$${formatCurrency(customerTotal)}'),
             ],
           ),
         ),
@@ -83,6 +84,7 @@ class _PieChartAndDetailState extends State<PieChartAndDetail> {
                   padding: const EdgeInsets.all(30),
                   child: PieChart(
                     PieChartData(
+                      centerSpaceRadius: max(250, w * 0.25) * 0.2,
                       pieTouchData: total != 0
                           ? PieTouchData(
                               touchCallback: (FlTouchEvent event, pieTouchResponse) {
@@ -96,7 +98,6 @@ class _PieChartAndDetailState extends State<PieChartAndDetail> {
                               },
                             )
                           : null,
-                      ////centerSpaceRadius: w * 0.05,
                       sectionsSpace: 3,
                       sections: pieChartSectionDataList,
                     ),
@@ -108,9 +109,25 @@ class _PieChartAndDetailState extends State<PieChartAndDetail> {
                 children: [
                   SizedBox(
                     height: max(250, w * 0.25) - 60,
-                    width: maxTextWidth + 50,
+                    width: maxTextWidth * 1.4,
                     child: ListView(
                       children: customerInfo,
+                    ),
+                  ),
+                  SizedBox(
+                    width: maxTextWidth * 1.4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 20,
+                            height: 20,
+                            color: Colors.grey,
+                          ),
+                          Text('總金額：\$${formatCurrency(total)}'),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -120,5 +137,13 @@ class _PieChartAndDetailState extends State<PieChartAndDetail> {
         ],
       ),
     );
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                  Function                                  */
+  /* -------------------------------------------------------------------------- */
+  String formatCurrency(double amount) {
+    final format = NumberFormat("#,##0.00", "en_US");
+    return format.format(amount);
   }
 }

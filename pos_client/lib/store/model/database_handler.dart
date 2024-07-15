@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:pos/store/model/restock/purchased_items.dart';
-import 'package:pos/store/model/restock/restock.dart';
 import 'package:pos/store/model/sell/good_providers/goods.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -21,12 +20,9 @@ abstract class DatabaseHandler {
     return db!;
   }
 
-  Future _onCreate(Database db, int version) async {
-    print('on create');
-  }
+  Future _onCreate(Database db, int version) async {}
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    print('on upgrade');
     for (int version = oldVersion; version < newVersion; version++) {
       switch (version) {
         case 1:

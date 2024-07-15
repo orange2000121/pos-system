@@ -2,7 +2,6 @@
 
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
 import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -122,7 +121,6 @@ class GoodsProvider extends DatabaseHandler {
 
   Future<List<Good>> getItemsByGroupId(int groupId) async {
     db ??= await open();
-    print('db version: ${await db!.getVersion()}');
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'group_id = ?', whereArgs: [groupId]);
     List<Good> items = [];
     for (var map in maps) {

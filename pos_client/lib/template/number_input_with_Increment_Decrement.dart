@@ -54,7 +54,6 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
               }
             },
             onEditingComplete: () {
-              print('onEditingComplete');
               if (widget.onEditingComplete != null) {
                 widget.onEditingComplete!();
               }

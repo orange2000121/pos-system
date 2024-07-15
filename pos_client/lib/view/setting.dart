@@ -90,7 +90,7 @@ class _SettingState extends State<Setting> {
                   onEditFinished: (controller) => snapshot.data!.userInfo.editUserInfo(controller.text, UserInfoKey.phone),
                 ),
                 ListTile(
-                  title: const Text('載入資料備份'),
+                  title: const Text('載入備份資料'),
                   trailing: ElevatedButton(
                     onPressed: () async {
                       bool isRestore = await showDialog(
@@ -126,10 +126,11 @@ class _SettingState extends State<Setting> {
                   ),
                 ),
                 ListTile(
-                    title: Text('匯出資料'),
+                    title: const Text('匯出資料'),
                     trailing: ElevatedButton(
                       onPressed: () async {
                         await DataBaseBackup().backup(exportPath: await FilePicker.platform.getDirectoryPath());
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('匯出成功')));
                       },
                       child: const Text('匯出'),
