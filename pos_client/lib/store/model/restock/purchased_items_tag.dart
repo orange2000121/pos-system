@@ -1,3 +1,4 @@
+import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
 /// 進貨品項標籤，包含標籤編號、標籤名稱、標籤顏色
@@ -30,28 +31,11 @@ class PurchasedItemsTag {
   }
 }
 
-class PurchasedItemsTagProvider {
-  // ignore: avoid_init_to_null
-  late Database? db = null;
+class PurchasedItemsTagProvider extends DatabaseHandler {
   String tableName = 'purchased_items_tag';
-  String dbName = 'pos.db';
-  Future open() async {
-    var databasesPath = await getDatabasesPath();
-    String path = databasesPath + dbName;
-    db = await openDatabase(
-      path,
-      version: 1,
-      onCreate: (Database db, int version) async {
-        await db.execute('''
-          create table $tableName ( 
-            id integer primary key autoincrement, 
-            name text not null,
-            color integer
-          )
-          ''');
-      },
-      onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
-    );
+  @override
+  Future<Database> open() async {
+    db = await super.open();
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
@@ -59,7 +43,7 @@ class PurchasedItemsTagProvider {
             color integer
           )
           ''');
-    return db;
+    return db!;
   }
 
   Future<int> insert(PurchasedItemsTag item) async {

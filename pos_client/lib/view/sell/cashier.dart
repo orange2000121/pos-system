@@ -385,7 +385,7 @@ class _CashierState extends State<Cashier> {
                   const Text('數量'),
                   const SizedBox(width: 8),
                   NumberInputWithIncrementDecrement(
-                    initialNumber: int.parse(quantity.text),
+                    initialNumber: double.parse(quantity.text),
                     onChanged: (value) {
                       quantity.text = value.toString();
                     },
@@ -534,9 +534,7 @@ class _CashierState extends State<Cashier> {
                     widget.editShopItems!.customerId,
                     widget.editShopItems!.createAt,
                   );
-                  if (!context.mounted) {
-                    return;
-                  }
+                  if (!mounted) return;
                   Navigator.pop(context);
                 }
               },
@@ -621,7 +619,7 @@ class _CashierState extends State<Cashier> {
                 insertCustomer = await customerProvider.insert(customerValueNotifier.value);
                 customerValueNotifier.value.id = insertCustomer.id;
               }
-              if (context.mounted) Navigator.pop(context, customerValueNotifier.value.id);
+              if (mounted) Navigator.pop(context, customerValueNotifier.value.id);
             },
             child: const Text('列印')),
         ElevatedButton(

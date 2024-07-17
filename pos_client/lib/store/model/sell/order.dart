@@ -1,5 +1,6 @@
 /// 訂單紀錄，包含訂單編號、顧客編號、總金額、建立時間
 
+import 'package:pos/store/model/database_handler.dart';
 import 'package:pos/store/model/sell/sell.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -37,28 +38,11 @@ class OrderItem {
   OrderItem(this.totalPrice, {this.id, this.createAt, this.customerId});
 }
 
-class OrderProvider {
-  // ignore: avoid_init_to_null
-  late Database? db = null;
+class OrderProvider extends DatabaseHandler {
   String tableName = 'orders';
-  String dbName = 'pos.db';
-  Future open() async {
-    var databasesPath = await getDatabasesPath();
-    String path = databasesPath + dbName;
-    db = await openDatabase(
-      path,
-      version: 1,
-      onCreate: (Database db, int version) async {
-        await db.execute('''
-          create table $tableName ( 
-            id integer primary key autoincrement, 
-            customerId integer,
-            totalPrice real not null,
-            createAt TIMESTAMP not null
-          )
-          ''');
-      },
-    );
+  @override
+  Future<Database> open() async {
+    db = await super.open();
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
@@ -67,7 +51,7 @@ class OrderProvider {
             createAt TIMESTAMP not null
           )
           ''');
-    return db;
+    return db!;
   }
 
   Future<int> insert(OrderItem item) async {

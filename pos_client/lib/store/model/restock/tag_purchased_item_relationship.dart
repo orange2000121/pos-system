@@ -1,3 +1,4 @@
+import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
 class TagPurchasedItemRelationship {
@@ -28,23 +29,11 @@ class TagPurchasedItemRelationship {
   }
 }
 
-class TagPurchasedItemRelationshipProvider {
-  // ignore: avoid_init_to_null
-  late Database? db = null;
+class TagPurchasedItemRelationshipProvider extends DatabaseHandler {
   String tableName = 'tag_purchased_item_relationship';
-  String dbName = 'pos.db';
-  Future open() async {
-    var databasesPath = await getDatabasesPath();
-    String path = databasesPath + dbName;
-    db = await openDatabase(path, version: 1, onCreate: (Database db, int version) async {
-      await db.execute('''
-          create table $tableName ( 
-            id integer primary key autoincrement,
-            tag_id integer not null,
-            purchased_item_id integer not null
-          )
-          ''');
-    });
+  @override
+  Future<Database> open() async {
+    db = await super.open();
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement,
@@ -52,7 +41,7 @@ class TagPurchasedItemRelationshipProvider {
             purchased_item_id integer not null
           )
           ''');
-    return db;
+    return db!;
   }
 
   Future<int> insert(TagPurchasedItemRelationship item) async {

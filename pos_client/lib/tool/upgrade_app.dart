@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ffi';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
@@ -73,7 +72,6 @@ class UpgradeApp {
       onReceiveProgress: (received, total) {
         if (total != -1) {
           if (progress != null) progress(received / total);
-          print((received / total * 100).toStringAsFixed(0) + '%' + ' received');
         }
       },
     );

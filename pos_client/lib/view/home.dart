@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_launcher_icons/logger.dart';
 // ignore: unused_import
 import 'package:pos/store/model/sell/good_providers/goods.dart';
 import 'package:pos/template/routes_page.dart';
@@ -24,7 +23,7 @@ class _HomeState extends State<Home> {
   void showUpgrade() async {
     UpgradeApp upgradeAppHelper = UpgradeApp();
     if (await upgradeAppHelper.isNeedUpgrade() == false) return;
-    if (!context.mounted) return;
+    if (!mounted) return;
     await showDialog(
       context: context,
       builder: (context) {

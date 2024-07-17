@@ -1,3 +1,4 @@
+import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
 /// 進貨品項，包含品項編號、進貨廠商編號、品項名稱、品項單位
@@ -7,12 +8,14 @@ class PurchasedItem {
   final int vendorId;
   final String name;
   final String unit;
+  double? amount;
 
   PurchasedItem({
     this.id,
     required this.vendorId,
     required this.name,
     required this.unit,
+    this.amount = 0,
   });
 
   factory PurchasedItem.fromJson(Map<String, dynamic> json) {
@@ -21,6 +24,7 @@ class PurchasedItem {
       vendorId: json['vendorId'],
       name: json['name'],
       unit: json['unit'],
+      amount: json['amount'] ?? 0,
     );
   }
 
@@ -29,42 +33,26 @@ class PurchasedItem {
       'vendorId': vendorId,
       'name': name,
       'unit': unit,
+      'amount': amount ?? 0,
     };
   }
 }
 
-class PurchasedItemProvider {
-  // ignore: avoid_init_to_null
-  late Database? db = null;
+class PurchasedItemProvider extends DatabaseHandler {
   String tableName = 'purchased_item';
-  String dbName = 'pos.db';
-  Future open() async {
-    var databasesPath = await getDatabasesPath();
-    String path = databasesPath + dbName;
-    db = await openDatabase(
-      path,
-      version: 1,
-      onCreate: (Database db, int version) async {
-        await db.execute('''
-          create table $tableName ( 
-            id integer primary key autoincrement, 
-            vendorId integer not null,
-            name text not null,
-            unit text not null
-          )
-          ''');
-      },
-      onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
-    );
+  @override
+  Future<Database> open() async {
+    db = await super.open();
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
             vendorId integer not null,
             name text not null,
-            unit text not null
+            unit text not null,
+            amount real not null
           )
           ''');
-    return db;
+    return db!;
   }
 
   Future<int> insert(PurchasedItem item) async {

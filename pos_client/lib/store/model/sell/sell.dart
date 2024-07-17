@@ -1,5 +1,6 @@
 /// 記錄單向商品訂單記錄，包含訂單編號、商品名稱、價格、冰塊、甜度、數量、建立時間
 
+import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SellItem {
@@ -52,33 +53,11 @@ class SellItem {
   SellItem(this.orderId, this.name, this.price, this.ice, this.sugar, this.quantity, {this.id, this.createAt});
 }
 
-class SellProvider {
-  // ignore: avoid_init_to_null
-  late Database? db = null;
+class SellProvider extends DatabaseHandler {
   String tableName = 'sell';
-  String dbName = 'pos.db';
-  Future open() async {
-    var databasesPath = await getDatabasesPath();
-    String path = databasesPath + dbName;
-    db = await openDatabase(
-      path,
-      version: 1,
-      onCreate: (Database db, int version) async {
-        await db.execute('''
-          create table $tableName ( 
-            id integer primary key autoincrement, 
-            orderId integer not null,
-            name text not null,
-            price real not null,
-            ice text not null,
-            sugar text not null,
-            quantity integer not null,
-            createAt TIMESTAMP not null,
-            foreign key (orderId) references order(id) on delete cascade on update cascade)
-          ''');
-      },
-      onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
-    );
+  @override
+  Future<Database> open() async {
+    db = await super.open();
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
@@ -91,7 +70,7 @@ class SellProvider {
             createAt TIMESTAMP not null,
             foreign key (orderId) references orders(id) on delete cascade on update cascade)
           ''');
-    return db;
+    return db!;
   }
 
   Future<SellItem> insert(SellItem item) async {
