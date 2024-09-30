@@ -80,7 +80,7 @@ class _CashierState extends State<Cashier> {
         builder: (context, cashierInitSnapshot) {
           return Scaffold(
             appBar: AppBar(title: const Text('收銀臺')),
-            endDrawer: drawer(),
+            endDrawer: drawer(cashierInitSnapshot),
             body: Row(children: [
               Expanded(
                 flex: 1,
@@ -109,17 +109,27 @@ class _CashierState extends State<Cashier> {
   /* -------------------------------------------------------------------------- */
   /*                                   Widget                                   */
   /* -------------------------------------------------------------------------- */
-  Widget drawer() {
+  Widget drawer(AsyncSnapshot<bool> cashierInitSnapshot) {
+    Switch receiptSwitch() {
+      bool value;
+      if (cashierInitSnapshot.hasData) {
+        value = cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false;
+      } else {
+        value = false;
+      }
+      return Switch(
+          value: value,
+          onChanged: (isAvailable) {
+            cashierInit.sharedPreferenceHelper.setting.editSetting(isAvailable, BoolSettingKey.useReceiptPrinter);
+            setState(() {});
+          });
+    }
+
     return Drawer(
       child: ListView(children: [
         ListTile(
           title: const Text('開立收據'),
-          trailing: Switch(
-              value: cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false,
-              onChanged: (isAvailable) {
-                cashierInit.sharedPreferenceHelper.setting.editSetting(isAvailable, BoolSettingKey.useReceiptPrinter);
-                setState(() {});
-              }),
+          trailing: receiptSwitch(),
         )
       ]),
     );
@@ -279,6 +289,7 @@ class _CashierState extends State<Cashier> {
         [TextField(keyboardType: TextInputType.number, decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '%off'), controller: discountEditingController)]); // 備註選項
     finishEdit() {
       if (discountEditingController.text.isNotEmpty) {
+        print(discountEditingController.text);
         item.price = item.price * (1 - double.parse(discountEditingController.text) / 100);
         item.note = '${noteEditingController.text}${noteEditingController.text.isEmpty ? '' : ', '}折扣${discountEditingController.text}%';
       }
@@ -288,7 +299,7 @@ class _CashierState extends State<Cashier> {
             item.id,
             item.name,
             item.price,
-            int.parse(quantity.text),
+            double.parse(quantity.text).toInt(),
             item.unit,
             ice: chosenIce,
             sugar: chosenSugar,
@@ -395,22 +406,6 @@ class _CashierState extends State<Cashier> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  // if (discountEditingController.text.isNotEmpty) {
-                  //   item.price = item.price * (1 - double.parse(discountEditingController.text) / 100);
-                  //   item.note = '${noteEditingController.text}${noteEditingController.text.isEmpty ? '' : ', '}折扣${discountEditingController.text}%';
-                  // }
-                  // Navigator.pop(
-                  //     context,
-                  //     ShopItem(
-                  //       item.id,
-                  //       item.name,
-                  //       item.price,
-                  //       int.parse(quantity.text),
-                  //       item.unit,
-                  //       ice: chosenIce,
-                  //       sugar: chosenSugar,
-                  //       note: item.note,
-                  //     ));
                   finishEdit();
                 },
                 child: const Text('加入'),
@@ -472,16 +467,6 @@ class _CashierState extends State<Cashier> {
             flex: 4,
             child: Column(
               children: [
-                // Row(
-                //   children: [
-                //     Text('實收現金'),
-                //     ValueListenableBuilder(
-                //         valueListenable: receivedCashNotifier,
-                //         builder: (context, receivedCash, child) {
-                //           return Text(receivedCash);
-                //         }),
-                //   ],
-                // ),
                 Row(
                   children: [
                     const Text('總價'),
@@ -492,21 +477,6 @@ class _CashierState extends State<Cashier> {
                         }),
                   ],
                 ),
-                // Row(
-                //   children: [
-                //     const Text('找零'),
-                //     ValueListenableBuilder(
-                //         valueListenable: receivedCashNotifier,
-                //         builder: (context, receivedCash, child) {
-                //           double change;
-                //           if (receivedCash.isEmpty)
-                //             change = 0;
-                //           else
-                //             change = double.parse(receivedCash) - cashierLogic.totalPrice;
-                //           return Text(change.toString());
-                //         }),
-                //   ],
-                // ),
               ],
             )),
         Row(
