@@ -1,21 +1,11 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:pdf/pdf.dart';
 import 'package:pos/logic/cashier_logic.dart';
 import 'package:pos/store/model/sell/customer.dart';
-import 'package:pos/store/model/sell/good_providers/goods.dart';
 import 'package:pos/store/model/sell/order.dart';
 import 'package:pos/store/model/sell/sell.dart';
-import 'package:pos/store/sharePreferenes/setting_key.dart';
-import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
-import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:pos/template/small_item_card.dart';
 import 'package:pos/template/date_picker.dart';
 import 'package:pos/view/sell/cashier.dart';
-import 'package:shipment/sample.dart';
 
 class OrderHistory extends StatefulWidget {
   final DateTime? startDate;

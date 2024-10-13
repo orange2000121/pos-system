@@ -484,23 +484,41 @@ class _CashierState extends State<Cashier> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
+              child: Container(
+                // width: 100,
+                height: 50,
+                alignment: Alignment.center,
+                child: Text(
+                  widget.isEditMode ? '確認編輯' : '現金結帳',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 20),
+                ),
+              ),
               onPressed: () async {
                 if (!widget.isEditMode) {
                   int? isSettle; // -1: 取消, 其他: 客戶ID
                   if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
                     isSettle = await showDialog(context: context, builder: (context) => receiptOption());
                   }
-                  if (isSettle != -1) {
-                    // cashierLogic.customerId = isSettle;
-                    cashierLogic.settleAccount(isSettle);
-                    receivedCashNotifier.value = '';
-                  }
                   if (isSettle == -1) {
                     cashierLogic.clear();
                     receivedCashNotifier.value = '';
                   }
+                  if (isSettle == null) return;
+                  // 存入資料庫
+                  cashierLogic.settleAccount(isSettle);
+                  receivedCashNotifier.value = '';
                 } else if (widget.isEditMode && widget.editShopItems != null) {
-                  await showDialog(context: context, builder: (context) => receiptOption());
+                  int? isSettle; // -1: 取消, 1000:完成編輯, 其他: 客戶ID
+                  if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
+                    isSettle = await showDialog(context: context, builder: (context) => receiptOption());
+                  }
+                  if (isSettle == null) return;
+                  if (isSettle == -1) {
+                    if (!mounted) return;
+                    Navigator.pop(context);
+                    return;
+                  }
                   await cashierLogic.editOrder(
                     widget.editShopItems!.orderId,
                     widget.editShopItems!.customerId,
@@ -510,16 +528,6 @@ class _CashierState extends State<Cashier> {
                   Navigator.pop(context);
                 }
               },
-              child: Container(
-                // width: 100,
-                height: 50,
-                alignment: Alignment.center,
-                child: Text(
-                  widget.isEditMode ? '完成編輯' : '現金結帳',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 20),
-                ),
-              ),
             ),
           ],
         ),
@@ -597,6 +605,13 @@ class _CashierState extends State<Cashier> {
               Navigator.pop(context, -1);
             },
             child: const Text('取消')),
+        if (widget.isEditMode)
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context, 1000);
+            },
+            child: const Text('完成編輯'),
+          ),
       ],
       content: FutureBuilder(
         future: customerProvider.getAll(),
