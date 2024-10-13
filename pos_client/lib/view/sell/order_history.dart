@@ -277,7 +277,7 @@ class _OrderHistoryState extends State<OrderHistory> {
             ),
             ElevatedButton(
               onPressed: () async {
-                Customer customer = await customerProvider.getItem(customerId!);
+                Customer customer = customerId != null ? await customerProvider.getItem(customerId!) : Customer('', '', '', '');
                 SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper();
                 await sharedPreferenceHelper.init();
                 String userName = sharedPreferenceHelper.userInfo.getUserInfo(UserInfoKey.userName) ?? '';
