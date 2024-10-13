@@ -59,17 +59,19 @@ class _CashierState extends State<Cashier> {
   late CashierLogic cashierLogic;
   CashierInitData cashierInit = CashierInitData();
   late ValueNotifier<int> groupIdNotifier = ValueNotifier(-1); // -1: 全部
+  CustomerProvider customerProvider = CustomerProvider();
+  late Future<List<Customer>> allCustomers;
   @override
   void initState() {
     super.initState();
     cashierLogic = CashierLogic();
+    allCustomers = customerProvider.getAll();
+    cashierLogic.customerId = allCustomers.then((value) => value.first.id) as int;
     if (widget.isEditMode && widget.editShopItems != null) {
       cashierLogic.shopItemsNotifier.value = widget.editShopItems!.shopItems;
     }
-    if (widget.isEditMode) {
-      if (widget.editShopItems == null) {
-        throw Exception('editShopItems is null');
-      }
+    if (widget.isEditMode && widget.editShopItems == null) {
+      throw Exception('editShopItems is null');
     }
   }
 
@@ -463,6 +465,39 @@ class _CashierState extends State<Cashier> {
     double h = MediaQuery.of(context).size.height;
     return Column(
       children: [
+        Row(
+          children: [
+            FutureBuilder(
+              future: allCustomers,
+              initialData: const [],
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                return DropdownButton<Customer>(
+                  value: snapshot.data.where((element) => element.id == cashierLogic.customerId).first ?? Customer('', '', '', ''), // 選擇的值
+                  isDense: true,
+                  items: List.generate(snapshot.data.length, (index) {
+                    return DropdownMenuItem<Customer>(
+                      value: snapshot.data[index], // 每個選項的值
+                      child: Text(snapshot.data[index].name),
+                    );
+                  }),
+                  onChanged: (newValue) {
+                    cashierLogic.customerId = newValue!.id!;
+                  },
+                );
+              },
+            ),
+            Row(
+              children: [
+                const Text('總價'),
+                ValueListenableBuilder(
+                    valueListenable: cashierLogic.totalPriceNotifier,
+                    builder: (context, totalPrice, child) {
+                      return Text(totalPrice.toString());
+                    }),
+              ],
+            ),
+          ],
+        ),
         Expanded(
             flex: 4,
             child: Column(
@@ -599,7 +634,7 @@ class _CashierState extends State<Cashier> {
             child: const Text('取消')),
       ],
       content: FutureBuilder(
-        future: customerProvider.getAll(),
+        future: allCustomers,
         builder: (context, snapshot) {
           _nameFocusNode.addListener(() {
             if (!_nameFocusNode.hasFocus) {

@@ -10,7 +10,7 @@ class CashierLogic {
   OrderProvider orderProvider = OrderProvider();
   ValueNotifier<List<ShopItem>> shopItemsNotifier = ValueNotifier<List<ShopItem>>([]);
   ValueNotifier<double> totalPriceNotifier = ValueNotifier<double>(0);
-
+  late int customerId;
   CashierLogic() {
     shopItemsNotifier.addListener(() {
       totalPriceNotifier.value = totalPrice;
