@@ -52,7 +52,7 @@ class _OrderHistoryState extends State<OrderHistory> {
     return Scaffold(
       appBar: AppBar(
           title: FutureBuilder(
-              future: customerProvider.getItem(customerId),
+              future: customerId != null ? customerProvider.getItem(customerId!) : Future(() => Customer('', '', '', '')),
               builder: (context, AsyncSnapshot<Customer> snapshot) {
                 if (snapshot.hasData) {
                   return Text('『${snapshot.data!.name}』歷史訂單');
@@ -229,6 +229,7 @@ class _OrderHistoryState extends State<OrderHistory> {
                     builder: (context) => Cashier(
                       isEditMode: true,
                       editShopItems: shopItemEditData,
+                      initCustomerId: order.customerId,
                     ),
                   ),
                 );
@@ -274,76 +275,6 @@ class _OrderHistoryState extends State<OrderHistory> {
                       },
                 child: Text(value ? '確認' : '關閉'),
               ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Customer customer = customerId != null ? await customerProvider.getItem(customerId!) : Customer('', '', '', '');
-                SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper();
-                await sharedPreferenceHelper.init();
-                String userName = sharedPreferenceHelper.userInfo.getUserInfo(UserInfoKey.userName) ?? '';
-                List<SellItem> sellItemsTemp = await sellProvider.getItemByOrderId(order.id!);
-                List<SaleItemData> data = [];
-                GoodsProvider goodsProvider = GoodsProvider();
-
-                for (var element in sellItemsTemp) {
-                  data.add(SaleItemData(
-                    id: element.id!.toString(),
-                    name: element.name,
-                    num: element.quantity,
-                    price: element.price.toInt(),
-                    unit: await goodsProvider.getItemByName(element.name).then((value) => value?.unit ?? ''),
-                  ));
-                }
-                if (!context.mounted) return;
-                DateTime sellDate = order.createAt ?? DateTime.now();
-                String formatSellDate = '${sellDate.year}-${sellDate.month}-${sellDate.day}';
-                double? shippingPaperWidth = sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperWidth);
-                double? shippingPaperHeight = sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperHeight);
-                PdfPageFormat? pdfPageFormat;
-                CreateReceipt receiptSample;
-                if (shippingPaperWidth != null && shippingPaperHeight != null) {
-                  pdfPageFormat = PdfPageFormat(shippingPaperWidth * PdfPageFormat.mm, shippingPaperHeight * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm);
-                  receiptSample = CreateReceipt(
-                    userName: userName,
-                    customName: customer.name,
-                    contactPerson: customer.contactPerson,
-                    phone: customer.phone,
-                    address: customer.address,
-                    formattedDate: formatSellDate,
-                    data: data,
-                    pdfPageFormat: pdfPageFormat,
-                  );
-                } else {
-                  receiptSample = CreateReceipt(
-                    userName: userName,
-                    customName: customer.name,
-                    contactPerson: customer.contactPerson,
-                    phone: customer.phone,
-                    address: customer.address,
-                    formattedDate: formatSellDate,
-                    data: data,
-                  );
-                }
-                // 建立pdf儲存資料夾
-                String receiptFolder = 'receipt';
-                String customerName = customer.name;
-                final output = await getApplicationDocumentsDirectory();
-                if (File('${output.path}/$receiptFolder').existsSync() == false) {
-                  Directory('${output.path}/$receiptFolder').createSync();
-                }
-                if (File('${output.path}/$receiptFolder/$customerName').existsSync() == false) {
-                  Directory('${output.path}/$receiptFolder/$customerName').createSync();
-                }
-                DateTime now = DateTime.now();
-                String formattedDate = '${now.year}-${now.month}-${now.day}-${now.hour}-${now.minute}-${now.second}';
-                final file = File('${output.path}/$receiptFolder/$customerName/$customerName$formattedDate.pdf');
-                // pdf存檔
-                Uint8List bytes = await receiptSample.layout().then((value) => value.save());
-                await file.writeAsBytes(bytes);
-                if (!context.mounted) return;
-                Navigator.pop(context);
-              },
-              child: const Text('列印歷史訂單'),
             ),
           ],
           onPop: (popValue) {
