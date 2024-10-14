@@ -15,6 +15,7 @@ import 'package:pos/store/model/sell/good_providers/goods.dart';
 import 'package:pos/store/model/sell/good_providers/goods_group.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:pos/template/button/text_icon_button.dart';
+import 'package:pos/template/date_picker.dart';
 import 'package:pos/template/number_input_with_increment_decrement.dart';
 import 'package:pos/template/product_card.dart';
 import 'package:shipment/sample.dart';
@@ -45,12 +46,10 @@ class ShopItemEditData {
 class Cashier extends StatefulWidget {
   final bool isEditMode;
   final ShopItemEditData? editShopItems;
-  final int? initCustomerId;
   const Cashier({
     super.key,
     this.isEditMode = false,
     this.editShopItems,
-    this.initCustomerId,
   });
 
   @override
@@ -63,6 +62,7 @@ class _CashierState extends State<Cashier> {
   late ValueNotifier<int> groupIdNotifier = ValueNotifier(-1); // -1: 全部
   CustomerProvider customerProvider = CustomerProvider();
   ValueNotifier<Customer> customerValueNotifier = ValueNotifier<Customer>(Customer('', '', '', ''));
+  DateTime receiptDate = DateTime.now();
 
   @override
   void initState() {
@@ -73,11 +73,10 @@ class _CashierState extends State<Cashier> {
     }
     if (widget.isEditMode) {
       cashierLogic.shopItemsNotifier.value = widget.editShopItems!.shopItems;
-      if (widget.initCustomerId != null) {
-        customerProvider.getItem(widget.initCustomerId!).then((value) {
-          customerValueNotifier.value = value;
-        });
-      }
+      customerProvider.getItem(widget.editShopItems!.customerId).then((value) {
+        customerValueNotifier.value = value;
+      });
+      receiptDate = widget.editShopItems!.createAt;
     } else {
       customerProvider.getAll().then((value) {
         customerValueNotifier.value = value.first;
@@ -506,10 +505,10 @@ class _CashierState extends State<Cashier> {
                   }
                   if (isSettle == null) return;
                   // 存入資料庫
-                  cashierLogic.settleAccount(isSettle);
+                  cashierLogic.settleAccount(isSettle, createAt: receiptDate);
                   receivedCashNotifier.value = '';
                 } else if (widget.isEditMode && widget.editShopItems != null) {
-                  int? isSettle; // -1: 取消, 1000:完成編輯, 其他: 客戶ID
+                  int? isSettle; // -1: 取消, 其他: 客戶ID
                   if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
                     isSettle = await showDialog(context: context, builder: (context) => receiptOption());
                   }
@@ -521,8 +520,8 @@ class _CashierState extends State<Cashier> {
                   }
                   await cashierLogic.editOrder(
                     widget.editShopItems!.orderId,
-                    widget.editShopItems!.customerId,
-                    widget.editShopItems!.createAt,
+                    isSettle,
+                    receiptDate,
                   );
                   if (!mounted) return;
                   Navigator.pop(context);
@@ -544,6 +543,10 @@ class _CashierState extends State<Cashier> {
     ValueNotifier<bool> showPriceNotifier = ValueNotifier<bool>(true);
     return AlertDialog(
       title: const Text('發票'),
+      icon: DatePickerField(
+        initialDate: receiptDate,
+        onChanged: (date) => receiptDate = date ?? DateTime.now(),
+      ),
       actions: [
         ValueListenableBuilder(
           valueListenable: showPriceNotifier,
@@ -572,8 +575,7 @@ class _CashierState extends State<Cashier> {
               if (File('${output.path}/$receiptFolder/$customerName').existsSync() == false) {
                 Directory('${output.path}/$receiptFolder/$customerName').createSync();
               }
-              DateTime now = DateTime.now();
-              String formattedDate = '${now.year}-${now.month}-${now.day}-${now.hour}-${now.minute}-${now.second}';
+              String formattedDate = '${receiptDate.year}-${receiptDate.month}-${receiptDate.day}-${receiptDate.hour}-${receiptDate.minute}-${receiptDate.second}';
               final file = File('${output.path}/$receiptFolder/$customerName/$customerName$formattedDate.pdf');
               // 最後更新客戶資料
               receiptSample.customName = _name.text;
@@ -608,7 +610,7 @@ class _CashierState extends State<Cashier> {
         if (widget.isEditMode)
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context, 1000);
+              Navigator.pop(context, customerValueNotifier.value.id);
             },
             child: const Text('完成編輯'),
           ),

@@ -219,7 +219,6 @@ class _OrderHistoryState extends State<OrderHistory> {
                     builder: (context) => Cashier(
                       isEditMode: true,
                       editShopItems: shopItemEditData,
-                      initCustomerId: order.customerId,
                     ),
                   ),
                 );

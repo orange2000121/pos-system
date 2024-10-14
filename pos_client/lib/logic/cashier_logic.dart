@@ -38,13 +38,15 @@ class CashierLogic {
     shopItemsNotifier.notifyListeners();
   }
 
-  Future settleAccount(int? customerId) async {
+  Future settleAccount(int? customerId, {DateTime? createAt}) async {
     if (shopItemsNotifier.value.isEmpty) return;
     double total = 0;
     for (var i = 0; i < shopItemsNotifier.value.length; i++) {
       total += shopItemsNotifier.value[i].price * shopItemsNotifier.value[i].quantity;
     }
-    int orderId = await orderProvider.insert(OrderItem(total, customerId: customerId));
+    int orderId = await orderProvider.insert(
+      OrderItem(total, customerId: customerId, createAt: createAt),
+    );
     for (var i = 0; i < shopItemsNotifier.value.length; i++) {
       SellItem item = SellItem(
         orderId,
@@ -53,6 +55,7 @@ class CashierLogic {
         shopItemsNotifier.value[i].ice ?? '',
         shopItemsNotifier.value[i].sugar ?? '',
         shopItemsNotifier.value[i].quantity,
+        createAt: createAt,
       );
       sellProvider.insert(item);
     }
@@ -75,6 +78,7 @@ class CashierLogic {
         shopItemsNotifier.value[i].ice ?? '',
         shopItemsNotifier.value[i].sugar ?? '',
         shopItemsNotifier.value[i].quantity,
+        createAt: createAt,
       );
       sellProvider.insert(item);
     }
