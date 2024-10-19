@@ -142,21 +142,11 @@ class _OrderHistoryState extends State<OrderHistory> {
       itemBuilder: (context, index) {
         List<SellItem> sellItems = orderMap.values.toList()[index];
         OrderItem order = orderMap.keys.toList()[index];
-        ValueNotifier editSwitchNotifier = ValueNotifier(false);
         return SimplAndDetailInfoCard(
-          title: ValueListenableBuilder(
-              valueListenable: editSwitchNotifier,
-              builder: (context, isEdit, child) {
-                return isEdit
-                    ? DatePickerField(
-                        initialDate: order.createAt,
-                        onChanged: (date) => order.createAt = date,
-                      )
-                    : Text(
-                        order.createAt.toString().split('.')[0],
-                        textAlign: TextAlign.center,
-                      );
-              }),
+          title: Text(
+            order.createAt.toString().split('.')[0],
+            textAlign: TextAlign.center,
+          ),
           subtitle: [
             Text('總金額：${order.totalPrice}'),
           ],
@@ -164,32 +154,20 @@ class _OrderHistoryState extends State<OrderHistory> {
             return Text('${e.name} x${e.quantity}');
           }).toList(),
           detailedInfo: sellItems.map((e) {
-            return ValueListenableBuilder(
-                valueListenable: editSwitchNotifier,
-                builder: (context, value, child) {
-                  return ListTile(
-                    leading: value
-                        ? IconButton(
-                            onPressed: () {
-                              showDialog(context: context, builder: (context) => editSellItem(context, e));
-                            },
-                            icon: const Icon(Icons.edit),
-                          )
-                        : null,
-                    title: Text(e.name),
-                    subtitle: Text('${e.sugar} ${e.ice}'),
-                    trailing: SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.2,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('${e.price} x${e.quantity}'),
-                          Text('${e.price * e.quantity}'),
-                        ],
-                      ),
-                    ),
-                  );
-                });
+            return ListTile(
+              title: Text(e.name),
+              subtitle: Text('${e.sugar} ${e.ice}'),
+              trailing: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.2,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('${e.price} x${e.quantity}'),
+                    Text('${e.price * e.quantity}'),
+                  ],
+                ),
+              ),
+            );
           }).toList(),
           dialogAction: [
             ElevatedButton(
@@ -226,14 +204,6 @@ class _OrderHistoryState extends State<OrderHistory> {
               },
               child: const Text('編輯'),
             ),
-            ValueListenableBuilder(
-              valueListenable: editSwitchNotifier,
-              builder: (context, value, child) => Switch(
-                value: editSwitchNotifier.value,
-                thumbIcon: MaterialStateProperty.all(const Icon(Icons.edit)),
-                onChanged: (value) => editSwitchNotifier.value = value,
-              ),
-            ),
             ElevatedButton(
               onPressed: () {
                 orderProvider.delete(order.id!);
@@ -243,32 +213,11 @@ class _OrderHistoryState extends State<OrderHistory> {
               },
               child: const Text('刪除', style: TextStyle(color: Colors.red)),
             ),
-            ValueListenableBuilder(
-              valueListenable: editSwitchNotifier,
-              builder: (context, value, child) => ElevatedButton(
-                onPressed: value
-                    ? () {
-                        double totalPrice = 0;
-                        for (var element in sellItems) {
-                          sellProvider.update(element.id!, element); //更新sellItem
-                          totalPrice += element.price * element.quantity;
-                        }
-                        order.totalPrice = totalPrice;
-                        orderProvider.update(order.id!, order);
-                        setState(() {
-                          Navigator.of(context).pop();
-                        });
-                      }
-                    : () {
-                        Navigator.of(context).pop();
-                      },
-                child: Text(value ? '確認' : '關閉'),
-              ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('關閉'),
             ),
           ],
-          onPop: (popValue) {
-            editSwitchNotifier.value = false;
-          },
         );
       },
     );
