@@ -1,21 +1,11 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:pdf/pdf.dart';
 import 'package:pos/logic/cashier_logic.dart';
 import 'package:pos/store/model/sell/customer.dart';
-import 'package:pos/store/model/sell/good_providers/goods.dart';
 import 'package:pos/store/model/sell/order.dart';
 import 'package:pos/store/model/sell/sell.dart';
-import 'package:pos/store/sharePreferenes/setting_key.dart';
-import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
-import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:pos/template/small_item_card.dart';
 import 'package:pos/template/date_picker.dart';
 import 'package:pos/view/sell/cashier.dart';
-import 'package:shipment/sample.dart';
 
 class OrderHistory extends StatefulWidget {
   final DateTime? startDate;
@@ -52,7 +42,7 @@ class _OrderHistoryState extends State<OrderHistory> {
     return Scaffold(
       appBar: AppBar(
           title: FutureBuilder(
-              future: customerProvider.getItem(customerId),
+              future: customerId != null ? customerProvider.getItem(customerId!) : Future(() => Customer('', '', '', '')),
               builder: (context, AsyncSnapshot<Customer> snapshot) {
                 if (snapshot.hasData) {
                   return Text('『${snapshot.data!.name}』歷史訂單');
@@ -152,21 +142,11 @@ class _OrderHistoryState extends State<OrderHistory> {
       itemBuilder: (context, index) {
         List<SellItem> sellItems = orderMap.values.toList()[index];
         OrderItem order = orderMap.keys.toList()[index];
-        ValueNotifier editSwitchNotifier = ValueNotifier(false);
         return SimplAndDetailInfoCard(
-          title: ValueListenableBuilder(
-              valueListenable: editSwitchNotifier,
-              builder: (context, isEdit, child) {
-                return isEdit
-                    ? DatePickerField(
-                        initialDate: order.createAt,
-                        onChanged: (date) => order.createAt = date,
-                      )
-                    : Text(
-                        order.createAt.toString().split('.')[0],
-                        textAlign: TextAlign.center,
-                      );
-              }),
+          title: Text(
+            order.createAt.toString().split('.')[0],
+            textAlign: TextAlign.center,
+          ),
           subtitle: [
             Text('總金額：${order.totalPrice}'),
           ],
@@ -174,32 +154,20 @@ class _OrderHistoryState extends State<OrderHistory> {
             return Text('${e.name} x${e.quantity}');
           }).toList(),
           detailedInfo: sellItems.map((e) {
-            return ValueListenableBuilder(
-                valueListenable: editSwitchNotifier,
-                builder: (context, value, child) {
-                  return ListTile(
-                    leading: value
-                        ? IconButton(
-                            onPressed: () {
-                              showDialog(context: context, builder: (context) => editSellItem(context, e));
-                            },
-                            icon: const Icon(Icons.edit),
-                          )
-                        : null,
-                    title: Text(e.name),
-                    subtitle: Text('${e.sugar} ${e.ice}'),
-                    trailing: SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.2,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('${e.price} x${e.quantity}'),
-                          Text('${e.price * e.quantity}'),
-                        ],
-                      ),
-                    ),
-                  );
-                });
+            return ListTile(
+              title: Text(e.name),
+              subtitle: Text('${e.sugar} ${e.ice}'),
+              trailing: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.2,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('${e.price} x${e.quantity}'),
+                    Text('${e.price * e.quantity}'),
+                  ],
+                ),
+              ),
+            );
           }).toList(),
           dialogAction: [
             ElevatedButton(
@@ -236,14 +204,6 @@ class _OrderHistoryState extends State<OrderHistory> {
               },
               child: const Text('編輯'),
             ),
-            ValueListenableBuilder(
-              valueListenable: editSwitchNotifier,
-              builder: (context, value, child) => Switch(
-                value: editSwitchNotifier.value,
-                thumbIcon: MaterialStateProperty.all(const Icon(Icons.edit)),
-                onChanged: (value) => editSwitchNotifier.value = value,
-              ),
-            ),
             ElevatedButton(
               onPressed: () {
                 orderProvider.delete(order.id!);
@@ -253,102 +213,11 @@ class _OrderHistoryState extends State<OrderHistory> {
               },
               child: const Text('刪除', style: TextStyle(color: Colors.red)),
             ),
-            ValueListenableBuilder(
-              valueListenable: editSwitchNotifier,
-              builder: (context, value, child) => ElevatedButton(
-                onPressed: value
-                    ? () {
-                        double totalPrice = 0;
-                        for (var element in sellItems) {
-                          sellProvider.update(element.id!, element); //更新sellItem
-                          totalPrice += element.price * element.quantity;
-                        }
-                        order.totalPrice = totalPrice;
-                        orderProvider.update(order.id!, order);
-                        setState(() {
-                          Navigator.of(context).pop();
-                        });
-                      }
-                    : () {
-                        Navigator.of(context).pop();
-                      },
-                child: Text(value ? '確認' : '關閉'),
-              ),
-            ),
             ElevatedButton(
-              onPressed: () async {
-                Customer customer = await customerProvider.getItem(customerId!);
-                SharedPreferenceHelper sharedPreferenceHelper = SharedPreferenceHelper();
-                await sharedPreferenceHelper.init();
-                String userName = sharedPreferenceHelper.userInfo.getUserInfo(UserInfoKey.userName) ?? '';
-                List<SellItem> sellItemsTemp = await sellProvider.getItemByOrderId(order.id!);
-                List<SaleItemData> data = [];
-                GoodsProvider goodsProvider = GoodsProvider();
-
-                for (var element in sellItemsTemp) {
-                  data.add(SaleItemData(
-                    id: element.id!.toString(),
-                    name: element.name,
-                    num: element.quantity,
-                    price: element.price.toInt(),
-                    unit: await goodsProvider.getItemByName(element.name).then((value) => value?.unit ?? ''),
-                  ));
-                }
-                if (!context.mounted) return;
-                DateTime sellDate = order.createAt ?? DateTime.now();
-                String formatSellDate = '${sellDate.year}-${sellDate.month}-${sellDate.day}';
-                double? shippingPaperWidth = sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperWidth);
-                double? shippingPaperHeight = sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperHeight);
-                PdfPageFormat? pdfPageFormat;
-                CreateReceipt receiptSample;
-                if (shippingPaperWidth != null && shippingPaperHeight != null) {
-                  pdfPageFormat = PdfPageFormat(shippingPaperWidth * PdfPageFormat.mm, shippingPaperHeight * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm);
-                  receiptSample = CreateReceipt(
-                    userName: userName,
-                    customName: customer.name,
-                    contactPerson: customer.contactPerson,
-                    phone: customer.phone,
-                    address: customer.address,
-                    formattedDate: formatSellDate,
-                    data: data,
-                    pdfPageFormat: pdfPageFormat,
-                  );
-                } else {
-                  receiptSample = CreateReceipt(
-                    userName: userName,
-                    customName: customer.name,
-                    contactPerson: customer.contactPerson,
-                    phone: customer.phone,
-                    address: customer.address,
-                    formattedDate: formatSellDate,
-                    data: data,
-                  );
-                }
-                // 建立pdf儲存資料夾
-                String receiptFolder = 'receipt';
-                String customerName = customer.name;
-                final output = await getApplicationDocumentsDirectory();
-                if (File('${output.path}/$receiptFolder').existsSync() == false) {
-                  Directory('${output.path}/$receiptFolder').createSync();
-                }
-                if (File('${output.path}/$receiptFolder/$customerName').existsSync() == false) {
-                  Directory('${output.path}/$receiptFolder/$customerName').createSync();
-                }
-                DateTime now = DateTime.now();
-                String formattedDate = '${now.year}-${now.month}-${now.day}-${now.hour}-${now.minute}-${now.second}';
-                final file = File('${output.path}/$receiptFolder/$customerName/$customerName$formattedDate.pdf');
-                // pdf存檔
-                Uint8List bytes = await receiptSample.layout().then((value) => value.save());
-                await file.writeAsBytes(bytes);
-                if (!context.mounted) return;
-                Navigator.pop(context);
-              },
-              child: const Text('列印歷史訂單'),
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('關閉'),
             ),
           ],
-          onPop: (popValue) {
-            editSwitchNotifier.value = false;
-          },
         );
       },
     );

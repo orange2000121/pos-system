@@ -15,6 +15,7 @@ import 'package:pos/store/model/sell/good_providers/goods.dart';
 import 'package:pos/store/model/sell/good_providers/goods_group.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:pos/template/button/text_icon_button.dart';
+import 'package:pos/template/date_picker.dart';
 import 'package:pos/template/number_input_with_increment_decrement.dart';
 import 'package:pos/template/product_card.dart';
 import 'package:shipment/sample.dart';
@@ -59,17 +60,29 @@ class _CashierState extends State<Cashier> {
   late CashierLogic cashierLogic;
   CashierInitData cashierInit = CashierInitData();
   late ValueNotifier<int> groupIdNotifier = ValueNotifier(-1); // -1: 全部
+  CustomerProvider customerProvider = CustomerProvider();
+  ValueNotifier<Customer> customerValueNotifier = ValueNotifier<Customer>(Customer('', '', '', ''));
+  DateTime receiptDate = DateTime.now();
+
   @override
   void initState() {
     super.initState();
     cashierLogic = CashierLogic();
-    if (widget.isEditMode && widget.editShopItems != null) {
-      cashierLogic.shopItemsNotifier.value = widget.editShopItems!.shopItems;
+    if (widget.isEditMode && widget.editShopItems == null) {
+      throw Exception('editShopItems is null');
     }
     if (widget.isEditMode) {
-      if (widget.editShopItems == null) {
-        throw Exception('editShopItems is null');
-      }
+      cashierLogic.shopItemsNotifier.value = widget.editShopItems!.shopItems;
+      customerProvider.getItem(widget.editShopItems!.customerId).then((value) {
+        customerValueNotifier.value = value;
+      });
+      receiptDate = widget.editShopItems!.createAt;
+    } else {
+      customerProvider.getAll().then((value) {
+        if (value.isNotEmpty) {
+          customerValueNotifier.value = value.first;
+        }
+      });
     }
   }
 
@@ -288,7 +301,7 @@ class _CashierState extends State<Cashier> {
             item.id,
             item.name,
             item.price,
-            int.parse(quantity.text),
+            double.parse(quantity.text).toInt(),
             item.unit,
             ice: chosenIce,
             sugar: chosenSugar,
@@ -395,22 +408,6 @@ class _CashierState extends State<Cashier> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  // if (discountEditingController.text.isNotEmpty) {
-                  //   item.price = item.price * (1 - double.parse(discountEditingController.text) / 100);
-                  //   item.note = '${noteEditingController.text}${noteEditingController.text.isEmpty ? '' : ', '}折扣${discountEditingController.text}%';
-                  // }
-                  // Navigator.pop(
-                  //     context,
-                  //     ShopItem(
-                  //       item.id,
-                  //       item.name,
-                  //       item.price,
-                  //       int.parse(quantity.text),
-                  //       item.unit,
-                  //       ice: chosenIce,
-                  //       sugar: chosenSugar,
-                  //       note: item.note,
-                  //     ));
                   finishEdit();
                 },
                 child: const Text('加入'),
@@ -472,16 +469,6 @@ class _CashierState extends State<Cashier> {
             flex: 4,
             child: Column(
               children: [
-                // Row(
-                //   children: [
-                //     Text('實收現金'),
-                //     ValueListenableBuilder(
-                //         valueListenable: receivedCashNotifier,
-                //         builder: (context, receivedCash, child) {
-                //           return Text(receivedCash);
-                //         }),
-                //   ],
-                // ),
                 Row(
                   children: [
                     const Text('總價'),
@@ -492,62 +479,57 @@ class _CashierState extends State<Cashier> {
                         }),
                   ],
                 ),
-                // Row(
-                //   children: [
-                //     const Text('找零'),
-                //     ValueListenableBuilder(
-                //         valueListenable: receivedCashNotifier,
-                //         builder: (context, receivedCash, child) {
-                //           double change;
-                //           if (receivedCash.isEmpty)
-                //             change = 0;
-                //           else
-                //             change = double.parse(receivedCash) - cashierLogic.totalPrice;
-                //           return Text(change.toString());
-                //         }),
-                //   ],
-                // ),
               ],
             )),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
-              onPressed: () async {
-                if (!widget.isEditMode) {
-                  int? isSettle;
-                  if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
-                    isSettle = await showDialog(context: context, builder: (context) => receiptOption());
-                  }
-                  if (isSettle != -1) {
-                    // cashierLogic.customerId = isSettle;
-                    cashierLogic.settleAccount(isSettle);
-                    receivedCashNotifier.value = '';
-                  }
-                  if (isSettle == -1) {
-                    cashierLogic.clear();
-                    receivedCashNotifier.value = '';
-                  }
-                } else if (widget.isEditMode && widget.editShopItems != null) {
-                  await cashierLogic.editOrder(
-                    widget.editShopItems!.orderId,
-                    widget.editShopItems!.customerId,
-                    widget.editShopItems!.createAt,
-                  );
-                  if (!mounted) return;
-                  Navigator.pop(context);
-                }
-              },
               child: Container(
                 // width: 100,
                 height: 50,
                 alignment: Alignment.center,
                 child: Text(
-                  widget.isEditMode ? '完成編輯' : '現金結帳',
+                  widget.isEditMode ? '確認編輯' : '現金結帳',
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 20),
                 ),
               ),
+              onPressed: () async {
+                if (!widget.isEditMode) {
+                  int? isSettle; // -1: 取消, 其他: 客戶ID
+                  if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
+                    isSettle = await showDialog(context: context, builder: (context) => receiptOption());
+                    if (isSettle == -1) {
+                      cashierLogic.clear();
+                      receivedCashNotifier.value = '';
+                      return;
+                    }
+                    if (isSettle == null) return;
+                  }
+                  // 存入資料庫
+                  cashierLogic.settleAccount(isSettle, createAt: receiptDate);
+                  receivedCashNotifier.value = '';
+                } else if (widget.isEditMode && widget.editShopItems != null) {
+                  int? isSettle; // -1: 取消, 其他: 客戶ID
+                  if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
+                    isSettle = await showDialog(context: context, builder: (context) => receiptOption());
+                  }
+                  if (isSettle == null) return;
+                  if (isSettle == -1) {
+                    if (!mounted) return;
+                    Navigator.pop(context);
+                    return;
+                  }
+                  await cashierLogic.editOrder(
+                    widget.editShopItems!.orderId,
+                    isSettle,
+                    receiptDate,
+                  );
+                  if (!mounted) return;
+                  Navigator.pop(context);
+                }
+              },
             ),
           ],
         ),
@@ -557,15 +539,17 @@ class _CashierState extends State<Cashier> {
   }
 
   Widget receiptOption() {
-    CustomerProvider customerProvider = CustomerProvider();
-    ValueNotifier<Customer> customerValueNotifier = ValueNotifier<Customer>(Customer('', '', '', ''));
     ReceiptSample receiptSample = ReceiptSample(userName: '', customName: '', contactPerson: '', phone: '', address: '', data: const []);
     TextEditingController _name = TextEditingController(), _phone = TextEditingController(), _contactPerson = TextEditingController(), _address = TextEditingController();
     FocusNode _nameFocusNode = FocusNode(), _phoneFocusNode = FocusNode(), _contactPersonFocusNode = FocusNode(), _addressFocusNode = FocusNode();
-    List dropdownItems = [];
+    List<Customer> customerDropdownItems = [];
     ValueNotifier<bool> showPriceNotifier = ValueNotifier<bool>(true);
     return AlertDialog(
       title: const Text('發票'),
+      icon: DatePickerField(
+        initialDate: receiptDate,
+        onChanged: (date) => receiptDate = date ?? DateTime.now(),
+      ),
       actions: [
         ValueListenableBuilder(
           valueListenable: showPriceNotifier,
@@ -594,8 +578,7 @@ class _CashierState extends State<Cashier> {
               if (File('${output.path}/$receiptFolder/$customerName').existsSync() == false) {
                 Directory('${output.path}/$receiptFolder/$customerName').createSync();
               }
-              DateTime now = DateTime.now();
-              String formattedDate = '${now.year}-${now.month}-${now.day}-${now.hour}-${now.minute}-${now.second}';
+              String formattedDate = '${receiptDate.year}-${receiptDate.month}-${receiptDate.day}-${receiptDate.hour}-${receiptDate.minute}-${receiptDate.second}';
               final file = File('${output.path}/$receiptFolder/$customerName/$customerName$formattedDate.pdf');
               // 最後更新客戶資料
               receiptSample.customName = _name.text;
@@ -627,10 +610,18 @@ class _CashierState extends State<Cashier> {
               Navigator.pop(context, -1);
             },
             child: const Text('取消')),
+        if (widget.isEditMode)
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context, customerValueNotifier.value.id);
+            },
+            child: const Text('完成編輯'),
+          ),
       ],
       content: FutureBuilder(
         future: customerProvider.getAll(),
-        builder: (context, snapshot) {
+        builder: (context, allCustomerSnapshot) {
+          /* -------------------------------- 監聽客戶資料變更 -------------------------------- */
           _nameFocusNode.addListener(() {
             if (!_nameFocusNode.hasFocus) {
               customerValueNotifier.value.name = _name.text;
@@ -659,12 +650,28 @@ class _CashierState extends State<Cashier> {
               customerValueNotifier.notifyListeners();
             }
           });
-          dropdownItems = snapshot.data ?? [];
-          dropdownItems.add(Customer('新增客戶', '', '', ''));
-          customerValueNotifier.value = dropdownItems.first;
-          List<SaleItemData> data = [];
+          /* --------------------------------- 初始化客戶資料 -------------------------------- */
+          customerDropdownItems = allCustomerSnapshot.data ?? [];
+          // Replace the customer in the dropdown items if the IDs match
+          bool replaceFlag = false;
+          customerDropdownItems.add(Customer('新增客戶', '', '', ''));
+          for (int i = 0; i < customerDropdownItems.length; i++) {
+            if (customerDropdownItems[i].id == customerValueNotifier.value.id) {
+              customerDropdownItems[i] = customerValueNotifier.value;
+              replaceFlag = true;
+              break;
+            }
+          }
+          if (!replaceFlag) {
+            customerDropdownItems.add(customerValueNotifier.value);
+          }
+          for (int i = 0; i < customerDropdownItems.length; i++) {
+            print('idx: $i, id: ${customerDropdownItems[i].id}, name: ${customerDropdownItems[i].name}');
+          }
+          /* --------------------------------- 初始購物車資料 -------------------------------- */
+          List<SaleItemData> saleItems = [];
           for (var i = 0; i < cashierLogic.shopItemsNotifier.value.length; i++) {
-            data.add(
+            saleItems.add(
               SaleItemData(
                 id: cashierLogic.shopItemsNotifier.value[i].id.toString(),
                 name: cashierLogic.shopItemsNotifier.value[i].name,
@@ -675,15 +682,17 @@ class _CashierState extends State<Cashier> {
               ),
             );
           }
-          receiptSample.customName = dropdownItems.first.name;
-          receiptSample.contactPerson = dropdownItems.first.contactPerson;
-          receiptSample.phone = dropdownItems.first.phone;
-          receiptSample.address = dropdownItems.first.address;
-          receiptSample.data = data;
+          /* --------------------------------- 初始化收據資料 -------------------------------- */
+          receiptSample.customName = customerValueNotifier.value.name;
+          receiptSample.contactPerson = customerValueNotifier.value.contactPerson;
+          receiptSample.phone = customerValueNotifier.value.phone;
+          receiptSample.address = customerValueNotifier.value.address;
+          receiptSample.data = saleItems;
           _name.text = customerValueNotifier.value.name;
           _phone.text = customerValueNotifier.value.phone;
           _contactPerson.text = customerValueNotifier.value.contactPerson;
           _address.text = customerValueNotifier.value.address;
+          /* ----------------------------------- UI ----------------------------------- */
           return Column(
             children: [
               ValueListenableBuilder(
@@ -691,10 +700,10 @@ class _CashierState extends State<Cashier> {
                 builder: (context, value, child) => DropdownButton<Customer>(
                   value: customerValueNotifier.value, // 選擇的值
                   isDense: true,
-                  items: List.generate(dropdownItems.length, (index) {
+                  items: List.generate(customerDropdownItems.length, (index) {
                     return DropdownMenuItem<Customer>(
-                      value: dropdownItems[index], // 每個選項的值
-                      child: Text(dropdownItems[index].name),
+                      value: customerDropdownItems[index], // 每個選項的值
+                      child: Text(customerDropdownItems[index].name),
                     );
                   }),
                   onChanged: (newValue) {
