@@ -29,10 +29,15 @@ abstract class DatabaseHandler {
           // 新增 amount 欄位，在 GoodsProvider 和 PurchasedItemProvider 中
           print('update database case 1');
           if (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='${GoodsProvider().tableName}';").then((value) => value.isNotEmpty)) {
-            await db.execute("ALTER TABLE ${GoodsProvider().tableName} ADD COLUMN amount real not null DEFAULT 0;");
+            if (!await columnExists(db, GoodsProvider().tableName, 'amount')) {
+              await db.execute("ALTER TABLE ${GoodsProvider().tableName} ADD COLUMN amount real not null DEFAULT 0;");
+            }
           }
+
           if (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='${PurchasedItemProvider().tableName}';").then((value) => value.isNotEmpty)) {
-            await db.execute("ALTER TABLE ${PurchasedItemProvider().tableName} ADD COLUMN amount real not null DEFAULT 0;");
+            if (!await columnExists(db, PurchasedItemProvider().tableName, 'amount')) {
+              await db.execute("ALTER TABLE ${PurchasedItemProvider().tableName} ADD COLUMN amount real not null DEFAULT 0;");
+            }
           }
           break;
         case 2:
@@ -72,5 +77,10 @@ abstract class DatabaseHandler {
           break;
       }
     }
+  }
+
+  Future<bool> columnExists(Database db, String tableName, String columnName) async {
+    var result = await db.rawQuery("PRAGMA table_info($tableName);");
+    return result.any((element) => element['name'] == columnName);
   }
 }
