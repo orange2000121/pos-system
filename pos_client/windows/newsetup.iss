@@ -3,7 +3,7 @@
 
 #define MyAppName "pos"
 #define MyAppVersion "0.1.1"
-#define MyAppPublisher "My Company, Inc."
+#define MyAppPublisher "Orange Tech"
 #define MyAppURL "https://www.example.com/"
 #define MyAppExeName "pos.exe"
 #define MyAppAssocName MyAppName + " File"
@@ -44,9 +44,9 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\Danny\Desktop\pos-system\pos_client\build\windows\x64\runner\Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Danny\Desktop\pos-system\pos_client\build\windows\x64\runner\Release\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Danny\Desktop\pos-system\pos_client\build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\build\windows\x64\runner\Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\windows\x64\runner\Release\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: ".dart_tool"
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]

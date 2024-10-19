@@ -27,14 +27,22 @@ abstract class DatabaseHandler {
       switch (version) {
         case 1:
           // 新增 amount 欄位，在 GoodsProvider 和 PurchasedItemProvider 中
-          await db.execute("ALTER TABLE ${GoodsProvider().tableName} ADD COLUMN amount real not null DEFAULT 0;");
-          await db.execute("ALTER TABLE ${PurchasedItemProvider().tableName} ADD COLUMN amount real not null DEFAULT 0;");
+          print('update database case 1');
+          if (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='${GoodsProvider().tableName}';").then((value) => value.isNotEmpty)) {
+            await db.execute("ALTER TABLE ${GoodsProvider().tableName} ADD COLUMN amount real not null DEFAULT 0;");
+          }
+          if (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='${PurchasedItemProvider().tableName}';").then((value) => value.isNotEmpty)) {
+            await db.execute("ALTER TABLE ${PurchasedItemProvider().tableName} ADD COLUMN amount real not null DEFAULT 0;");
+          }
           break;
         case 2:
           // 假設 restock 表的名稱是 restockTableName
+          print('update database case 2');
           String restockTableName = "restock";
           String tempTableName = "temp_restock";
-
+          if (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='$restockTableName';").then((value) => value.isEmpty)) {
+            break;
+          }
           // 1. 創建一個新的臨時表
           await db.execute("""
           CREATE TABLE $tempTableName (

@@ -79,7 +79,9 @@ class _CashierState extends State<Cashier> {
       receiptDate = widget.editShopItems!.createAt;
     } else {
       customerProvider.getAll().then((value) {
-        customerValueNotifier.value = value.first;
+        if (value.isNotEmpty) {
+          customerValueNotifier.value = value.first;
+        }
       });
     }
   }
@@ -498,12 +500,13 @@ class _CashierState extends State<Cashier> {
                   int? isSettle; // -1: 取消, 其他: 客戶ID
                   if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
                     isSettle = await showDialog(context: context, builder: (context) => receiptOption());
+                    if (isSettle == -1) {
+                      cashierLogic.clear();
+                      receivedCashNotifier.value = '';
+                      return;
+                    }
+                    if (isSettle == null) return;
                   }
-                  if (isSettle == -1) {
-                    cashierLogic.clear();
-                    receivedCashNotifier.value = '';
-                  }
-                  if (isSettle == null) return;
                   // 存入資料庫
                   cashierLogic.settleAccount(isSettle, createAt: receiptDate);
                   receivedCashNotifier.value = '';
@@ -650,13 +653,21 @@ class _CashierState extends State<Cashier> {
           /* --------------------------------- 初始化客戶資料 -------------------------------- */
           customerDropdownItems = allCustomerSnapshot.data ?? [];
           // Replace the customer in the dropdown items if the IDs match
+          bool replaceFlag = false;
+          customerDropdownItems.add(Customer('新增客戶', '', '', ''));
           for (int i = 0; i < customerDropdownItems.length; i++) {
             if (customerDropdownItems[i].id == customerValueNotifier.value.id) {
               customerDropdownItems[i] = customerValueNotifier.value;
+              replaceFlag = true;
               break;
             }
           }
-          customerDropdownItems.add(Customer('新增客戶', '', '', ''));
+          if (!replaceFlag) {
+            customerDropdownItems.add(customerValueNotifier.value);
+          }
+          for (int i = 0; i < customerDropdownItems.length; i++) {
+            print('idx: $i, id: ${customerDropdownItems[i].id}, name: ${customerDropdownItems[i].name}');
+          }
           /* --------------------------------- 初始購物車資料 -------------------------------- */
           List<SaleItemData> saleItems = [];
           for (var i = 0; i < cashierLogic.shopItemsNotifier.value.length; i++) {
