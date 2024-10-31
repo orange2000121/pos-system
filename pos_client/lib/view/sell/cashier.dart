@@ -539,7 +539,15 @@ class _CashierState extends State<Cashier> {
   }
 
   Widget receiptOption() {
-    ReceiptSample receiptSample = ReceiptSample(userName: '', customName: '', contactPerson: '', phone: '', address: '', data: const []);
+    ReceiptSample receiptSample = ReceiptSample(
+      userName: '',
+      customName: '',
+      contactPerson: '',
+      phone: '',
+      address: '',
+      data: const [],
+      date: DateTime.now(),
+    );
     TextEditingController _name = TextEditingController(), _phone = TextEditingController(), _contactPerson = TextEditingController(), _address = TextEditingController();
     FocusNode _nameFocusNode = FocusNode(), _phoneFocusNode = FocusNode(), _contactPersonFocusNode = FocusNode(), _addressFocusNode = FocusNode();
     List<Customer> customerDropdownItems = [];
@@ -548,7 +556,11 @@ class _CashierState extends State<Cashier> {
       title: const Text('發票'),
       icon: DatePickerField(
         initialDate: receiptDate,
-        onChanged: (date) => receiptDate = date ?? DateTime.now(),
+        onChanged: (date) {
+          receiptDate = date ?? DateTime.now();
+          receiptSample.date = receiptDate;
+          customerValueNotifier.notifyListeners(); // 更新畫面
+        },
       ),
       actions: [
         ValueListenableBuilder(
@@ -665,9 +677,6 @@ class _CashierState extends State<Cashier> {
           if (!replaceFlag) {
             customerDropdownItems.add(customerValueNotifier.value);
           }
-          for (int i = 0; i < customerDropdownItems.length; i++) {
-            print('idx: $i, id: ${customerDropdownItems[i].id}, name: ${customerDropdownItems[i].name}');
-          }
           /* --------------------------------- 初始購物車資料 -------------------------------- */
           List<SaleItemData> saleItems = [];
           for (var i = 0; i < cashierLogic.shopItemsNotifier.value.length; i++) {
@@ -767,6 +776,7 @@ class _CashierState extends State<Cashier> {
                             data: receiptSample.data,
                             pdfPageFormat: pdfPageFormat,
                             showPrice: showPriceNotifier.value,
+                            date: receiptDate,
                           );
 
                           return receiptSample; // 根据新值构建用户界面

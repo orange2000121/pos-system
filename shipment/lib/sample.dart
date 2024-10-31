@@ -37,6 +37,7 @@ class ReceiptSample extends StatefulWidget {
   late Future<pw.Document> Function() layout;
   final PdfPageFormat? pdfPageFormat;
   late bool showPrice;
+  DateTime? date;
 
   ///```
   ///const ReceiptSample(
@@ -62,7 +63,10 @@ class ReceiptSample extends StatefulWidget {
     this.pdfPageFormat,
     this.taxRate = 0,
     this.showPrice = true,
-  });
+    this.date,
+  }) {
+    date = date ?? DateTime.now();
+  }
 
   @override
   State<ReceiptSample> createState() => _ReceiptSampleState();
@@ -81,7 +85,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
         address: widget.address,
         data: widget.data,
         taxRate: widget.taxRate,
-        formattedDate: DateTime.now().toString().split(' ')[0],
+        formattedDate: widget.date.toString().split(' ')[0],
         showPrice: widget.showPrice,
       );
     } else {
@@ -93,7 +97,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
         address: widget.address,
         data: widget.data,
         taxRate: widget.taxRate,
-        formattedDate: DateTime.now().toString().split(' ')[0],
+        formattedDate: widget.date.toString().split(' ')[0],
         pdfPageFormat: widget.pdfPageFormat!,
         showPrice: widget.showPrice,
       );
