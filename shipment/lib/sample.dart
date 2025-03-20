@@ -39,19 +39,6 @@ class ReceiptSample extends StatefulWidget {
   late bool showPrice;
   DateTime? date;
 
-  ///```
-  ///const ReceiptSample(
-  ///   customName: '中正店',
-  ///   phone: '0908811233',
-  ///   contactPerson: '許子霆',
-  ///   address: '中正路',
-  ///   data: [
-  ///     {'name': '湯包', 'num': 10, 'price': 500},
-  ///     {'name': '大吸管', 'num': 3, 'price': 200},
-  ///     {'name': '四顆裝梅餅', 'num': 20, 'price': 50},
-  ///   ],
-  /// )
-  /// ```
   ReceiptSample({
     super.key,
     required this.userName,
@@ -317,6 +304,9 @@ class CreateReceipt {
     return pdf;
   }
 
+  ///
+  /// 列印pdf
+  ///
   Future<pw.Document> layout() async {
     final pdf = await addPage();
     await Printing.layoutPdf(
