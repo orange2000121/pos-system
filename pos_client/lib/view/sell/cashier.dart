@@ -541,7 +541,7 @@ class _CashierState extends State<Cashier> {
   Widget receiptOption() {
     ReceiptSample receiptSample = ReceiptSample(
       userName: '',
-      customName: '',
+      customerName: '',
       contactPerson: '',
       phone: '',
       address: '',
@@ -593,7 +593,7 @@ class _CashierState extends State<Cashier> {
               String formattedDate = '${receiptDate.year}-${receiptDate.month}-${receiptDate.day}-${receiptDate.hour}-${receiptDate.minute}-${receiptDate.second}';
               final file = File('${output.path}/$receiptFolder/$customerName/$customerName$formattedDate.pdf');
               // 最後更新客戶資料
-              receiptSample.customName = _name.text;
+              receiptSample.customerName = _name.text;
               receiptSample.contactPerson = _contactPerson.text;
               receiptSample.phone = _phone.text;
               receiptSample.address = _address.text;
@@ -637,7 +637,7 @@ class _CashierState extends State<Cashier> {
           _nameFocusNode.addListener(() {
             if (!_nameFocusNode.hasFocus) {
               customerValueNotifier.value.name = _name.text;
-              receiptSample.customName = _name.text;
+              receiptSample.customerName = _name.text;
               customerValueNotifier.notifyListeners();
             }
           });
@@ -692,7 +692,7 @@ class _CashierState extends State<Cashier> {
             );
           }
           /* --------------------------------- 初始化收據資料 -------------------------------- */
-          receiptSample.customName = customerValueNotifier.value.name;
+          receiptSample.customerName = customerValueNotifier.value.name;
           receiptSample.contactPerson = customerValueNotifier.value.contactPerson;
           receiptSample.phone = customerValueNotifier.value.phone;
           receiptSample.address = customerValueNotifier.value.address;
@@ -769,7 +769,7 @@ class _CashierState extends State<Cashier> {
                           }
                           receiptSample = ReceiptSample(
                             userName: cashierInit.sharedPreferenceHelper.userInfo.getUserInfo(UserInfoKey.userName) ?? '',
-                            customName: customerValueNotifier.value.name,
+                            customerName: customerValueNotifier.value.name,
                             contactPerson: customerValueNotifier.value.contactPerson,
                             phone: customerValueNotifier.value.phone,
                             address: customerValueNotifier.value.address,

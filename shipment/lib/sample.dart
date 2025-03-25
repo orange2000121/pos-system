@@ -26,7 +26,7 @@ class SaleItemData {
 // ignore: must_be_immutable
 class ReceiptSample extends StatefulWidget {
   late String userName;
-  late String customName;
+  late String customerName;
   late String contactPerson;
   late String phone;
   late String address;
@@ -42,7 +42,8 @@ class ReceiptSample extends StatefulWidget {
   ReceiptSample({
     super.key,
     required this.userName,
-    required this.customName,
+    String? customerName,
+    @Deprecated('Use customerName instead') String? customName,
     required this.contactPerson,
     required this.phone,
     required this.address,
@@ -51,7 +52,13 @@ class ReceiptSample extends StatefulWidget {
     this.taxRate = 0,
     this.showPrice = true,
     this.date,
-  }) {
+  }) : customerName = customerName ?? customName ?? '' {
+    // 使用 assert 在調試模式下檢查參數
+    assert(
+      (customerName != null && customerName.isNotEmpty) || (customName != null && customName.isNotEmpty),
+      'Either customerName or customName must be provided.',
+    );
+    // 初始化日期
     date = date ?? DateTime.now();
   }
 
@@ -66,7 +73,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
     if (widget.pdfPageFormat == null) {
       createReceipt = CreateReceipt(
         userName: widget.userName,
-        customName: widget.customName,
+        customerName: widget.customerName,
         contactPerson: widget.contactPerson,
         phone: widget.phone,
         address: widget.address,
@@ -78,7 +85,7 @@ class _ReceiptSampleState extends State<ReceiptSample> {
     } else {
       createReceipt = CreateReceipt(
         userName: widget.userName,
-        customName: widget.customName,
+        customerName: widget.customerName,
         contactPerson: widget.contactPerson,
         phone: widget.phone,
         address: widget.address,
@@ -124,8 +131,9 @@ class CreateReceipt {
   final double textSize = 10, titleSize = 20;
   final int pageNum = 12;
   final PdfPageFormat pdfPageFormat;
+
   final String userName;
-  final String customName;
+  final String customerName;
   final String contactPerson;
   final String phone;
   final String address;
@@ -136,7 +144,8 @@ class CreateReceipt {
 
   CreateReceipt({
     required this.userName,
-    required this.customName,
+    required String? customerName,
+    @Deprecated('Use customerName instead') String? customName,
     required this.contactPerson,
     required this.phone,
     required this.address,
@@ -145,7 +154,7 @@ class CreateReceipt {
     this.pdfPageFormat = const PdfPageFormat(190 * PdfPageFormat.mm, 139.7 * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm),
     this.taxRate = 0,
     this.showPrice = true,
-  });
+  }) : customerName = customerName ?? customName ?? '';
 
   pw.Widget companyInfo(pw.Font ttf) {
     return pw.Column(
@@ -166,7 +175,7 @@ class CreateReceipt {
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('客戶名稱： $customName', style: pw.TextStyle(font: ttf, fontSize: textSize)),
+              pw.Text('客戶名稱： $customerName', style: pw.TextStyle(font: ttf, fontSize: textSize)),
               pw.Text('送貨地址： $address', style: pw.TextStyle(font: ttf, fontSize: textSize)),
               pw.Row(children: [
                 pw.Text('聯絡人： $contactPerson', style: pw.TextStyle(font: ttf, fontSize: textSize)),
