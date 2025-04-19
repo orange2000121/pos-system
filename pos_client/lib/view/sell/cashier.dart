@@ -293,8 +293,9 @@ class _CashierState extends State<Cashier> {
     finishEdit() {
       if (discountEditingController.text.isNotEmpty) {
         item.price = item.price * (1 - double.parse(discountEditingController.text) / 100);
-        item.note = '${noteEditingController.text}${noteEditingController.text.isEmpty ? '' : ', '}折扣${discountEditingController.text}%';
       }
+      print('noteEditingController.text: ${noteEditingController.text}');
+      item.note = '${noteEditingController.text}${noteEditingController.text.isEmpty ? '' : ', '}折扣${discountEditingController.text}%';
       Navigator.pop(
           context,
           ShopItem(
