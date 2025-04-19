@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // ignore: unused_import
-import 'package:pos/store/model/sell/good_providers/goods.dart';
+import 'package:pos/store/model/sell/product_providers/product.dart';
 import 'package:pos/template/routes_page.dart';
 import 'package:pos/tool/upgrade_app.dart';
 import 'package:pos/view/restock/restock_history.dart';

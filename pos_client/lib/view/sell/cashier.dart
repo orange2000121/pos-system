@@ -11,8 +11,8 @@ import 'package:pos/logic/cashier_logic.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:pos/store/model/sell/customer.dart';
-import 'package:pos/store/model/sell/good_providers/goods.dart';
-import 'package:pos/store/model/sell/good_providers/goods_group.dart';
+import 'package:pos/store/model/sell/product_providers/product.dart';
+import 'package:pos/store/model/sell/product_providers/product_group.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:pos/template/button/text_icon_button.dart';
 import 'package:pos/template/date_picker.dart';
@@ -110,7 +110,7 @@ class _CashierState extends State<Cashier> {
                   children: [
                     groupList(),
                     const Divider(),
-                    goodsList(),
+                    ProductList(),
                   ],
                 ),
               ),
@@ -143,8 +143,8 @@ class _CashierState extends State<Cashier> {
   /// 這個 widget 會顯示一個卡片，包含商品分類的圖片和名稱。
   /// 當用戶點擊這個項目時，會通過 [groupIdNotifier] 通知父 widget，以便更新商品列表。
   ///
-  /// [item] 是一個 [GoodsGroupItem] 對象，包含了分類的名稱、ID 和圖片。
-  Widget cashierGroupItem(GoodsGroupItem item) {
+  /// [item] 是一個 [ProductGroupItem] 對象，包含了分類的名稱、ID 和圖片。
+  Widget cashierGroupItem(ProductGroupItem item) {
     return InkWell(
       onTap: () => groupIdNotifier.value = item.id!,
       child: SizedBox(
@@ -185,7 +185,7 @@ class _CashierState extends State<Cashier> {
     return SizedBox(
       height: size,
       child: FutureBuilder(
-        future: GoodsGroupProvider().getAll(),
+        future: ProductGroupProvider().getAll(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             List<Widget> groupListWidgets = [];
@@ -195,7 +195,7 @@ class _CashierState extends State<Cashier> {
             return ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                cashierGroupItem(GoodsGroupItem('全部', id: -1, image: Uint8List(0))),
+                cashierGroupItem(ProductGroupItem('全部', id: -1, image: Uint8List(0))),
                 ...groupListWidgets,
               ],
             );
@@ -207,7 +207,7 @@ class _CashierState extends State<Cashier> {
     );
   }
 
-  Widget cashierProduct(Good item) {
+  Widget cashierProduct(Product item) {
     return InkWell(
       onTap: () async {
         // 新增商品
@@ -234,12 +234,12 @@ class _CashierState extends State<Cashier> {
     );
   }
 
-  Widget goodsList() {
+  Widget ProductList() {
     return FutureBuilder(
-        future: GoodsProvider().getAll(),
+        future: ProductProvider().getAll(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            Map<int, List<Good>> groupMap = {};
+            Map<int, List<Product>> groupMap = {};
             for (var i = 0; i < snapshot.data!.length; i++) {
               if (groupMap.containsKey(snapshot.data![i].groupId)) {
                 groupMap[snapshot.data![i].groupId]!.add(snapshot.data![i]);
@@ -251,17 +251,17 @@ class _CashierState extends State<Cashier> {
                 child: ValueListenableBuilder(
                     valueListenable: groupIdNotifier,
                     builder: (context, groupId, child) {
-                      int goodListLength;
+                      int productListLength;
                       if (groupId == -1) {
-                        goodListLength = snapshot.data!.length;
+                        productListLength = snapshot.data!.length;
                       } else {
-                        goodListLength = groupMap[groupId]?.length ?? 0;
+                        productListLength = groupMap[groupId]?.length ?? 0;
                       }
                       return GridView.builder(
                         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 200,
                         ),
-                        itemCount: goodListLength,
+                        itemCount: productListLength,
                         itemBuilder: (context, index) {
                           if (groupId == -1) {
                             return cashierProduct(snapshot.data![index]);

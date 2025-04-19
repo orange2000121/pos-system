@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
-class Good {
+class Product {
   int? id;
   late int groupId;
   late String name;
@@ -25,8 +25,8 @@ class Good {
     return map;
   }
 
-  static Good fromMapStatic(Map<String, dynamic> map) {
-    return Good(
+  static Product fromMapStatic(Map<String, dynamic> map) {
+    return Product(
       map['group_id'] as int,
       map['name'] as String,
       map['price'] as double,
@@ -37,7 +37,7 @@ class Good {
     );
   }
 
-  Good fromMap(Map<String, dynamic> map) {
+  Product fromMap(Map<String, dynamic> map) {
     id = map['id'] as int?;
     groupId = map['group_id'] as int;
     name = map['name'] as String;
@@ -63,7 +63,7 @@ class Good {
   //   );
   // }
 
-  Good(
+  Product(
     this.groupId,
     this.name,
     this.price,
@@ -76,10 +76,10 @@ class Good {
   }
 }
 
-class GoodsProvider extends DatabaseHandler {
+class ProductProvider extends DatabaseHandler {
   // ignore: avoid_init_to_null
   // late Database? db = null;
-  String tableName = 'goods';
+  String tableName = 'product';
   String dbName = 'pos.db';
   @override
   Future<Database> open() async {
@@ -93,53 +93,53 @@ class GoodsProvider extends DatabaseHandler {
             unit text not null,
             image blob,
             amount real not null,
-            foreign key (group_id) references goods_group(id) on delete cascade on update cascade)
+            foreign key (group_id) references product_group(id) on delete cascade on update cascade)
           ''');
     return db!;
   }
 
-  Future<int> insert(Good item) async {
+  Future<int> insert(Product item) async {
     db ??= await open();
     int id = await db!.insert(tableName, item.toMap());
     return id;
   }
 
-  Future<Good> getItem(int id) async {
+  Future<Product> getItem(int id) async {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'id = ?', whereArgs: [id]);
-    return Good.fromMapStatic(maps.first);
+    return Product.fromMapStatic(maps.first);
   }
 
-  Future<Good?> getItemByName(String name) async {
+  Future<Product?> getItemByName(String name) async {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'name = ?', whereArgs: [name]);
     if (maps.isEmpty) {
       return null;
     }
-    return Good.fromMapStatic(maps.first);
+    return Product.fromMapStatic(maps.first);
   }
 
-  Future<List<Good>> getItemsByGroupId(int groupId) async {
+  Future<List<Product>> getItemsByGroupId(int groupId) async {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'group_id = ?', whereArgs: [groupId]);
-    List<Good> items = [];
+    List<Product> items = [];
     for (var map in maps) {
-      items.add(Good.fromMapStatic(map));
+      items.add(Product.fromMapStatic(map));
     }
     return items;
   }
 
-  Future<List<Good>> getAll() async {
+  Future<List<Product>> getAll() async {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName);
-    List<Good> items = [];
+    List<Product> items = [];
     for (var map in maps) {
-      items.add(Good.fromMapStatic(map));
+      items.add(Product.fromMapStatic(map));
     }
     return items;
   }
 
-  Future update(Good item) async {
+  Future update(Product item) async {
     db ??= await open();
     await db!.update(tableName, item.toMap(), where: 'id = ?', whereArgs: [item.id]);
   }

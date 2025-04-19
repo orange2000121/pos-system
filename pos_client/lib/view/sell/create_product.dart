@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:pos/store/model/sell/good_providers/goods.dart';
-import 'package:pos/store/model/sell/good_providers/goods_group.dart';
+import 'package:pos/store/model/sell/product_providers/product.dart';
+import 'package:pos/store/model/sell/product_providers/product_group.dart';
 import 'package:pos/template/item_edit.dart';
 import 'package:pos/tool/calculate_text_size.dart';
 
@@ -14,7 +14,7 @@ class CreateProduct extends StatefulWidget {
 }
 
 class _CreateProductState extends State<CreateProduct> {
-  GoodsProvider goodsProvider = GoodsProvider();
+  ProductProvider productProvider = ProductProvider();
   // TextEditingController nameController = TextEditingController();
   // TextEditingController priceController = TextEditingController();
   // TextEditingController unitController = TextEditingController();
@@ -26,7 +26,7 @@ class _CreateProductState extends State<CreateProduct> {
   @override
   void dispose() {
     super.dispose();
-    goodsProvider.close();
+    productProvider.close();
   }
 
   @override
@@ -52,11 +52,11 @@ class _CreateProductState extends State<CreateProduct> {
   Widget product(int groupId) {
     return FutureBuilder(
       initialData: const [],
-      future: goodsProvider.getItemsByGroupId(groupId),
+      future: productProvider.getItemsByGroupId(groupId),
       builder: (BuildContext context, snapshot) {
         if (snapshot.hasData) {
           List<Widget> widgets = [];
-          for (Good item in snapshot.data ?? []) {
+          for (Product item in snapshot.data ?? []) {
             widgets.add(ListTile(
               leading: Image.memory(
                 width: 50,
@@ -83,11 +83,11 @@ class _CreateProductState extends State<CreateProduct> {
 
   Widget showProduct() {
     return FutureBuilder(
-      future: GoodsGroupProvider().getAll(),
+      future: ProductGroupProvider().getAll(),
       builder: (BuildContext context, AsyncSnapshot<List> snapshot) {
         List<Widget> widgets = [];
         if (snapshot.hasData) {
-          for (GoodsGroupItem item in snapshot.data!) {
+          for (ProductGroupItem item in snapshot.data!) {
             widgets.add(Column(
               children: [
                 groupBar(item.name, () => addProduct(item)),
@@ -151,7 +151,7 @@ class _CreateProductState extends State<CreateProduct> {
               ItemEditButton(
                 name: '確定',
                 onPressed: () {
-                  GoodsGroupProvider().insert(GoodsGroupItem(groupNameController.text, image: image));
+                  ProductGroupProvider().insert(ProductGroupItem(groupNameController.text, image: image));
                   setState(() {});
                   Navigator.pop(context);
                 },
@@ -169,13 +169,13 @@ class _CreateProductState extends State<CreateProduct> {
     );
   }
 
-  void addProduct(GoodsGroupItem group) async {
+  void addProduct(ProductGroupItem group) async {
     ValueNotifier<String> addProductGroupNameNotifier = ValueNotifier(group.name);
     TextEditingController addProductNameController = TextEditingController();
     TextEditingController addProductPriceController = TextEditingController();
     TextEditingController addProductUnitController = TextEditingController();
     TextEditingController addProductGroupNameController = TextEditingController(text: group.name);
-    GoodsGroupProvider goodsGroupProvider = GoodsGroupProvider();
+    ProductGroupProvider productGroupProvider = ProductGroupProvider();
     Uint8List? image;
     await showDialog(
         context: context,
@@ -198,7 +198,7 @@ class _CreateProductState extends State<CreateProduct> {
                           onChanged: (value) {
                             addProductGroupNameNotifier.value = value;
                             group.name = value;
-                            goodsGroupProvider.update(group.id!, group);
+                            productGroupProvider.update(group.id!, group);
                           },
                         ),
                       );
@@ -230,8 +230,8 @@ class _CreateProductState extends State<CreateProduct> {
                 ItemEditButton(
                   name: '確定',
                   onPressed: () {
-                    Good good = Good(group.id!, addProductNameController.text, double.parse(addProductPriceController.text), addProductUnitController.text, image: image);
-                    goodsProvider.insert(good);
+                    Product product = Product(group.id!, addProductNameController.text, double.parse(addProductPriceController.text), addProductUnitController.text, image: image);
+                    productProvider.insert(product);
                     Navigator.pop(context);
                     setState(() {});
                   },
@@ -245,8 +245,8 @@ class _CreateProductState extends State<CreateProduct> {
                 ItemEditButton(
                   name: '刪除群組',
                   onPressed: () {
-                    goodsProvider.deleteByGroupId(group.id!);
-                    GoodsGroupProvider().delete(group.id!);
+                    productProvider.deleteByGroupId(group.id!);
+                    ProductGroupProvider().delete(group.id!);
                     Navigator.pop(context);
                     setState(() {});
                   },
@@ -259,23 +259,23 @@ class _CreateProductState extends State<CreateProduct> {
     setState(() {});
   }
 
-  void editProduct(Good good) {
-    TextEditingController nameController = TextEditingController(text: good.name);
-    TextEditingController priceController = TextEditingController(text: good.price.toString());
-    TextEditingController unitController = TextEditingController(text: good.unit);
-    ValueNotifier showImageNotifier = ValueNotifier<Uint8List?>(good.image);
+  void editProduct(Product product) {
+    TextEditingController nameController = TextEditingController(text: product.name);
+    TextEditingController priceController = TextEditingController(text: product.price.toString());
+    TextEditingController unitController = TextEditingController(text: product.unit);
+    ValueNotifier showImageNotifier = ValueNotifier<Uint8List?>(product.image);
     showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('修改 ${good.name}'),
+            title: Text('修改 ${product.name}'),
             content: ItemEdit(
               choseImage: ChoseImage(
                 size: 100,
-                initialImage: good.image,
+                initialImage: product.image,
                 onImageChanged: (img) {
-                  good.image = img;
-                  showImageNotifier.value = good.image;
+                  product.image = img;
+                  showImageNotifier.value = product.image;
                 },
               ),
               textFields: [
@@ -297,10 +297,10 @@ class _CreateProductState extends State<CreateProduct> {
                 ItemEditButton(
                   name: '修改產品',
                   onPressed: () {
-                    good.name = nameController.text;
-                    good.price = double.parse(priceController.text);
-                    good.unit = unitController.text;
-                    goodsProvider.update(good);
+                    product.name = nameController.text;
+                    product.price = double.parse(priceController.text);
+                    product.unit = unitController.text;
+                    productProvider.update(product);
                     Navigator.pop(context);
                     setState(() {});
                   },
@@ -308,7 +308,7 @@ class _CreateProductState extends State<CreateProduct> {
                 ItemEditButton(
                   name: '刪除產品',
                   onPressed: () {
-                    goodsProvider.delete(good.id!);
+                    productProvider.delete(product.id!);
                     setState(() {});
                     Navigator.pop(context);
                   },
