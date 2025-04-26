@@ -156,7 +156,6 @@ class _OrderHistoryState extends State<OrderHistory> {
           detailedInfo: sellItems.map((e) {
             return ListTile(
               title: Text(e.name),
-              subtitle: Text('${e.sugar} ${e.ice}'),
               trailing: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.2,
                 child: Row(
@@ -180,8 +179,6 @@ class _OrderHistoryState extends State<OrderHistory> {
                     element.price,
                     element.quantity,
                     '',
-                    ice: element.ice,
-                    sugar: element.sugar,
                   ));
                 }
                 ShopItemEditData shopItemEditData = ShopItemEditData(
@@ -223,43 +220,41 @@ class _OrderHistoryState extends State<OrderHistory> {
     );
   }
 
-  AlertDialog editSellItem(BuildContext context, SellItem e) {
-    return AlertDialog(
-      title: const Text('編輯商品紀錄'),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.height * 0.8,
-        height: MediaQuery.of(context).size.height * 0.8,
-        child: GridView(
-          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: MediaQuery.of(context).size.width * 0.2,
-          ),
-          children: [
-            editCard(context, '商品名稱', e.name, (value) => e.name = value),
-            editCard(context, '糖度', e.sugar, (value) => e.sugar = value),
-            editCard(context, '冰塊', e.ice, (value) => e.ice = value),
-            editCard(context, '數量', e.quantity.toString(), (value) => e.quantity = int.parse(value)),
-          ],
-        ),
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () {
-            // sellProvider.update(e.id!, e);
-            setState(() {
-              Navigator.of(context).pop();
-            });
-          },
-          child: const Text('確認'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('關閉'),
-        ),
-      ],
-    );
-  }
+  // AlertDialog editSellItem(BuildContext context, SellItem e) {
+  //   return AlertDialog(
+  //     title: const Text('編輯商品紀錄'),
+  //     content: SizedBox(
+  //       width: MediaQuery.of(context).size.height * 0.8,
+  //       height: MediaQuery.of(context).size.height * 0.8,
+  //       child: GridView(
+  //         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+  //           maxCrossAxisExtent: MediaQuery.of(context).size.width * 0.2,
+  //         ),
+  //         children: [
+  //           editCard(context, '商品名稱', e.name, (value) => e.name = value),
+  //           editCard(context, '數量', e.quantity.toString(), (value) => e.quantity = int.parse(value)),
+  //         ],
+  //       ),
+  //     ),
+  //     actions: [
+  //       ElevatedButton(
+  //         onPressed: () {
+  //           // sellProvider.update(e.id!, e);
+  //           setState(() {
+  //             Navigator.of(context).pop();
+  //           });
+  //         },
+  //         child: const Text('確認'),
+  //       ),
+  //       ElevatedButton(
+  //         onPressed: () {
+  //           Navigator.of(context).pop();
+  //         },
+  //         child: const Text('關閉'),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Card editCard(BuildContext context, String hint, String initialValue, Function(String value) onChanged) {
     return Card(

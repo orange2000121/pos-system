@@ -7,13 +7,14 @@ import 'package:sqflite/sqflite.dart';
 
 class Product {
   int? id;
-  late int groupId;
-  late String name;
-  late double price;
-  late String unit;
-  late Uint8List? image;
+  int groupId;
+  String name;
+  double price;
+  String unit;
+  Uint8List? image;
   double? amount;
   int length = 0;
+
   Map<String, dynamic> toMap() {
     var map = <String, Object>{};
     map['group_id'] = groupId;
@@ -25,7 +26,7 @@ class Product {
     return map;
   }
 
-  static Product fromMapStatic(Map<String, dynamic> map) {
+  factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
       map['group_id'] as int,
       map['name'] as String,
@@ -37,30 +38,15 @@ class Product {
     );
   }
 
-  Product fromMap(Map<String, dynamic> map) {
-    id = map['id'] as int?;
-    groupId = map['group_id'] as int;
-    name = map['name'] as String;
-    price = double.parse(map['price'].toString());
-    unit = map['unit'] as String;
-    image = map['image'] as Uint8List?;
-    amount = (map['amount'] ?? 0) as double;
-    return this;
-  }
-
-  // Widget toWidget({Function()? onTap}) {
-  //   return ListTile(
-  //     leading: Image.memory(
-  //       image!,
-  //       errorBuilder: (context, error, stackTrace) => const FlutterLogo(size: 50),
-  //     ),
-  //     title: Text(name),
-  //     subtitle: Text('單價: $price'),
-  //     trailing: IconButton(
-  //       icon: const Icon(Icons.edit),
-  //       onPressed: onTap,
-  //     ),
-  //   );
+  // Product fromMap(Map<String, dynamic> map) {
+  //   id = map['id'] as int?;
+  //   groupId = map['group_id'] as int;
+  //   name = map['name'] as String;
+  //   price = double.parse(map['price'].toString());
+  //   unit = map['unit'] as String;
+  //   image = map['image'] as Uint8List?;
+  //   amount = (map['amount'] ?? 0) as double;
+  //   return this;
   // }
 
   Product(
@@ -107,7 +93,7 @@ class ProductProvider extends DatabaseHandler {
   Future<Product> getItem(int id) async {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'id = ?', whereArgs: [id]);
-    return Product.fromMapStatic(maps.first);
+    return Product.fromMap(maps.first);
   }
 
   Future<Product?> getItemByName(String name) async {
@@ -116,7 +102,7 @@ class ProductProvider extends DatabaseHandler {
     if (maps.isEmpty) {
       return null;
     }
-    return Product.fromMapStatic(maps.first);
+    return Product.fromMap(maps.first);
   }
 
   Future<List<Product>> getItemsByGroupId(int groupId) async {
@@ -124,7 +110,7 @@ class ProductProvider extends DatabaseHandler {
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'group_id = ?', whereArgs: [groupId]);
     List<Product> items = [];
     for (var map in maps) {
-      items.add(Product.fromMapStatic(map));
+      items.add(Product.fromMap(map));
     }
     return items;
   }
@@ -134,7 +120,7 @@ class ProductProvider extends DatabaseHandler {
     List<Map<String, dynamic>> maps = await db!.query(tableName);
     List<Product> items = [];
     for (var map in maps) {
-      items.add(Product.fromMapStatic(map));
+      items.add(Product.fromMap(map));
     }
     return items;
   }

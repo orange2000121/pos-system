@@ -1,4 +1,5 @@
 /// 販賣的商品分類，包含名稱、圖片
+library;
 
 import 'dart:typed_data';
 

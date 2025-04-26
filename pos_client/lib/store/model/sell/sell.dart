@@ -1,4 +1,5 @@
-/// 記錄單向商品訂單記錄，包含訂單編號、商品名稱、價格、冰塊、甜度、數量、建立時間
+/// 記錄單向商品訂單記錄，包含訂單編號、商品名稱、價格、數量、建立時間
+library;
 
 import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
@@ -8,8 +9,6 @@ class SellItem {
   late int orderId;
   late String name;
   late double price;
-  late String ice;
-  late String sugar;
   late DateTime? createAt;
   int quantity = 1;
   Map<String, dynamic> toMap() {
@@ -17,8 +16,6 @@ class SellItem {
       'orderId': orderId,
       'name': name,
       'price': price,
-      'ice': ice,
-      'sugar': sugar,
       'quantity': quantity,
       'createAt': createAt == null ? DateTime.now().toString() : createAt.toString(),
     };
@@ -29,8 +26,6 @@ class SellItem {
       map['orderId'],
       map['name'],
       map['price'],
-      map['ice'],
-      map['sugar'],
       map['quantity'],
       id: map['id'],
       createAt: DateTime.parse(map['createAt']),
@@ -42,15 +37,13 @@ class SellItem {
     orderId = map['orderId'];
     name = map['name'];
     price = map['price'];
-    ice = map['ice'];
-    sugar = map['sugar'];
     quantity = map['quantity'];
     id = map['id'];
     createAt = DateTime.parse(map['createAt']);
     return this;
   }
 
-  SellItem(this.orderId, this.name, this.price, this.ice, this.sugar, this.quantity, {this.id, this.createAt});
+  SellItem(this.orderId, this.name, this.price, this.quantity, {this.id, this.createAt});
 }
 
 class SellProvider extends DatabaseHandler {
@@ -64,8 +57,6 @@ class SellProvider extends DatabaseHandler {
             orderId integer not null,
             name text not null,
             price real not null,
-            ice text not null,
-            sugar text not null,
             quantity integer not null,
             createAt TIMESTAMP not null,
             foreign key (orderId) references orders(id) on delete cascade on update cascade)

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pos/store/model/sell/product_providers/product.dart';
 import 'package:pos/template/routes_page.dart';
 import 'package:pos/tool/upgrade_app.dart';
+import 'package:pos/view/inventory/goods_manage.dart';
 import 'package:pos/view/restock/restock_history.dart';
 import 'package:pos/view/restock/restock_view.dart';
 import 'package:pos/view/restock/vendor_manage.dart';
@@ -99,6 +100,11 @@ class _HomeState extends State<Home> {
             RoutesPageCard(name: '廠商管理', icon: const Icon(Icons.factory), page: const VendorManage()),
             RoutesPageCard(name: '進貨歷史', icon: const Icon(Icons.history), page: const RestockHistory()),
           ]),
+        ),
+        RoutesPageCard(
+          name: '庫存',
+          page: GoodsManage(),
+          icon: const Icon(Icons.inventory),
         ),
         RoutesPageCard(
           name: '設定',

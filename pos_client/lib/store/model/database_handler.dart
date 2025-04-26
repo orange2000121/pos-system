@@ -73,6 +73,7 @@ abstract class DatabaseHandler {
           break;
         //todo update goods table to product table
         //todo update goods_group table to product_group table
+        //todo delete goods table
       }
     }
   }

@@ -218,7 +218,7 @@ class _CashierState extends State<Cashier> {
                   content: abacus(ShopItem(item.id ?? -1, item.name, item.price, 1, item.unit)),
                 ));
         if (tempItem == null) return;
-        cashierLogic.addItem(tempItem.id, tempItem.name, tempItem.price, tempItem.ice ?? '', tempItem.sugar ?? '', tempItem.quantity, tempItem.unit, note: tempItem.note);
+        cashierLogic.addItem(tempItem.id, tempItem.name, tempItem.price, tempItem.quantity, tempItem.unit, note: tempItem.note);
       },
       child: ProductCard(
         title: item.name,
@@ -279,12 +279,7 @@ class _CashierState extends State<Cashier> {
 
   Widget abacus(ShopItem item, {int num = 1, String ice = '', String sugar = ''}) {
     /* -------------------------------- variable -------------------------------- */
-    List<Widget> sugarChoseWidgets = [];
-    List<Widget> iceChoseWidgets = [];
     double w = MediaQuery.of(context).size.width;
-    List<String> sugarList = ['正常糖', '少糖', '半糖', '微糖', '無糖'];
-    List<String> iceList = ['正常冰', '少冰', '半冰', '微冰', '去冰'];
-    String chosenSugar = sugar, chosenIce = ice;
     TextEditingController quantity = TextEditingController(text: num.toString());
     TextEditingController noteEditingController = TextEditingController(text: item.note);
     TextEditingController discountEditingController = TextEditingController();
@@ -303,28 +298,10 @@ class _CashierState extends State<Cashier> {
             item.price,
             double.parse(quantity.text).toInt(),
             item.unit,
-            ice: chosenIce,
-            sugar: chosenSugar,
             note: item.note,
           ));
     }
 
-    for (var i = 0; i < sugarList.length; i++) {
-      sugarChoseWidgets.add(ElevatedButton(
-        onPressed: () {
-          chosenSugar = sugarList[i];
-        },
-        child: Text(sugarList[i]),
-      ));
-    }
-    for (var i = 0; i < iceList.length; i++) {
-      iceChoseWidgets.add(ElevatedButton(
-        onPressed: () {
-          chosenIce = iceList[i];
-        },
-        child: Text(iceList[i]),
-      ));
-    }
     return SizedBox(
       height: 300,
       child: Column(
@@ -449,7 +426,7 @@ class _CashierState extends State<Cashier> {
                               num: shopItems[index].quantity,
                             ),
                           ));
-                  if (item != null) cashierLogic.editItem(shopItems[index], ice: item.ice, sugar: item.sugar, quantity: item.quantity);
+                  if (item != null) cashierLogic.editItem(shopItems[index], quantity: item.quantity);
                 },
               ),
             );
