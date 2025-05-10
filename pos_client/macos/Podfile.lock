@@ -14,7 +14,7 @@ PODS:
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - sqflite (0.0.3):
+  - sqflite_darwin (0.0.4):
     - Flutter
     - FlutterMacOS
 
@@ -26,7 +26,7 @@ DEPENDENCIES:
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
   - printing (from `Flutter/ephemeral/.symlinks/plugins/printing/macos`)
   - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
-  - sqflite (from `Flutter/ephemeral/.symlinks/plugins/sqflite/darwin`)
+  - sqflite_darwin (from `Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin`)
 
 EXTERNAL SOURCES:
   file_selector_macos:
@@ -43,18 +43,18 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/printing/macos
   shared_preferences_foundation:
     :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin
-  sqflite:
-    :path: Flutter/ephemeral/.symlinks/plugins/sqflite/darwin
+  sqflite_darwin:
+    :path: Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin
 
 SPEC CHECKSUMS:
-  file_selector_macos: 54fdab7caa3ac3fc43c9fac4d7d8d231277f8cf2
+  file_selector_macos: cc3858c981fe6889f364731200d6232dac1d812d
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   package_info: 6eba2fd8d3371dda2d85c8db6fe97488f24b74b2
   package_info_plus: 02d7a575e80f194102bef286361c6c326e4c29ce
-  path_provider_foundation: 3784922295ac71e43754bd15e0653ccfd36a147c
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   printing: 1dd6a1fce2209ec240698e2439a4adbb9b427637
-  shared_preferences_foundation: b4c3b4cddf1c21f02770737f147a3f5da9d39695
-  sqflite: 673a0e54cc04b7d6dba8d24fb8095b31c3a99eec
+  shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
+  sqflite_darwin: 5a7236e3b501866c1c9befc6771dfd73ffb8702d
 
 PODFILE CHECKSUM: 236401fc2c932af29a9fcf0e97baeeb2d750d367
 
