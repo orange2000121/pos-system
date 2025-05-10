@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pos/logic/cashier_logic.dart';
+import 'package:pos/logic/sell/cashier_logic.dart';
 import 'package:pos/store/model/sell/customer.dart';
 import 'package:pos/store/model/sell/order.dart';
 import 'package:pos/store/model/sell/sell.dart';

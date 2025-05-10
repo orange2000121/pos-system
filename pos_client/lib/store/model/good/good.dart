@@ -74,15 +74,25 @@ class GoodProvider extends DatabaseHandler {
     });
   }
 
-  Future<Good> getItem(int id) async {
+  Future<Good?> getItem(int id) async {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'id = ?', whereArgs: [id]);
+    if (maps.isEmpty) return null;
     return Good.fromJson(maps.first);
   }
 
-  Future<Good?> update(int id, Good good) async {
+  Future<Good?> getItemByName(String name) async {
     db ??= await open();
-    int result = await db!.update(tableName, good.toMap(), where: 'id = ?', whereArgs: [id]);
+    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'name = ?', whereArgs: [name]);
+    if (maps.isEmpty) {
+      return null;
+    }
+    return Good.fromJson(maps.first);
+  }
+
+  Future<Good?> update(Good good) async {
+    db ??= await open();
+    int result = await db!.update(tableName, good.toMap(), where: 'id = ?', whereArgs: [good.id]);
     if (result == 0) {
       return null;
     }

@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:pos/logic/sell/create_product_logic.dart';
+import 'package:pos/logic/sell/product_item.dart';
 import 'package:pos/store/model/sell/product_providers/product.dart';
 import 'package:pos/store/model/sell/product_providers/product_group.dart';
 import 'package:pos/template/item_edit.dart';
@@ -15,6 +17,8 @@ class CreateProduct extends StatefulWidget {
 
 class _CreateProductState extends State<CreateProduct> {
   ProductProvider productProvider = ProductProvider();
+  CreateProductLogic createProductLogic = CreateProductLogic();
+
   // TextEditingController nameController = TextEditingController();
   // TextEditingController priceController = TextEditingController();
   // TextEditingController unitController = TextEditingController();
@@ -50,13 +54,18 @@ class _CreateProductState extends State<CreateProduct> {
   /* -------------------------------------------------------------------------- */
 
   Widget product(int groupId) {
+    Future<List<ProductItem>> getProductItemByGroupId(int groupId) async {
+      List<Product> products = await productProvider.getItemsByGroupId(groupId);
+      return await ProductItems().convertProducts2ProductItems(products);
+    }
+
     return FutureBuilder(
       initialData: const [],
-      future: productProvider.getItemsByGroupId(groupId),
+      future: getProductItemByGroupId(groupId),
       builder: (BuildContext context, snapshot) {
         if (snapshot.hasData) {
           List<Widget> widgets = [];
-          for (Product item in snapshot.data ?? []) {
+          for (ProductItem item in snapshot.data ?? []) {
             widgets.add(ListTile(
               leading: Image.memory(
                 width: 50,
@@ -230,8 +239,13 @@ class _CreateProductState extends State<CreateProduct> {
                 ItemEditButton(
                   name: '確定',
                   onPressed: () {
-                    Product product = Product(group.id!, addProductNameController.text, double.parse(addProductPriceController.text), addProductUnitController.text, image: image);
-                    productProvider.insert(product);
+                    createProductLogic.addNewProduct(
+                      group: group,
+                      name: addProductNameController.text,
+                      price: double.parse(addProductPriceController.text),
+                      unit: addProductUnitController.text,
+                      image: image,
+                    );
                     Navigator.pop(context);
                     setState(() {});
                   },
@@ -259,7 +273,7 @@ class _CreateProductState extends State<CreateProduct> {
     setState(() {});
   }
 
-  void editProduct(Product product) {
+  void editProduct(ProductItem product) {
     TextEditingController nameController = TextEditingController(text: product.name);
     TextEditingController priceController = TextEditingController(text: product.price.toString());
     TextEditingController unitController = TextEditingController(text: product.unit);
@@ -300,15 +314,16 @@ class _CreateProductState extends State<CreateProduct> {
                     product.name = nameController.text;
                     product.price = double.parse(priceController.text);
                     product.unit = unitController.text;
-                    productProvider.update(product);
+                    createProductLogic.editProduct(productItem: product);
                     Navigator.pop(context);
                     setState(() {});
                   },
                 ),
                 ItemEditButton(
+                  //todo 改成取消銷售
                   name: '刪除產品',
                   onPressed: () {
-                    productProvider.delete(product.id!);
+                    productProvider.delete(product.id);
                     setState(() {});
                     Navigator.pop(context);
                   },

@@ -7,7 +7,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
-import 'package:pos/logic/cashier_logic.dart';
+import 'package:pos/logic/sell/cashier_logic.dart';
+import 'package:pos/logic/sell/product_item.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:pos/store/model/sell/customer.dart';
@@ -110,7 +111,7 @@ class _CashierState extends State<Cashier> {
                   children: [
                     groupList(),
                     const Divider(),
-                    ProductList(),
+                    productList(),
                   ],
                 ),
               ),
@@ -207,7 +208,7 @@ class _CashierState extends State<Cashier> {
     );
   }
 
-  Widget cashierProduct(Product item) {
+  Widget cashierProduct(ProductItem item) {
     return InkWell(
       onTap: () async {
         // 新增商品
@@ -215,7 +216,7 @@ class _CashierState extends State<Cashier> {
             context: context,
             builder: (context) => AlertDialog(
                   title: Text(item.name),
-                  content: abacus(ShopItem(item.id ?? -1, item.name, item.price, 1, item.unit)),
+                  content: abacus(ShopItem(item.id, item.name, item.price, 1, item.unit)),
                 ));
         if (tempItem == null) return;
         cashierLogic.addItem(tempItem.id, tempItem.name, tempItem.price, tempItem.quantity, tempItem.unit, note: tempItem.note);
@@ -234,13 +235,20 @@ class _CashierState extends State<Cashier> {
     );
   }
 
-  Widget ProductList() {
+  Widget productList() {
+    Future<List<ProductItem>> getProductList() async {
+      // 取得所有商品，並結合good資料
+      List<Product> products = await ProductProvider().getAll();
+      return await ProductItems().convertProducts2ProductItems(products);
+    }
+
     return FutureBuilder(
-        future: ProductProvider().getAll(),
+        future: getProductList(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            Map<int, List<Product>> groupMap = {};
+            Map<int, List<ProductItem>> groupMap = {};
             for (var i = 0; i < snapshot.data!.length; i++) {
+              // 將商品依照分類ID分組
               if (groupMap.containsKey(snapshot.data![i].groupId)) {
                 groupMap[snapshot.data![i].groupId]!.add(snapshot.data![i]);
               } else {
@@ -263,6 +271,7 @@ class _CashierState extends State<Cashier> {
                         ),
                         itemCount: productListLength,
                         itemBuilder: (context, index) {
+                          //如果沒有選擇分類，顯示所有商品
                           if (groupId == -1) {
                             return cashierProduct(snapshot.data![index]);
                           } else {

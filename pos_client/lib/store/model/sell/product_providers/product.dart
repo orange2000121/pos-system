@@ -1,60 +1,40 @@
 /// 販賣的商品，包含商品名稱、價格、單位、圖片
 
-import 'dart:typed_data';
-
 import 'package:pos/store/model/database_handler.dart';
+import 'package:pos/store/model/good/good.dart';
 import 'package:sqflite/sqflite.dart';
 
 class Product {
   int? id;
   int groupId;
-  String name;
+  int goodId;
   double price;
-  String unit;
-  Uint8List? image;
   double? amount;
   int length = 0;
 
   Map<String, dynamic> toMap() {
     var map = <String, Object>{};
     map['group_id'] = groupId;
-    map['name'] = name;
+    map['good_id'] = goodId;
     map['price'] = price;
-    map['unit'] = unit;
-    map['image'] = image ?? Uint8List(0);
     map['amount'] = amount ?? 0;
     return map;
   }
 
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
-      map['group_id'] as int,
-      map['name'] as String,
-      map['price'] as double,
-      map['unit'] as String,
-      image: map['image'] as Uint8List?,
+      groupId: map['group_id'] as int,
+      goodId: map['good_id'] as int,
+      price: map['price'] as double,
       id: map['id'] as int?,
       amount: map['amount'] ?? 0,
     );
   }
 
-  // Product fromMap(Map<String, dynamic> map) {
-  //   id = map['id'] as int?;
-  //   groupId = map['group_id'] as int;
-  //   name = map['name'] as String;
-  //   price = double.parse(map['price'].toString());
-  //   unit = map['unit'] as String;
-  //   image = map['image'] as Uint8List?;
-  //   amount = (map['amount'] ?? 0) as double;
-  //   return this;
-  // }
-
-  Product(
-    this.groupId,
-    this.name,
-    this.price,
-    this.unit, {
-    this.image,
+  Product({
+    required this.groupId,
+    required this.goodId,
+    required this.price,
     this.id,
     this.amount = 0,
   }) {
@@ -64,7 +44,6 @@ class Product {
 
 class ProductProvider extends DatabaseHandler {
   // ignore: avoid_init_to_null
-  // late Database? db = null;
   String tableName = 'product';
   String dbName = 'pos.db';
   @override
@@ -74,10 +53,8 @@ class ProductProvider extends DatabaseHandler {
           create table if not exists $tableName (
             id integer primary key autoincrement,
             group_id integer not null,
-            name text not null,
+            good_id integer not null,
             price real not null,
-            unit text not null,
-            image blob,
             amount real not null,
             foreign key (group_id) references product_group(id) on delete cascade on update cascade)
           ''');
@@ -98,10 +75,11 @@ class ProductProvider extends DatabaseHandler {
 
   Future<Product?> getItemByName(String name) async {
     db ??= await open();
-    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'name = ?', whereArgs: [name]);
-    if (maps.isEmpty) {
-      return null;
-    }
+    Good? good = await GoodProvider().getItemByName(name);
+    if (good == null) return null;
+
+    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'good_id = ?', whereArgs: [good.id]);
+    if (maps.isEmpty) return null;
     return Product.fromMap(maps.first);
   }
 
