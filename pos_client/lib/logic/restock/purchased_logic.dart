@@ -6,20 +6,20 @@ import 'package:pos/store/model/restock/purchased_items.dart';
 class PurchasedLogic {
   PurchasedItemProvider purchasedItemProvider = PurchasedItemProvider();
   GoodProvider goodProvider = GoodProvider();
-  void addNewPurchasedItem(PurchasedItemAndGood purchasedItemAndGood) {
+  void addNewPurchasedItem(PurchasedItemAndGood purchasedItemAndGood) async {
     Good good = Good(
       id: 0,
       name: purchasedItemAndGood.name,
       unit: purchasedItemAndGood.unit,
       image: purchasedItemAndGood.image,
     );
+    int goodId = await goodProvider.insert(good);
     PurchasedItem purchasedItem = PurchasedItem(
       id: 0,
-      goodId: purchasedItemAndGood.goodId,
+      goodId: goodId,
       vendorId: purchasedItemAndGood.vendorId,
       amount: 0,
     );
-    goodProvider.insert(good);
     purchasedItemProvider.insert(purchasedItem);
   }
 

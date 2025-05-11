@@ -92,7 +92,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
   }
 
   Future<PurchasedItemAndGood?> showPurchasedDetail(BuildContext context, {PurchasedItemAndGood? purchasedItemAndGood}) async {
-    ValueNotifier<int> vendorIdNotifier = ValueNotifier(0);
+    ValueNotifier<int?> vendorIdNotifier = ValueNotifier(null);
     ValueNotifier<TagsGridViewTag> tagNotifier = ValueNotifier(const TagsGridViewTag(id: 0, name: '', color: Color(-1)));
     List<TagsGridViewTag> tagGridViewTags = [];
     String name = '';
@@ -119,53 +119,26 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                     const Text('供應商：'),
                     FutureBuilder(
                         future: vendorProvider.getAll(),
-                        initialData: [Vendor.initial()],
                         builder: (context, snapshot) {
-                          // if (purchasedItem == null && snapshot.data!.isNotEmpty) {
-                          //   vendorIdNotifier.value = snapshot.data!.first.id!;
-                          //   print('vendor id: ${vendorIdNotifier.value}');
-                          // }
-                          return ValueListenableBuilder<int>(
+                          return ValueListenableBuilder<int?>(
                               valueListenable: vendorIdNotifier,
-                              builder: (context, value, child) {
-                                return DropdownButton(
-                                  value: vendorIdNotifier.value,
-                                  onChanged: (value) {
-                                    // setState(() {
-                                    //   vendorIdNotifier.value = value!;
-                                    // });
-                                    vendorIdNotifier.value = value!;
-                                    // vendorIdNotifier.notifyListeners();
+                              builder: (context, selectValue, child) {
+                                List<DropdownMenuItem<int>> items = [];
+                                if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                                  for (var vendor in snapshot.data!) {
+                                    items.add(DropdownMenuItem<int>(
+                                      value: vendor.id,
+                                      child: Text(vendor.name),
+                                    ));
+                                  }
+                                }
+                                return DropdownButton<int>(
+                                  value: selectValue,
+                                  hint: snapshot.data!.isNotEmpty ? const Text('請選擇供應商') : const Text('無供應商'),
+                                  onChanged: (selectValue) {
+                                    vendorIdNotifier.value = selectValue!;
                                   },
-                                  items: [
-                                    DropdownMenuItem<int>(
-                                      value: Vendor.initial().id,
-                                      child: const Text('請選擇供應商'),
-                                    ),
-                                    ...snapshot.data!.map((e) {
-                                      return DropdownMenuItem<int>(
-                                        value: e.id,
-                                        child: Text(e.name),
-                                      );
-                                    }).toList(),
-                                    if (snapshot.data!.isEmpty)
-                                      DropdownMenuItem<int>(
-                                        value: Vendor.initial().id,
-                                        child: const Text('無供應商'),
-                                      ),
-                                    // DropdownMenuItem<int>(
-                                    //   value: Vendor.initial().id,
-                                    //   child: TextButton(
-                                    //       onPressed: () {
-                                    //         Navigator.push(context, MaterialPageRoute(builder: (context) => VendorDetail(vendor: Vendor.initial(), isCreate: true))).then((value) {
-                                    //           if (value != null) {
-                                    //             setState(() {});
-                                    //           }
-                                    //         });
-                                    //       },
-                                    //       child: Text('新增供應商')),
-                                    // ),
-                                  ],
+                                  items: items,
                                 );
                               });
                         }),
@@ -176,14 +149,18 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                     labelText: '品項名稱',
                   ),
                   initialValue: name,
-                  onChanged: (value) => name = value,
+                  onChanged: (value) {
+                    name = value;
+                  },
                 ),
                 TextFormField(
                   decoration: const InputDecoration(
                     labelText: '單位',
                   ),
                   initialValue: unit,
-                  onChanged: (value) => unit = value,
+                  onChanged: (value) {
+                    unit = value;
+                  },
                 ),
                 FutureBuilder(future: () async {
                   //標籤取得
@@ -243,13 +220,13 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                 valueListenable: vendorIdNotifier,
                 builder: (context, value, child) {
                   return TextButton(
-                    onPressed: vendorIdNotifier.value != Vendor.initial().id
+                    onPressed: vendorIdNotifier.value != Vendor.initial().id && vendorIdNotifier.value != null
                         ? () {
                             Navigator.of(context).pop(
                               PurchasedItemAndGood(
                                 purchasedItemId: -1,
                                 goodId: -1,
-                                vendorId: vendorIdNotifier.value,
+                                vendorId: vendorIdNotifier.value!,
                                 name: name,
                                 unit: unit,
                               ),
