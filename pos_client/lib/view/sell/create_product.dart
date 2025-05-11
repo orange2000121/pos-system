@@ -320,8 +320,7 @@ class _CreateProductState extends State<CreateProduct> {
                   },
                 ),
                 ItemEditButton(
-                  //todo 改成取消銷售
-                  name: '刪除產品',
+                  name: '取消銷售',
                   onPressed: () {
                     productProvider.delete(product.id);
                     setState(() {});
