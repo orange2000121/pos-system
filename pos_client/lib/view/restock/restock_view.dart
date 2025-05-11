@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pos/logic/restock/purchased_logic.dart';
 import 'package:pos/store/model/restock/purchased_items.dart';
 import 'package:pos/store/model/restock/purchased_items_tag.dart';
 import 'package:pos/store/model/restock/restock.dart';
@@ -21,7 +22,7 @@ class RestockView extends StatefulWidget {
 class _RestockViewState extends State<RestockView> {
   PurchasedItemProvider purchasedItemProvider = PurchasedItemProvider();
   ValueNotifier<List<Restock>> restockItemsNotifier = ValueNotifier<List<Restock>>([]); //訂貨清單
-  ValueNotifier<List<PurchasedItem>> purchasedItemsNotifier = ValueNotifier<List<PurchasedItem>>([]); //可進貨的商品
+  ValueNotifier<List<PurchasedItemAndGood>> purchasedItemsNotifier = ValueNotifier<List<PurchasedItemAndGood>>([]); //可進貨的商品
   ValueNotifier<Vendor> restockOrderVendorNotifier = ValueNotifier<Vendor>(Vendor.initial()); //此次進貨的供應商
   @override
   void initState() {
@@ -45,10 +46,10 @@ class _RestockViewState extends State<RestockView> {
         ],
       ),
       body: FutureBuilder(
-          future: purchasedItemProvider.queryAll(),
+          future: getAllPurchasedAndGoods(),
           builder: (context, purchasedItemSnapshot) {
             if (purchasedItemSnapshot.hasData) {
-              Map<int, PurchasedItem> purchasedItemMap = {for (var e in purchasedItemSnapshot.data!) e.id!: e};
+              Map<int, PurchasedItemAndGood> purchasedItemMap = {for (var e in purchasedItemSnapshot.data!) e.purchasedItemId: e};
               purchasedItemsNotifier.value = purchasedItemSnapshot.data!;
               return Row(
                 children: [
@@ -83,6 +84,12 @@ class _RestockViewState extends State<RestockView> {
             }
           }),
     );
+  }
+
+  Future<List<PurchasedItemAndGood>> getAllPurchasedAndGoods() async {
+    var purchasedItems = await purchasedItemProvider.queryAll();
+    var purchasedItemAndGoods = PurchasedLogic().convertPurchasedItems2PurchasedItemAndGoods(purchasedItems);
+    return purchasedItemAndGoods;
   }
 
   Widget restockOrderSave() {
@@ -229,7 +236,7 @@ class _RestockViewState extends State<RestockView> {
     );
   }
 
-  Widget searchBar(Map<int, PurchasedItem> purchasedItemSnapshot) {
+  Widget searchBar(Map<int, PurchasedItemAndGood> purchasedItemSnapshot) {
     return FutureBuilder(
         future: PurchasedItemsTagProvider().getAll(),
         builder: (context, purchasedItemsTagsSnapshot) {
@@ -254,7 +261,7 @@ class _RestockViewState extends State<RestockView> {
               name: purchasedItemsTag.name,
               color: Color(purchasedItemsTag.color),
               onTap: () async {
-                List<PurchasedItem> purchasedItems = [];
+                List<PurchasedItemAndGood> purchasedItems = [];
                 await tagPurchasedItemRelationships.then((value) {
                   for (var tagPurchasedItemRelationship in value) {
                     if (tagPurchasedItemRelationship.tagId == purchasedItemsTag.id) {
@@ -271,11 +278,11 @@ class _RestockViewState extends State<RestockView> {
         });
   }
 
-  Widget purchasedItemList(List<PurchasedItem> purchasedItems) {
+  Widget purchasedItemList(List<PurchasedItemAndGood> purchasedItems) {
     return ValueListenableBuilder(
         valueListenable: restockOrderVendorNotifier,
         builder: (context, vendor, child) {
-          List<PurchasedItem> purchasedItemsCopy = [];
+          List<PurchasedItemAndGood> purchasedItemsCopy = [];
           if (vendor.id != Vendor.initial().id) {
             for (var purchasedItem in purchasedItems) {
               if (purchasedItem.vendorId == vendor.id) {
@@ -288,12 +295,12 @@ class _RestockViewState extends State<RestockView> {
           return ListView.builder(
             itemCount: purchasedItemsCopy.length,
             itemBuilder: (context, index) {
-              PurchasedItem purchasedItem = purchasedItemsCopy[index];
+              PurchasedItemAndGood purchasedItem = purchasedItemsCopy[index];
               return InkWell(
                 onTap: () async {
                   restockItemsNotifier.value.add(
                     Restock(
-                      purchasedItemId: purchasedItem.id!,
+                      purchasedItemId: purchasedItem.purchasedItemId,
                       quantity: 1,
                       price: 0,
                       amount: 0,
@@ -365,7 +372,7 @@ class _RestockViewState extends State<RestockView> {
     );
   }
 
-  Expanded restockItemsTable(Map<int, PurchasedItem> purchasedItemMap) {
+  Expanded restockItemsTable(Map<int, PurchasedItemAndGood> purchasedItemMap) {
     return Expanded(
       child: ValueListenableBuilder(
           valueListenable: restockItemsNotifier,

@@ -5,25 +5,22 @@ import 'package:sqflite/sqflite.dart';
 
 class PurchasedItem {
   final int? id;
+  final int goodId;
   final int vendorId;
-  final String name;
-  final String unit;
   double? amount;
 
   PurchasedItem({
     this.id,
+    required this.goodId,
     required this.vendorId,
-    required this.name,
-    required this.unit,
     this.amount = 0,
   });
 
   factory PurchasedItem.fromJson(Map<String, dynamic> json) {
     return PurchasedItem(
       id: json['id'],
+      goodId: json['goodId'],
       vendorId: json['vendorId'],
-      name: json['name'],
-      unit: json['unit'],
       amount: json['amount'] ?? 0,
     );
   }
@@ -31,8 +28,7 @@ class PurchasedItem {
   Map<String, dynamic> toInsertMap() {
     return {
       'vendorId': vendorId,
-      'name': name,
-      'unit': unit,
+      'goodId': goodId,
       'amount': amount ?? 0,
     };
   }
@@ -46,9 +42,8 @@ class PurchasedItemProvider extends DatabaseHandler {
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
+            goodId integer not null,
             vendorId integer not null,
-            name text not null,
-            unit text not null,
             amount real not null
           )
           ''');
@@ -80,9 +75,9 @@ class PurchasedItemProvider extends DatabaseHandler {
     return PurchasedItem.fromJson(maps.first);
   }
 
-  Future update(int id, PurchasedItem item) async {
+  Future update(PurchasedItem item) async {
     db ??= await open();
-    await db!.update(tableName, item.toInsertMap(), where: 'id = ?', whereArgs: [id]);
+    await db!.update(tableName, item.toInsertMap(), where: 'id = ?', whereArgs: [item.id]);
   }
 
   Future delete(int id) async {

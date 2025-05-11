@@ -1,3 +1,0 @@
-class ReceiptLogic {
-  ReceiptLogic();
-}
