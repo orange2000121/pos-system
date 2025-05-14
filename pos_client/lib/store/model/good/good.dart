@@ -1,8 +1,9 @@
 // ignore_for_file: constant_identifier_names
-
+// 所有的物品資料表，包括商品、進貨等，以物品存在的東西。
 import 'dart:typed_data';
 
 import 'package:pos/store/model/database_handler.dart';
+import 'package:pos/store/model/good/inventory.dart';
 import 'package:sqflite/sqflite.dart';
 
 class Good {
@@ -62,8 +63,17 @@ class GoodProvider extends DatabaseHandler {
 
   Future<int> insert(Good good) async {
     db ??= await open();
-    int result = await db!.insert(tableName, good.toMap());
-    return result;
+    int goodId = await db!.insert(tableName, good.toMap());
+    // 建立good時，一併建立inventory
+    InventoryProvider inventoryProvider = InventoryProvider();
+    Inventory inventory = Inventory(
+      goodId: goodId,
+      quantity: 0,
+      recodeMode: Inventory.CREATE_MODE,
+      recordTime: DateTime.now(),
+    );
+    await inventoryProvider.insert(inventory);
+    return goodId;
   }
 
   Future<List<Good>> getAll() async {
