@@ -74,7 +74,7 @@ class BomProvider extends DatabaseHandler {
 
   Future update(Bom bom) async {
     db ??= await open();
-    return db!.update(tableName, bom.toMap(), where: 'id = ?', whereArgs: [bom.id]);
+    return db!.update(tableName, bom.toMap(), where: 'id = ?', whereArgs: [bom.id!]);
   }
 
   Future delete(int id) async {

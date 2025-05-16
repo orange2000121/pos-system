@@ -59,38 +59,44 @@ class BomDetailLogic {
   ValueNotifier<int> materialSelectorNotifier = ValueNotifier(0);
   BomProvider bomProvider = BomProvider();
 
-  void setMaterialSelector({
+  Future<void> setMaterialSelector({
     required int value,
     required Map<int, Good> allGoodsMap,
-    // required GoodDetailLogic goodDetailLogic,
     required BomAndMaterial bomAndMaterial,
-  }) {
+  }) async {
     materialSelectorNotifier.value = value;
     Good selectedGood = allGoodsMap[value] ?? Good(id: 0, name: '', unit: '');
     bomAndMaterial.material = selectedGood;
     bomAndMaterial.bom.materialId = selectedGood.id;
     if (bomAndMaterial.bom.materialId != 0 && bomAndMaterial.bom.quantity != 0) {
       if (bomAndMaterial.bom.id == 0) {
-        bomProvider.insert(bomAndMaterial.bom);
+        bomAndMaterial.bom.id = await bomProvider.insert(bomAndMaterial.bom);
       } else {
         bomProvider.update(bomAndMaterial.bom);
       }
     }
   }
 
-  void setBomQuantity({
+  Future<void> setBomQuantity({
     required double value,
     required BomAndMaterial bomAndMaterial,
-  }) {
+  }) async {
     bomAndMaterial.bom.quantity = value;
-    print('Bom id: ${bomAndMaterial.bom.id}');
     if (bomAndMaterial.bom.materialId != 0 && bomAndMaterial.bom.quantity != 0) {
-      if (bomAndMaterial.bom.id == 0) {
-        bomProvider.insert(bomAndMaterial.bom);
+      if (bomAndMaterial.bom.id == 0 || bomAndMaterial.bom.id == null) {
+        bomAndMaterial.bom.id = await bomProvider.insert(bomAndMaterial.bom);
       } else {
         bomProvider.update(bomAndMaterial.bom);
       }
     }
+  }
+
+  Future<void> deleteBom({
+    required Bom bom,
+    required ValueNotifier<List<BomAndMaterial>> bomAndMaterialsNotifier,
+  }) async {
+    await bomProvider.delete(bom.id!);
+    bomAndMaterialsNotifier.value = List.from(bomAndMaterialsNotifier.value)..removeWhere((element) => element.bom.id == bom.id);
   }
 }
 

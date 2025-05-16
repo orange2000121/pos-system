@@ -88,7 +88,7 @@ class _GoodsManageState extends State<GoodsManage> {
 
   void showGoodDetailDialog(BuildContext context, Good good) {
     GoodDetailLogic goodDetailLogic = GoodDetailLogic();
-    goodDetailLogic.getBomsByGoodId(good.id);
+
     showDialog(
       context: context,
       builder: (context) {
@@ -158,59 +158,65 @@ class _GoodsManageState extends State<GoodsManage> {
                       ),
                       /* -------------------------------- 列出物料清單選項 -------------------------------- */
                       Flexible(
-                        child: ValueListenableBuilder(
-                          valueListenable: goodDetailLogic.bomAndMaterialsNotifier,
-                          builder: (BuildContext context, List<BomAndMaterial> bomAndMaterials, Widget? child) {
-                            return ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: bomAndMaterials.length,
-                              itemBuilder: (context, index) {
-                                BomDetailLogic bomDetailLogic = BomDetailLogic();
-                                /* -------------------------------- 個別物料清單選項 -------------------------------- */
-                                return ListTile(
-                                  title: Row(
-                                    children: [
-                                      DropdownMenu<int>(
-                                        initialSelection: bomAndMaterials[index].material.id,
-                                        dropdownMenuEntries: goodManageLogic.allGoods.map((e) {
-                                          return DropdownMenuEntry(
-                                            value: e.id,
-                                            label: e.name,
-                                          );
-                                        }).toList(),
-                                        onSelected: (value) => bomDetailLogic.setMaterialSelector(value: value ?? 0, allGoodsMap: goodManageLogic.allGoodsMap, bomAndMaterial: bomAndMaterials[index]),
-                                      ),
-                                      ValueListenableBuilder(
-                                        valueListenable: bomDetailLogic.materialSelectorNotifier,
-                                        builder: (BuildContext context, int materialId, Widget? child) {
-                                          return Text(
-                                            '(${bomAndMaterials[index].material.unit})',
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                  subtitle: Row(
-                                    children: [
-                                      const Text('數量：'),
-                                      Expanded(
-                                        child: TextFormField(
-                                          initialValue: bomAndMaterials[index].bom.quantity.toString(),
-                                          keyboardType: TextInputType.number,
-                                          onChanged: (value) => bomDetailLogic.setBomQuantity(value: double.parse(value), bomAndMaterial: bomAndMaterials[index]),
+                        child: FutureBuilder(
+                            future: goodDetailLogic.getBomsByGoodId(good.id),
+                            builder: (context, bomsSnapshot) {
+                              return ValueListenableBuilder(
+                                valueListenable: goodDetailLogic.bomAndMaterialsNotifier,
+                                builder: (BuildContext context, List<BomAndMaterial> bomAndMaterials, Widget? child) {
+                                  return ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: bomAndMaterials.length,
+                                    itemBuilder: (context, index) {
+                                      BomDetailLogic bomDetailLogic = BomDetailLogic();
+                                      /* -------------------------------- 個別物料清單選項 -------------------------------- */
+                                      BomAndMaterial bomAndMaterial = bomAndMaterials[index];
+                                      return ListTile(
+                                        title: Row(
+                                          children: [
+                                            DropdownMenu<int>(
+                                              initialSelection: bomAndMaterial.material.id,
+                                              dropdownMenuEntries: goodManageLogic.allGoods.map((e) {
+                                                return DropdownMenuEntry(
+                                                  value: e.id,
+                                                  label: e.name,
+                                                );
+                                              }).toList(),
+                                              onSelected: (value) => bomDetailLogic.setMaterialSelector(value: value ?? 0, allGoodsMap: goodManageLogic.allGoodsMap, bomAndMaterial: bomAndMaterial),
+                                            ),
+                                            ValueListenableBuilder(
+                                              valueListenable: bomDetailLogic.materialSelectorNotifier,
+                                              builder: (BuildContext context, int materialId, Widget? child) {
+                                                return Text(
+                                                  '(${bomAndMaterial.material.unit})',
+                                                );
+                                              },
+                                            ),
+                                          ],
                                         ),
-                                      )
-                                    ],
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(Icons.delete),
-                                    onPressed: () {},
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
+                                        subtitle: Row(
+                                          children: [
+                                            const Text('數量：'),
+                                            Expanded(
+                                              child: TextFormField(
+                                                key: ValueKey(bomAndMaterial.bom.id),
+                                                initialValue: bomAndMaterial.bom.quantity.toString(),
+                                                keyboardType: TextInputType.number,
+                                                onChanged: (value) => bomDetailLogic.setBomQuantity(value: double.parse(value), bomAndMaterial: bomAndMaterial),
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                        trailing: IconButton(
+                                          icon: const Icon(Icons.delete),
+                                          onPressed: () => bomDetailLogic.deleteBom(bom: bomAndMaterial.bom, bomAndMaterialsNotifier: goodDetailLogic.bomAndMaterialsNotifier),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            }),
                       ),
                     ],
                   ),
