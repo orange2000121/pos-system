@@ -18,6 +18,14 @@ class GoodDetailLogic {
   BomProvider bomProvider = BomProvider();
   GoodProvider goodProvider = GoodProvider();
   ValueNotifier<List<BomAndMaterial>> bomAndMaterialsNotifier = ValueNotifier([]);
+  final Good mainGood;
+  GoodDetailLogic({required this.mainGood});
+
+  List<Good> getAvailableMaterials({
+    required List<Good> allGoods,
+  }) {
+    return allGoods.where((good) => good.id != mainGood.id).toList();
+  }
 
   Future<List<BomAndMaterial>> getBomsByGoodId(int goodId) async {
     var boms = await bomProvider.getItemsByProductId(goodId) ?? [];
@@ -58,6 +66,8 @@ class GoodDetailLogic {
 class BomDetailLogic {
   ValueNotifier<int> materialSelectorNotifier = ValueNotifier(0);
   BomProvider bomProvider = BomProvider();
+  BomAndMaterial mainBomAndMaterial;
+  BomDetailLogic({required this.mainBomAndMaterial});
 
   Future<void> setMaterialSelector({
     required int value,
