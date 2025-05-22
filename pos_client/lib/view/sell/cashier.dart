@@ -291,9 +291,10 @@ class _CashierState extends State<Cashier> {
     ValueNotifier<List<Widget>> annotationOptions = ValueNotifier(
         [TextField(keyboardType: TextInputType.number, decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '%off'), controller: discountEditingController)]); // 備註選項
     finishEdit() {
+      item.note = noteEditingController.text;
       if (discountEditingController.text.isNotEmpty) {
         item.price = item.price * (1 - double.parse(discountEditingController.text) / 100);
-        item.note = '${noteEditingController.text}${noteEditingController.text.isEmpty ? '' : ', '}折扣${discountEditingController.text}%';
+        item.note = '${item.note}${noteEditingController.text.isEmpty ? '' : ', '}折扣${discountEditingController.text}%';
       }
       Navigator.pop(
           context,

@@ -137,4 +137,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: windows-installer
-        path: pos_client/build/windows/installer/Output/*.exe
+        path: pos_client/build/setupPOS.exe
