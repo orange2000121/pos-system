@@ -124,8 +124,7 @@ jobs:
 
     - name: Create Inno Setup Installer # 創建 Inno Setup 安裝檔
       run: |
-        # 已將 Inno Setup 腳本路徑更新為您提供的 'newsetup.iss'
-        $ISS_FILE = "pos_client\windows\newsetup.iss"
+        $ISS_FILE = "pos_client\installers\windows\newsetup.iss"
         if (-not (Test-Path $ISS_FILE)) {
           Write-Error "Inno Setup script not found at $ISS_FILE. Please create it."
           exit 1
@@ -137,4 +136,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: windows-installer
-        path: pos_client/build/setupPOS.exe
+        path: pos_client/installers/windows/setupPOS.exe
