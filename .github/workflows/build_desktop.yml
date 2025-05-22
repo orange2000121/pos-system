@@ -1,0 +1,139 @@
+name: Flutter Desktop Build # Workflow 的名稱，會顯示在 GitHub Actions 頁面
+
+on:
+  workflow_dispatch: # 允許手動觸發 workflow
+
+jobs:
+  # build_macos:
+  #   name: Build macOS Installer # 任務名稱，現在包含安裝檔打包
+  #   runs-on: macos-latest # 使用最新的 macOS 執行器
+
+  #   steps:
+  #   - name: Checkout Repository # 檢查程式碼
+  #     uses: actions/checkout@v4
+
+  #   - name: Set up Flutter # 設定 Flutter 環境
+  #     uses: subosito/flutter-action@v2
+  #     with:
+  #       flutter-version: '3.29.3'
+  #       channel: 'stable' # 指定 Flutter 頻道 (stable, beta, dev)
+
+  #   - name: Clean Flutter Project # 清理 Flutter 專案，確保乾淨的編譯環境
+  #     run: |
+  #       cd pos_client
+  #       flutter clean
+
+  #   - name: Get Flutter Dependencies # 安裝專案依賴，進入 pos_client 目錄執行
+  #     run: |
+  #       cd pos_client
+  #       flutter pub get
+
+  #   - name: Enable macOS Desktop Support # 啟用 macOS 桌面支援，進入 pos_client 目錄執行
+  #     run: |
+  #       cd pos_client
+  #       flutter config --enable-macos-desktop
+
+  #   - name: Build macOS Release # 編譯 macOS Release 版本，進入 pos_client 目錄執行
+  #     run: |
+  #       cd pos_client
+  #       flutter build macos --release
+
+  #   - name: Create DMG Installer # 創建 DMG 安裝檔
+  #     run: |
+  #       # 已將 'YourAppName' 替換為您提供的應用程式名稱 'POS'
+  #       APP_NAME="POS"
+  #       APP_PATH="pos_client/build/macos/Build/Products/Release/$APP_NAME.app"
+  #       DMG_TEMP_NAME="$APP_NAME-temp.dmg"
+  #       DMG_FINAL_NAME="$APP_NAME-Installer.dmg"
+  #       DMG_OUTPUT_DIR="pos_client/build/macos" # DMG 安裝檔的輸出目錄
+
+  #       # 確保輸出目錄存在
+  #       mkdir -p "$DMG_OUTPUT_DIR"
+
+  #       # 檢查 .app 檔案是否存在
+  #       if [ ! -d "$APP_PATH" ]; then
+  #         echo "Error: .app file not found at $APP_PATH. Please ensure the app name is correct and build was successful."
+  #         exit 1
+  #       fi
+
+  #       echo "Creating temporary disk image..."
+  #       hdiutil create -ov -volname "$APP_NAME Installer" -fs HFS+ -size 500m "$DMG_TEMP_NAME"
+
+  #       echo "Mounting disk image..."
+  #       MOUNT_POINT=$(hdiutil attach "$DMG_TEMP_NAME" | grep "Volumes" | awk '{print $3}')
+  #       echo "Mounted at: $MOUNT_POINT"
+
+  #       echo "Copying app to disk image..."
+  #       cp -R "$APP_PATH" "$MOUNT_POINT/"
+
+  #       echo "Creating Applications symlink..."
+  #       ln -s /Applications "$MOUNT_POINT/Applications"
+
+  #       echo "Unmounting disk image..."
+  #       hdiutil detach "$MOUNT_POINT" -force
+
+  #       echo "Converting to final DMG..."
+  #       hdiutil convert "$DMG_TEMP_NAME" -format UDRW -o "$DMG_OUTPUT_DIR/$DMG_FINAL_NAME" -ov
+  #       hdiutil convert "$DMG_OUTPUT_DIR/$DMG_FINAL_NAME" -format UDBZ -o "$DMG_OUTPUT_DIR/$DMG_FINAL_NAME" -ov
+
+  #       echo "Cleaning up temporary files..."
+  #       rm "$DMG_TEMP_NAME"
+
+  #   - name: Upload macOS DMG Installer Artifact # 上傳編譯好的 macOS DMG 安裝檔
+  #     uses: actions/upload-artifact@v4
+  #     with:
+  #       name: macos-installer
+  #       path: pos_client/build/macos/*.dmg # 上傳 DMG 檔案
+
+  build_windows:
+    name: Build Windows Installer # 任務名稱，現在包含安裝檔打包
+    runs-on: windows-latest # 使用最新的 Windows 執行器
+
+    steps:
+    - name: Checkout Repository # 檢查程式碼
+      uses: actions/checkout@v4
+
+    - name: Set up Flutter # 設定 Flutter 環境
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.29.3'
+        channel: 'stable' # 指定 Flutter 頻道 (stable, beta, dev)
+
+    - name: Clean Flutter Project # 清理 Flutter 專案，確保乾淨的編譯環境
+      run: |
+        cd pos_client
+        flutter clean
+
+    - name: Get Flutter Dependencies # 安裝專案依賴，進入 pos_client 目錄執行
+      run: |
+        cd pos_client
+        flutter pub get
+
+    - name: Enable Windows Desktop Support # 啟用 Windows 桌面支援，進入 pos_client 目錄執行
+      run: |
+        cd pos_client
+        flutter config --enable-windows-desktop
+
+    - name: Build Windows Release # 編譯 Windows Release 版本，進入 pos_client 目錄執行
+      run: |
+        cd pos_client
+        flutter build windows --release
+
+    - name: Install Inno Setup # 安裝 Inno Setup
+      run: choco install innosetup --confirm
+
+    - name: Create Inno Setup Installer # 創建 Inno Setup 安裝檔
+      run: |
+        $ISS_FILE = "pos_client\installers\windows\newsetup.iss"
+        if (-not (Test-Path $ISS_FILE)) {
+          Write-Error "Inno Setup script not found at $ISS_FILE. Please create it."
+          exit 1
+        }
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" $ISS_FILE
+      shell: powershell # 使用 PowerShell 執行，因為 choco 和 ISCC 建議在 PowerShell 中執行
+
+    - name: Upload Windows EXE Installer Artifact # 上傳編譯好的 Windows EXE 安裝檔
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-installer
+        path: pos_client/installers/windows/setupPOS.exe

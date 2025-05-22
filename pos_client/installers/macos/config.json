@@ -1,0 +1,27 @@
+{
+    "title": "POS",
+    "icon": "AppIcon.icns",
+    "window": {
+        "size": {
+            "width": 660,
+            "height": 400
+        }
+    },
+    "contents": [
+        {
+            "x": 165,
+            "y": 200,
+            "type": "file",
+            "path": "../../build/macos/Build/Products/Release/pos.app"
+        },
+        {
+            "x": 495,
+            "y": 200,
+            "type": "link",
+            "path": "/Applications"
+        }
+    ],
+    "code-sign": {
+        "signing-identity": "MPKZJ4SN49"
+    }
+}
