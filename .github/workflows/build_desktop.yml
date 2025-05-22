@@ -1,0 +1,83 @@
+name: Flutter Desktop Build # Workflow 的名稱，會顯示在 GitHub Actions 頁面
+
+on:
+  workflow_dispatch: # 允許手動觸發 workflow
+
+jobs:
+  build_macos:
+    name: Build macOS # 任務名稱
+    runs-on: macos-latest # 使用最新的 macOS 執行器
+
+    steps:
+    - name: Checkout Repository # 檢查程式碼
+      uses: actions/checkout@v4
+
+    - name: Set up Flutter # 設定 Flutter 環境
+      uses: subosito/flutter-action@v2
+      with:
+        # 指定你使用的 Flutter 版本，例如 '3.22.0' 或 'stable'。
+        # 已更新為您提供的 Flutter 版本。
+        flutter-version: '3.29.3'
+        channel: 'stable' # 指定 Flutter 頻道 (stable, beta, dev)
+
+    - name: Get Flutter Dependencies # 安裝專案依賴，進入 pos_client 目錄執行
+      run: |
+        cd pos_client
+        flutter pub get
+
+    - name: Enable macOS Desktop Support # 啟用 macOS 桌面支援，進入 pos_client 目錄執行
+      run: |
+        cd pos_client
+        flutter config --enable-macos-desktop
+
+    - name: Build macOS Release # 編譯 macOS Release 版本，進入 pos_client 目錄執行
+      run: |
+        cd pos_client
+        flutter build macos --release
+
+    - name: Upload macOS Artifact # 上傳編譯好的 macOS 應用程式
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-app
+        # 根據你的專案結構調整路徑。
+        # 現在路徑會包含 pos_client 子目錄。
+        path: pos_client/build/macos/Build/Products/Release/*.app
+
+  build_windows:
+    name: Build Windows # 任務名稱
+    runs-on: windows-latest # 使用最新的 Windows 執行器
+
+    steps:
+    - name: Checkout Repository # 檢查程式碼
+      uses: actions/checkout@v4
+
+    - name: Set up Flutter # 設定 Flutter 環境
+      uses: subosito/flutter-action@v2
+      with:
+        # 指定你使用的 Flutter 版本，例如 '3.22.0' 或 'stable'。
+        # 已更新為您提供的 Flutter 版本。
+        flutter-version: '3.29.3'
+        channel: 'stable' # 指定 Flutter 頻道 (stable, beta, dev)
+
+    - name: Get Flutter Dependencies # 安裝專案依賴，進入 pos_client 目錄執行
+      run: |
+        cd pos_client
+        flutter pub get
+
+    - name: Enable Windows Desktop Support # 啟用 Windows 桌面支援，進入 pos_client 目錄執行
+      run: |
+        cd pos_client
+        flutter config --enable-windows-desktop
+
+    - name: Build Windows Release # 編譯 Windows Release 版本，進入 pos_client 目錄執行
+      run: |
+        cd pos_client
+        flutter build windows --release
+
+    - name: Upload Windows Artifact # 上傳編譯好的 Windows 應用程式
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-app
+        # 根據你的專案結構調整路徑。
+        # 現在路徑會包含 pos_client 子目錄。
+        path: pos_client/build/windows/x64/runner/Release
