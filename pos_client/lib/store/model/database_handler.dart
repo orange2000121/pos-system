@@ -27,7 +27,6 @@ abstract class DatabaseHandler {
       switch (version) {
         case 1:
           // 新增 amount 欄位，在 GoodsProvider 和 PurchasedItemProvider 中
-          print('update database case 1');
           if (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='${ProductProvider().tableName}';").then((value) => value.isNotEmpty)) {
             if (!await columnExists(db, ProductProvider().tableName, 'amount')) {
               await db.execute("ALTER TABLE ${ProductProvider().tableName} ADD COLUMN amount real not null DEFAULT 0;");
@@ -41,7 +40,6 @@ abstract class DatabaseHandler {
           break;
         case 2:
           // 假設 restock 表的名稱是 restockTableName
-          print('update database case 2');
           String restockTableName = "restock";
           String tempTableName = "temp_restock";
           if (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='$restockTableName';").then((value) => value.isEmpty)) {

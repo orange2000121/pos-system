@@ -67,7 +67,7 @@ class _VendorManageState extends State<VendorManage> {
                         ),
                       ),
                     );
-                  }).toList(),
+                  }),
               ],
             );
           }),

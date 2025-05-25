@@ -3,7 +3,7 @@ import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 使用函示之前必須先呼叫 Future<bool> init()
+/// 使用函示之前必須先呼叫 Future SharedPreferenceHelper.init()
 class SharedPreferenceHelper {
   static SharedPreferenceHelper? _instance;
   static SharedPreferenceHelper get instance {

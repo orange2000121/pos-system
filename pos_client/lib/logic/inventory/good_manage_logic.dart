@@ -13,8 +13,6 @@ class GoodManageLogic {
   Future<Map<int, Map<String, dynamic>>> getAllGoodsInfo() async {
     allGoods = await goodProvider.getAll();
     allInventories = await inventoryProvider.getAll();
-    print('good count: ${allGoods.length}');
-    print('inventory count: ${allInventories.length}');
     for (var good in allGoods) {
       var inventory = allInventories.firstWhere(
         (inventory) => inventory.goodId == good.id,

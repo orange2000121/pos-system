@@ -1,4 +1,5 @@
 /// 販賣的商品，包含商品名稱、價格、單位、圖片
+library;
 
 import 'package:pos/store/model/database_handler.dart';
 import 'package:pos/store/model/good/good.dart';

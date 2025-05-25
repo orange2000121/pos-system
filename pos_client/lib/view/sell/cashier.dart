@@ -554,8 +554,8 @@ class _CashierState extends State<Cashier> {
           valueListenable: showPriceNotifier,
           builder: (context, showPrice, child) => Switch(
               value: showPriceNotifier.value,
-              thumbIcon: MaterialStateProperty.resolveWith<Icon?>((Set<MaterialState> states) {
-                if (states.contains(MaterialState.selected)) {
+              thumbIcon: WidgetStateProperty.resolveWith<Icon?>((Set<WidgetState> states) {
+                if (states.contains(WidgetState.selected)) {
                   return const Icon(Icons.attach_money);
                 }
                 return const Icon(Icons.money_off);
