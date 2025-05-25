@@ -1,16 +1,36 @@
 import 'package:flutter/widgets.dart';
 import 'package:pos/store/model/good/bom.dart';
 import 'package:pos/store/model/good/good.dart';
+import 'package:pos/store/model/good/inventory.dart';
 
 class GoodManageLogic {
   GoodProvider goodProvider = GoodProvider();
+  InventoryProvider inventoryProvider = InventoryProvider();
 
   List<Good> allGoods = [];
-  Map<int, Good> allGoodsMap = {};
-  Future<List<Good>> getAllGoods() async {
+  List<Inventory> allInventories = [];
+  Map<int, Map<String, dynamic>> allGoodInfo = {};
+  Future<Map<int, Map<String, dynamic>>> getAllGoodsInfo() async {
     allGoods = await goodProvider.getAll();
-    allGoodsMap = allGoods.asMap().map((key, value) => MapEntry(value.id, value));
-    return allGoods;
+    allInventories = await inventoryProvider.getAll();
+    print('good count: ${allGoods.length}');
+    print('inventory count: ${allInventories.length}');
+    for (var good in allGoods) {
+      var inventory = allInventories.firstWhere(
+        (inventory) => inventory.goodId == good.id,
+        orElse: () => Inventory(
+          goodId: good.id,
+          quantity: 0,
+          recodeMode: Inventory.CREATE_MODE,
+          recordTime: DateTime.now(),
+        ),
+      );
+      allGoodInfo[good.id] = {
+        'good': good,
+        'inventory': inventory,
+      };
+    }
+    return allGoodInfo;
   }
 }
 

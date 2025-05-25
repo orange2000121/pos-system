@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pos/logic/inventory/good_manage_logic.dart';
 import 'package:pos/store/model/good/good.dart';
+import 'package:pos/store/model/good/inventory.dart';
 import 'package:pos/template/item_edit.dart';
 
 class GoodsManage extends StatefulWidget {
@@ -15,8 +16,8 @@ class _GoodsManageState extends State<GoodsManage> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: goodManageLogic.getAllGoods(),
-        builder: (context, goodsSnapshot) {
+        future: goodManageLogic.getAllGoodsInfo(),
+        builder: (context, goodsInfoSnapshot) {
           return Scaffold(
               appBar: AppBar(
                 title: const Text('貨物管理'),
@@ -31,17 +32,18 @@ class _GoodsManageState extends State<GoodsManage> {
                     title: '新增貨物',
                     icon: const Icon(Icons.add),
                   ),
-                  if (goodsSnapshot.hasData)
-                    ...goodsSnapshot.data!.map((e) {
+                  if (goodsInfoSnapshot.hasData)
+                    ...goodsInfoSnapshot.data!.values.map((goodInfo) {
                       return goodCard(
-                        title: e.name,
-                        onTap: () => showGoodDetailDialog(context, e),
-                        image: e.image != null && e.image!.isNotEmpty
+                        title: goodInfo['good'].name,
+                        onTap: () => showGoodDetailDialog(context, goodInfo),
+                        image: goodInfo['good'].image != null && goodInfo['good'].image!.isNotEmpty
                             ? Image.memory(
-                                e.image!,
+                                goodInfo['good'].image!,
                                 fit: BoxFit.cover,
                               )
                             : null,
+                        subtitle: '庫存：${goodInfo['inventory'].quantity}',
                       );
                     }),
                 ],
@@ -86,7 +88,9 @@ class _GoodsManageState extends State<GoodsManage> {
     );
   }
 
-  void showGoodDetailDialog(BuildContext context, Good good) {
+  void showGoodDetailDialog(BuildContext context, Map<String, dynamic> goodInfo) {
+    Good good = goodInfo['good'];
+    Inventory inventory = goodInfo['inventory'];
     GoodDetailLogic goodDetailLogic = GoodDetailLogic(mainGood: good);
 
     showDialog(
@@ -101,6 +105,7 @@ class _GoodsManageState extends State<GoodsManage> {
             ),
             Text(good.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             Text('單位：${good.unit}'),
+            Text('庫存：${inventory.quantity}'),
             const SizedBox(width: 100, child: Divider()),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -167,7 +172,13 @@ class _GoodsManageState extends State<GoodsManage> {
                                         label: e.name,
                                       );
                                     }).toList(),
-                                    onSelected: (value) => bomDetailLogic.setMaterialSelector(value: value ?? 0, allGoodsMap: goodManageLogic.allGoodsMap, bomAndMaterial: bomAndMaterial),
+                                    onSelected: (value) {
+                                      Map<int, Good> allGoodMapOnlyGoods = {};
+                                      for (var good in goodManageLogic.allGoodInfo.values) {
+                                        allGoodMapOnlyGoods[good['good'].id] = good['good'];
+                                      }
+                                      bomDetailLogic.setMaterialSelector(value: value ?? 0, allGoodsMap: allGoodMapOnlyGoods, bomAndMaterial: bomAndMaterial);
+                                    },
                                   ),
                                   ValueListenableBuilder(
                                     valueListenable: bomDetailLogic.materialSelectorNotifier,

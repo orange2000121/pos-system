@@ -82,15 +82,12 @@ class _HomeState extends State<Home> {
       children: [
         RoutesPageCard(name: '收銀台', icon: const Icon(Icons.attach_money), page: const Cashier()),
         RoutesPageCard(
-          name: '商品',
-          icon: const Icon(Icons.add),
-          page: const CreateProduct(),
-        ),
-        RoutesPageCard(
-          name: '銷售紀錄',
-          icon: const Icon(Icons.history),
-          page: const OrderOverview(),
-        ),
+            icon: const Icon(Icons.shopping_cart),
+            name: '銷售管理',
+            page: RoutesPage(children: [
+              RoutesPageCard(name: '商品', icon: const Icon(Icons.add), page: const CreateProduct()),
+              RoutesPageCard(name: '銷售紀錄', icon: const Icon(Icons.history), page: const OrderOverview()),
+            ])),
         RoutesPageCard(
           name: '進貨管理',
           icon: const Icon(Icons.input),

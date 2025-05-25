@@ -55,6 +55,12 @@ class InventoryProvider extends DatabaseHandler {
     return db!;
   }
 
+  Future<List<Inventory>> getAll() async {
+    db ??= await open();
+    List<Map<String, dynamic>> maps = await db!.query(tableName);
+    return maps.map((e) => Inventory.fromJson(e)).toList();
+  }
+
   Future<int> insert(Inventory inventory) async {
     db ??= await open();
     return await db!.insert(tableName, inventory.toMap());
