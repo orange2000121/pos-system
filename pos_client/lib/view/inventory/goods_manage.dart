@@ -3,6 +3,7 @@ import 'package:pos/logic/inventory/good_manage_logic.dart';
 import 'package:pos/store/model/good/good.dart';
 import 'package:pos/store/model/good/inventory.dart';
 import 'package:pos/template/item_edit.dart';
+import 'package:pos/template/number_input_with_Increment_Decrement.dart';
 
 class GoodsManage extends StatefulWidget {
   const GoodsManage({super.key});
@@ -126,7 +127,34 @@ class _GoodsManageState extends State<GoodsManage> {
                   ],
                 ),
               ],
-            )
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Text('製作'),
+                NumberInputWithIncrementDecrement(
+                  initialNumber: 0,
+                  width: 100,
+                ),
+                Text(good.unit),
+              ],
+            ),
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.all(8),
+              child: ValueListenableBuilder(
+                  valueListenable: goodDetailLogic.bomAndMaterialsNotifier,
+                  builder: (context, bomAndMaterials, child) {
+                    return ElevatedButton(
+                      onPressed: bomAndMaterials.isNotEmpty
+                          ? () {
+                              // 製作按鈕的處理邏輯
+                            }
+                          : null,
+                      child: const Text('製作'),
+                    );
+                  }),
+            ),
           ],
         );
         Widget rightColumn = Column(
@@ -155,7 +183,6 @@ class _GoodsManageState extends State<GoodsManage> {
                       valueListenable: goodDetailLogic.bomAndMaterialsNotifier,
                       builder: (BuildContext context, List<BomAndMaterial> bomAndMaterials, Widget? child) {
                         return ListView.builder(
-                          shrinkWrap: true,
                           itemCount: bomAndMaterials.length,
                           itemBuilder: (context, index) {
                             BomDetailLogic bomDetailLogic = BomDetailLogic(mainBomAndMaterial: bomAndMaterials[index]);
@@ -219,7 +246,7 @@ class _GoodsManageState extends State<GoodsManage> {
         return AlertDialog(
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.45,
-            height: MediaQuery.of(context).size.height * 0.4,
+            height: MediaQuery.of(context).size.height * 0.5,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

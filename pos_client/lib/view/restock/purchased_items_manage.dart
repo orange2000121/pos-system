@@ -134,7 +134,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                                 }
                                 return DropdownButton<int>(
                                   value: selectValue,
-                                  hint: snapshot.data!.isNotEmpty ? const Text('請選擇供應商') : const Text('無供應商'),
+                                  hint: snapshot.hasData && snapshot.data!.isNotEmpty ? const Text('請選擇供應商') : const Text('無供應商'),
                                   onChanged: (selectValue) {
                                     vendorIdNotifier.value = selectValue!;
                                   },
@@ -190,7 +190,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                   return ValueListenableBuilder(
                       valueListenable: tagNotifier,
                       builder: (context, value, child) {
-                        if (value.color.value != 4294967295) {
+                        if (value.color.toARGB32() != 0xFFFFFFFF) {
                           tagGridViewTags.add(value);
                         }
                         return TagsGridView(

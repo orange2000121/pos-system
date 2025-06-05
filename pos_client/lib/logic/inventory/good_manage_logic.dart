@@ -76,9 +76,9 @@ class GoodDetailLogic {
     bomAndMaterialsNotifier.value = List.from(bomAndMaterialsNotifier.value)..add(bomAndMaterial);
   }
 
-  Future addBom(Bom bom) async {
-    await bomProvider.insert(bom);
-  }
+  // Future addBom(Bom bom) async {
+  //   await bomProvider.insert(bom);
+  // }
 }
 
 class BomDetailLogic {
