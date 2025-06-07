@@ -89,12 +89,13 @@ class _GoodsManageState extends State<GoodsManage> {
     );
   }
 
-  void showGoodDetailDialog(BuildContext context, Map<String, dynamic> goodInfo) {
+  void showGoodDetailDialog(BuildContext context, Map<String, dynamic> goodInfo) async {
     Good good = goodInfo['good'];
     Inventory inventory = goodInfo['inventory'];
     GoodDetailLogic goodDetailLogic = GoodDetailLogic(mainGood: good);
+    Future<List<BomAndMaterial>> bomsFuture = goodDetailLogic.getBomsByGoodId(good.id);
 
-    showDialog(
+    await showDialog(
       context: context,
       builder: (context) {
         Widget leftColumn = Column(
@@ -106,7 +107,21 @@ class _GoodsManageState extends State<GoodsManage> {
             ),
             Text(good.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             Text('單位：${good.unit}'),
-            Text('庫存：${inventory.quantity}'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('庫存：'),
+                NumberInputWithIncrementDecrement(
+                  initialNumber: inventory.quantity,
+                  minNumber: 0,
+                  width: 100,
+                  height: 50,
+                  onEditingComplete: (number) {
+                    goodDetailLogic.makeInventory(number);
+                  },
+                ),
+              ],
+            ),
             const SizedBox(width: 100, child: Divider()),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -131,30 +146,40 @@ class _GoodsManageState extends State<GoodsManage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Text('製作'),
-                NumberInputWithIncrementDecrement(
-                  initialNumber: 0,
-                  width: 100,
-                ),
+                Text('製造'),
+                ValueListenableBuilder(
+                    valueListenable: goodDetailLogic.manufactureQuantityNotifier,
+                    builder: (context, manufactureQuantity, child) {
+                      return NumberInputWithIncrementDecrement(
+                        initialNumber: manufactureQuantity,
+                        minNumber: 0,
+                        width: 100,
+                        onChanged: (number) => goodDetailLogic.manufactureQuantityNotifier.value = number,
+                      );
+                    }),
                 Text(good.unit),
               ],
             ),
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.all(8),
-              child: ValueListenableBuilder(
-                  valueListenable: goodDetailLogic.bomAndMaterialsNotifier,
-                  builder: (context, bomAndMaterials, child) {
-                    return ElevatedButton(
-                      onPressed: bomAndMaterials.isNotEmpty
-                          ? () {
-                              // 製作按鈕的處理邏輯
-                            }
-                          : null,
-                      child: const Text('製作'),
-                    );
-                  }),
-            ),
+            FutureBuilder(
+                future: bomsFuture,
+                builder: (context, asyncSnapshot) {
+                  return Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.all(8),
+                    child: ValueListenableBuilder(
+                        valueListenable: goodDetailLogic.manufactureQuantityNotifier,
+                        builder: (context, manufactureQuantity, child) {
+                          return ValueListenableBuilder(
+                              valueListenable: goodDetailLogic.bomAndMaterialsNotifier,
+                              builder: (context, bomAndMaterials, child) {
+                                return ElevatedButton(
+                                  onPressed: bomAndMaterials.isNotEmpty && manufactureQuantity > 0 ? () => goodDetailLogic.manufactureProduct() : null,
+                                  child: const Text('製造'),
+                                );
+                              });
+                        }),
+                  );
+                }),
           ],
         );
         Widget rightColumn = Column(
@@ -177,7 +202,7 @@ class _GoodsManageState extends State<GoodsManage> {
             /* -------------------------------- 列出物料清單選項 -------------------------------- */
             Flexible(
               child: FutureBuilder(
-                  future: goodDetailLogic.getBomsByGoodId(good.id),
+                  future: bomsFuture,
                   builder: (context, bomsSnapshot) {
                     return ValueListenableBuilder(
                       valueListenable: goodDetailLogic.bomAndMaterialsNotifier,
@@ -275,5 +300,6 @@ class _GoodsManageState extends State<GoodsManage> {
         );
       },
     );
+    setState(() {});
   }
 }

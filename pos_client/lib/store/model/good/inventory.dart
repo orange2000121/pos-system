@@ -6,8 +6,8 @@ import 'package:sqflite/sqflite.dart';
 
 class Inventory {
   final int goodId;
-  final double quantity;
-  final String recodeMode;
+  double quantity;
+  String recodeMode;
   DateTime recordTime;
 
   static const String CREATE_MODE = 'create';
@@ -33,7 +33,7 @@ class Inventory {
       'good_id': goodId,
       'quantity': quantity,
       'recode_mode': recodeMode,
-      'record_time': DateTime.now().toString(),
+      'record_time': recordTime.toString(),
     };
   }
 }
@@ -63,6 +63,8 @@ class InventoryProvider extends DatabaseHandler {
 
   Future<int> insert(Inventory inventory) async {
     db ??= await open();
+    inventory.recodeMode = Inventory.CREATE_MODE;
+    inventory.recordTime = DateTime.now();
     return await db!.insert(tableName, inventory.toMap());
   }
 
@@ -78,8 +80,10 @@ class InventoryProvider extends DatabaseHandler {
     return await db!.delete(tableName, where: 'id = ?', whereArgs: [id]);
   }
 
-  Future update(Inventory inventory) async {
+  Future update(Inventory inventory, {required String mode}) async {
     db ??= await open();
+    inventory.recodeMode = mode;
+    inventory.recordTime = DateTime.now();
     return await db!.update(tableName, inventory.toMap(), where: 'good_id = ?', whereArgs: [inventory.goodId]);
   }
 }

@@ -33,11 +33,14 @@ class GoodManageLogic {
 }
 
 class GoodDetailLogic {
-  BomProvider bomProvider = BomProvider();
-  GoodProvider goodProvider = GoodProvider();
-  ValueNotifier<List<BomAndMaterial>> bomAndMaterialsNotifier = ValueNotifier([]);
   final Good mainGood;
   GoodDetailLogic({required this.mainGood});
+
+  BomProvider bomProvider = BomProvider();
+  GoodProvider goodProvider = GoodProvider();
+  InventoryProvider inventoryProvider = InventoryProvider();
+  ValueNotifier<List<BomAndMaterial>> bomAndMaterialsNotifier = ValueNotifier([]);
+  ValueNotifier<double> manufactureQuantityNotifier = ValueNotifier(0);
 
   List<Good> getAvailableMaterials({
     required List<Good> allGoods,
@@ -76,9 +79,41 @@ class GoodDetailLogic {
     bomAndMaterialsNotifier.value = List.from(bomAndMaterialsNotifier.value)..add(bomAndMaterial);
   }
 
-  // Future addBom(Bom bom) async {
-  //   await bomProvider.insert(bom);
-  // }
+  Future<Inventory> safetyGetInventory(int goodId) async {
+    Inventory? inventoryOfMaterial = await inventoryProvider.getInventoryByGoodId(goodId);
+    if (inventoryOfMaterial == null) {
+      inventoryOfMaterial = Inventory(
+        goodId: goodId,
+        quantity: 0,
+        recodeMode: Inventory.CREATE_MODE,
+        recordTime: DateTime.now(),
+      );
+      await inventoryProvider.insert(inventoryOfMaterial);
+    }
+    return inventoryOfMaterial;
+  }
+
+  void manufactureProduct() async {
+    //扣除原料數量
+    for (BomAndMaterial bomAndMaterial in bomAndMaterialsNotifier.value) {
+      double requiredQuantity = bomAndMaterial.bom.quantity * manufactureQuantityNotifier.value;
+      Inventory inventoryOfMaterial = await safetyGetInventory(bomAndMaterial.material.id);
+      inventoryOfMaterial.quantity -= requiredQuantity;
+      inventoryProvider.update(inventoryOfMaterial, mode: Inventory.COMPUTE_MODE);
+    }
+    //增加產品數量
+    Inventory inventoryOfProduct = await safetyGetInventory(mainGood.id);
+    inventoryOfProduct.quantity += manufactureQuantityNotifier.value;
+    inventoryProvider.update(inventoryOfProduct, mode: Inventory.COMPUTE_MODE);
+    //製作數量歸0
+    manufactureQuantityNotifier.value = 0;
+  }
+
+  void makeInventory(double quantity) async {
+    Inventory productInventory = await safetyGetInventory(mainGood.id);
+    productInventory.quantity = quantity;
+    await inventoryProvider.update(productInventory, mode: Inventory.MANUAL_MODE);
+  }
 }
 
 class BomDetailLogic {

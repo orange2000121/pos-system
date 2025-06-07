@@ -294,7 +294,7 @@ class _CashierState extends State<Cashier> {
     TextEditingController discountEditingController = TextEditingController();
     ValueNotifier<List<Widget>> annotationOptions = ValueNotifier(
         [TextField(keyboardType: TextInputType.number, decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '%off'), controller: discountEditingController)]); // 備註選項
-    finishEdit() {
+    void finishEdit() {
       item.note = noteEditingController.text;
       if (discountEditingController.text.isNotEmpty) {
         item.price = item.price * (1 - double.parse(discountEditingController.text) / 100);
@@ -389,7 +389,7 @@ class _CashierState extends State<Cashier> {
                     onChanged: (value) {
                       quantity.text = value.toString();
                     },
-                    onEditingComplete: finishEdit,
+                    onEditingComplete: (number) => finishEdit(),
                   )
                 ],
               ),

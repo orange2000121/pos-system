@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 class NumberInputWithIncrementDecrement extends StatefulWidget {
   final Function(double number)? onChanged;
-  final Function? onEditingComplete;
+  final Function(double number)? onEditingComplete;
   final double initialNumber;
+  final double minNumber; // 最小值
+  final double maxNumber; // 最大值
   final double width;
   final double height;
 
@@ -17,6 +19,8 @@ class NumberInputWithIncrementDecrement extends StatefulWidget {
     this.onEditingComplete,
     this.width = 60,
     this.height = 60,
+    this.minNumber = 1,
+    this.maxNumber = 100,
   });
 
   @override
@@ -28,6 +32,12 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
   @override
   void initState() {
     super.initState();
+    quantity.text = widget.initialNumber.toString();
+  }
+
+  @override
+  void didUpdateWidget(NumberInputWithIncrementDecrement oldWidget) {
+    super.didUpdateWidget(oldWidget);
     quantity.text = widget.initialNumber.toString();
   }
 
@@ -52,7 +62,13 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
               textAlign: TextAlign.center,
               keyboardType: TextInputType.number,
               controller: quantity,
-              onTap: () => quantity.value = TextEditingValue.empty,
+              onTap: () => quantity.value = TextEditingValue(
+                text: quantity.text,
+                selection: TextSelection(
+                  baseOffset: 0,
+                  extentOffset: quantity.text.length,
+                ),
+              ),
               decoration: const InputDecoration(border: UnderlineInputBorder()),
               onChanged: (value) {
                 if (widget.onChanged != null) {
@@ -61,7 +77,7 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
               },
               onEditingComplete: () {
                 if (widget.onEditingComplete != null) {
-                  widget.onEditingComplete!();
+                  widget.onEditingComplete!(str2double(quantity.text));
                 }
               },
             ),
@@ -76,13 +92,13 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onPressed: () {
+                  if (str2double(quantity.text) >= widget.maxNumber) {
+                    return;
+                  }
                   quantity.text = (str2double(quantity.text) + 1).toString();
                   if (widget.onChanged != null) {
                     widget.onChanged!(str2double(quantity.text));
                   }
-                  // if (widget.onEditingComplete != null) {
-                  //   widget.onEditingComplete!();
-                  // }
                 },
                 child: const Icon(
                   Icons.arrow_drop_up,
@@ -96,14 +112,12 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onPressed: () {
-                  if (str2double(quantity.text) > 1) {
-                    quantity.text = (str2double(quantity.text) - 1).toString();
-                    if (widget.onChanged != null) {
-                      widget.onChanged!(str2double(quantity.text));
-                    }
-                    // if (widget.onEditingComplete != null) {
-                    //   widget.onEditingComplete!();
-                    // }
+                  if (str2double(quantity.text) <= widget.minNumber) {
+                    return;
+                  }
+                  quantity.text = (str2double(quantity.text) - 1).toString();
+                  if (widget.onChanged != null) {
+                    widget.onChanged!(str2double(quantity.text));
                   }
                 },
                 child: const Icon(
