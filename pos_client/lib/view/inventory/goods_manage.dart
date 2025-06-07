@@ -90,9 +90,9 @@ class _GoodsManageState extends State<GoodsManage> {
   }
 
   void showGoodDetailDialog(BuildContext context, Map<String, dynamic> goodInfo) async {
-    Good good = goodInfo['good'];
-    Inventory inventory = goodInfo['inventory'];
-    GoodDetailLogic goodDetailLogic = GoodDetailLogic(mainGood: good);
+    GoodDetailLogic goodDetailLogic = GoodDetailLogic(mainGood: goodInfo['good'], mainGoodInventory: goodInfo['inventory']);
+    Good good = goodDetailLogic.mainGood;
+    Inventory inventory = goodDetailLogic.mainGoodInventory;
     Future<List<BomAndMaterial>> bomsFuture = goodDetailLogic.getBomsByGoodId(good.id);
 
     await showDialog(
@@ -112,10 +112,12 @@ class _GoodsManageState extends State<GoodsManage> {
               children: [
                 Text('庫存：'),
                 NumberInputWithIncrementDecrement(
+                  focusNode: goodDetailLogic.inventoryQuantityFocusNode,
                   initialNumber: inventory.quantity,
                   minNumber: 0,
                   width: 100,
                   height: 50,
+                  controller: goodDetailLogic.inventoryQuantityController,
                   onEditingComplete: (number) {
                     goodDetailLogic.makeInventory(number);
                   },
@@ -154,6 +156,7 @@ class _GoodsManageState extends State<GoodsManage> {
                         initialNumber: manufactureQuantity,
                         minNumber: 0,
                         width: 100,
+                        controller: goodDetailLogic.manufactureQuantityController,
                         onChanged: (number) => goodDetailLogic.manufactureQuantityNotifier.value = number,
                       );
                     }),

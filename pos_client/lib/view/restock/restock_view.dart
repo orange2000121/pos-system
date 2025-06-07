@@ -181,56 +181,6 @@ class _RestockViewState extends State<RestockView> {
               ),
             ],
           ),
-          // Row(
-          //   children: [
-          //     const Expanded(flex: 5, child: SizedBox()),
-          //     Expanded(
-          //       flex: 2,
-          //       child: ValueListenableBuilder(
-          //           valueListenable: restockItemsNotifier,
-          //           builder: (context, restockItems, child) {
-          //             return Text(
-          //               '${restockItemsNotifier.value.fold(0.0, (previousValue, element) {
-          //                 return previousValue + element.amount;
-          //               })}',
-          //               textAlign: TextAlign.center,
-          //             );
-          //           }),
-          //     ),
-          //     Expanded(
-          //       flex: 4,
-          //       child: TextFormField(
-          //         textAlign: TextAlign.start,
-          //         controller: restockOrderNoteController,
-          //       ),
-          //     ),
-          //     Expanded(
-          //       flex: 1,
-          //       child: IconButton(
-          //         onPressed: () async {
-          //           RestockOrderProvider restockOrderProvider = RestockOrderProvider();
-          //           int orderId = await restockOrderProvider.insert(RestockOrder(
-          //             vendorId: 1,
-          //             date: DateTime.now(),
-          //             total: restockItemsNotifier.value.fold(0.0, (previousValue, element) {
-          //               return previousValue + element.amount;
-          //             }),
-          //             note: restockOrderNoteController.text,
-          //           ));
-          //           RestockProvider restockProvider = RestockProvider();
-          //           for (var restock in restockItemsNotifier.value) {
-          //             restock.restockOrderId = orderId;
-          //             restock.restockDate = DateTime.now();
-          //             await restockProvider.insert(restock);
-          //           }
-          //           restockItemsNotifier.value = [];
-          //           restockOrderNoteController.text = '';
-          //         },
-          //         icon: const Icon(Icons.save),
-          //       ),
-          //     ),
-          //   ],
-          // )
         ],
       ),
     );
@@ -395,11 +345,10 @@ class _RestockViewState extends State<RestockView> {
                         flex: 2,
                         child: NumberInputWithIncrementDecrement(
                           key: ValueKey(restockItems[index]),
-                          initialNumber: restockItems[index].quantity.toDouble(),
+                          initialNumber: restockItems[index].quantity,
                           onChanged: (number) {
                             restockItemsNotifier.value[index].quantity = number;
-                            // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-                            restockItemsNotifier.notifyListeners();
+                            restockItemsNotifier.value = List.from(restockItemsNotifier.value);
                           },
                           // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
                           onEditingComplete: (number) => restockItemsNotifier.notifyListeners(),
@@ -408,16 +357,16 @@ class _RestockViewState extends State<RestockView> {
                       //price
                       Expanded(
                         flex: 2,
-                        child: TextFormField(
+                        child: NumberInputWithIncrementDecrement(
                           key: ValueKey(restockItems[index]),
-                          initialValue: restockItems[index].price.toString(),
+                          initialNumber: restockItems[index].price,
                           onChanged: (value) {
-                            restockItemsNotifier.value[index].price = double.parse(value);
+                            restockItemsNotifier.value[index].price = value;
                             // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
                             restockItemsNotifier.notifyListeners();
                           },
                           // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-                          onEditingComplete: () => restockItemsNotifier.notifyListeners(),
+                          onEditingComplete: (number) => restockItemsNotifier.notifyListeners(),
                         ),
                       ),
                       //amount

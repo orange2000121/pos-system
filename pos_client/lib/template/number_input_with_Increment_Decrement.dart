@@ -10,6 +10,8 @@ class NumberInputWithIncrementDecrement extends StatefulWidget {
   final double maxNumber; // 最大值
   final double width;
   final double height;
+  final TextEditingController? controller;
+  final FocusNode? focusNode;
 
   ///有上下箭頭的數字輸入框
   const NumberInputWithIncrementDecrement({
@@ -21,6 +23,8 @@ class NumberInputWithIncrementDecrement extends StatefulWidget {
     this.height = 60,
     this.minNumber = 1,
     this.maxNumber = 100,
+    this.controller,
+    this.focusNode,
   });
 
   @override
@@ -32,14 +36,17 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
   @override
   void initState() {
     super.initState();
+    if (widget.controller != null) {
+      quantity = widget.controller!;
+    }
     quantity.text = widget.initialNumber.toString();
   }
 
-  @override
-  void didUpdateWidget(NumberInputWithIncrementDecrement oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    quantity.text = widget.initialNumber.toString();
-  }
+  // @override
+  // void didUpdateWidget(NumberInputWithIncrementDecrement oldWidget) {
+  //   super.didUpdateWidget(oldWidget);
+  //   quantity.text = widget.initialNumber.toString();
+  // }
 
   double str2double(String str) {
     try {
@@ -59,6 +66,7 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
           Expanded(
             child: TextField(
               key: widget.key,
+              focusNode: widget.focusNode,
               textAlign: TextAlign.center,
               keyboardType: TextInputType.number,
               controller: quantity,

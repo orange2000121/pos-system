@@ -34,13 +34,19 @@ class GoodManageLogic {
 
 class GoodDetailLogic {
   final Good mainGood;
-  GoodDetailLogic({required this.mainGood});
+  final Inventory mainGoodInventory;
+  GoodDetailLogic({required this.mainGoodInventory, required this.mainGood}) {
+    listeners();
+  }
 
   BomProvider bomProvider = BomProvider();
   GoodProvider goodProvider = GoodProvider();
   InventoryProvider inventoryProvider = InventoryProvider();
   ValueNotifier<List<BomAndMaterial>> bomAndMaterialsNotifier = ValueNotifier([]);
   ValueNotifier<double> manufactureQuantityNotifier = ValueNotifier(0);
+  TextEditingController manufactureQuantityController = TextEditingController();
+  TextEditingController inventoryQuantityController = TextEditingController();
+  FocusNode inventoryQuantityFocusNode = FocusNode();
 
   List<Good> getAvailableMaterials({
     required List<Good> allGoods,
@@ -107,12 +113,25 @@ class GoodDetailLogic {
     inventoryProvider.update(inventoryOfProduct, mode: Inventory.COMPUTE_MODE);
     //製作數量歸0
     manufactureQuantityNotifier.value = 0;
+    manufactureQuantityController.text = '0';
+    inventoryQuantityController.text = inventoryOfProduct.quantity.toString();
   }
 
   void makeInventory(double quantity) async {
     Inventory productInventory = await safetyGetInventory(mainGood.id);
     productInventory.quantity = quantity;
     await inventoryProvider.update(productInventory, mode: Inventory.MANUAL_MODE);
+  }
+
+  void listeners() {
+    inventoryQuantityFocusNode.addListener(() async {
+      if (!inventoryQuantityFocusNode.hasFocus) {
+        Inventory productInventory = await safetyGetInventory(mainGood.id);
+        double quantity = productInventory.quantity;
+        inventoryQuantityController.text = quantity.toString();
+        print('Inventory updated: $quantity');
+      }
+    });
   }
 }
 
