@@ -73,11 +73,12 @@ class _CashierState extends State<Cashier> {
       throw Exception('editShopItems is null');
     }
     if (widget.isEditMode) {
-      cashierLogic.shopItemsNotifier.value = widget.editShopItems!.shopItems;
+      cashierLogic.shopItemsNotifier.value = widget.editShopItems!.shopItems.map((item) => item.copyWith()).toList();
       customerProvider.getItem(widget.editShopItems!.customerId).then((value) {
         customerValueNotifier.value = value;
       });
-      receiptDate = widget.editShopItems!.createAt;
+      receiptDate = DateTime(
+          widget.editShopItems!.createAt.year, widget.editShopItems!.createAt.month, widget.editShopItems!.createAt.day, widget.editShopItems!.createAt.hour, widget.editShopItems!.createAt.minute);
     } else {
       customerProvider.getAll().then((value) {
         if (value.isNotEmpty) {
@@ -497,7 +498,6 @@ class _CashierState extends State<Cashier> {
                   // 存入資料庫
                   cashierLogic.settleAccount(isSettle, createAt: receiptDate);
                   //? receivedCashNotifier.value = '';
-                  //todo 減少庫存
                 } else if (widget.isEditMode && widget.editShopItems != null) {
                   int? isSettle; // -1: 取消, 其他: 客戶ID
                   if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
@@ -510,9 +510,10 @@ class _CashierState extends State<Cashier> {
                     return;
                   }
                   await cashierLogic.editOrder(
-                    widget.editShopItems!.orderId,
-                    isSettle,
-                    receiptDate,
+                    orderId: widget.editShopItems!.orderId,
+                    originShopItems: widget.editShopItems!.shopItems,
+                    customerId: isSettle,
+                    createAt: receiptDate,
                   );
                   if (!mounted) return;
                   Navigator.pop(context);
