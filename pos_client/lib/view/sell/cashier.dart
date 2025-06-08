@@ -448,7 +448,7 @@ class _CashierState extends State<Cashier> {
 
   /// 顯示收銀員畫面左側的結帳區域。
   Widget settleAccount() {
-    ValueNotifier<String> receivedCashNotifier = ValueNotifier('');
+    // ValueNotifier<String> receivedCashNotifier = ValueNotifier('');
     double h = MediaQuery.of(context).size.height;
     return Column(
       children: [
@@ -489,14 +489,15 @@ class _CashierState extends State<Cashier> {
                     isSettle = await showDialog(context: context, builder: (context) => receiptOption());
                     if (isSettle == -1) {
                       cashierLogic.clear();
-                      receivedCashNotifier.value = '';
+                      // receivedCashNotifier.value = '';
                       return;
                     }
                     if (isSettle == null) return;
                   }
                   // 存入資料庫
                   cashierLogic.settleAccount(isSettle, createAt: receiptDate);
-                  receivedCashNotifier.value = '';
+                  //? receivedCashNotifier.value = '';
+                  //todo 減少庫存
                 } else if (widget.isEditMode && widget.editShopItems != null) {
                   int? isSettle; // -1: 取消, 其他: 客戶ID
                   if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
@@ -515,6 +516,7 @@ class _CashierState extends State<Cashier> {
                   );
                   if (!mounted) return;
                   Navigator.pop(context);
+                  //todo 修改庫存
                 }
               },
             ),

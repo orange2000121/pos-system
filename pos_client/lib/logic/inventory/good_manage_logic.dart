@@ -129,7 +129,6 @@ class GoodDetailLogic {
         Inventory productInventory = await safetyGetInventory(mainGood.id);
         double quantity = productInventory.quantity;
         inventoryQuantityController.text = quantity.toString();
-        print('Inventory updated: $quantity');
       }
     });
   }

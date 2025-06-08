@@ -2,12 +2,14 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:pos/store/model/good/inventory.dart';
 import 'package:pos/store/model/sell/order.dart';
 import 'package:pos/store/model/sell/sell.dart';
 
 class CashierLogic {
   SellProvider sellProvider = SellProvider();
   OrderProvider orderProvider = OrderProvider();
+  InventoryProvider inventoryProvider = InventoryProvider();
   ValueNotifier<List<ShopItem>> shopItemsNotifier = ValueNotifier<List<ShopItem>>([]);
   ValueNotifier<double> totalPriceNotifier = ValueNotifier<double>(0);
 
@@ -46,14 +48,25 @@ class CashierLogic {
       OrderItem(total, customerId: customerId, createAt: createAt),
     );
     for (var i = 0; i < shopItemsNotifier.value.length; i++) {
+      ShopItem shopItemTemp = shopItemsNotifier.value[i];
+      //將每一個商品加入到銷售記錄中
       SellItem item = SellItem(
         orderId,
-        shopItemsNotifier.value[i].name,
-        shopItemsNotifier.value[i].price,
-        shopItemsNotifier.value[i].quantity,
+        shopItemTemp.name,
+        shopItemTemp.price,
+        shopItemTemp.quantity,
         createAt: createAt,
       );
       sellProvider.insert(item);
+      //更新庫存
+      Inventory? inventory = await inventoryProvider.getInventoryByGoodId(shopItemTemp.id);
+      if (inventory != null) {
+        inventory.quantity -= shopItemTemp.quantity;
+        await inventoryProvider.update(inventory, mode: Inventory.COMPUTE_MODE);
+      } else {
+        //如果庫存不存在，則新增庫存
+        inventoryProvider.insert(Inventory(goodId: shopItemTemp.id, quantity: -shopItemTemp.quantity.toDouble(), recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
+      }
     }
     shopItemsNotifier.value = [];
   }
