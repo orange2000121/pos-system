@@ -51,10 +51,11 @@ class CashierLogic {
       ShopItem shopItemTemp = shopItemsNotifier.value[i];
       //將每一個商品加入到銷售記錄中
       SellItem item = SellItem(
-        orderId,
-        shopItemTemp.name,
-        shopItemTemp.price,
-        shopItemTemp.quantity,
+        goodId: shopItemTemp.id,
+        orderId: orderId,
+        name: shopItemTemp.name,
+        price: shopItemTemp.price,
+        quantity: shopItemTemp.quantity,
         createAt: createAt,
       );
       sellProvider.insert(item);
@@ -65,7 +66,7 @@ class CashierLogic {
         await inventoryProvider.update(inventory, mode: Inventory.COMPUTE_MODE);
       } else {
         //如果庫存不存在，則新增庫存
-        inventoryProvider.insert(Inventory(goodId: shopItemTemp.id, quantity: -shopItemTemp.quantity.toDouble(), recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
+        await inventoryProvider.insert(Inventory(goodId: shopItemTemp.id, quantity: -shopItemTemp.quantity.toDouble(), recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
       }
     }
     shopItemsNotifier.value = [];
@@ -86,13 +87,14 @@ class CashierLogic {
     await sellProvider.deleteByOrderId(orderId);
     for (var i = 0; i < shopItemsNotifier.value.length; i++) {
       SellItem item = SellItem(
-        orderId,
-        shopItemsNotifier.value[i].name,
-        shopItemsNotifier.value[i].price,
-        shopItemsNotifier.value[i].quantity,
+        goodId: shopItemsNotifier.value[i].id,
+        orderId: orderId,
+        name: shopItemsNotifier.value[i].name,
+        price: shopItemsNotifier.value[i].price,
+        quantity: shopItemsNotifier.value[i].quantity,
         createAt: createAt,
       );
-      sellProvider.insert(item);
+      await sellProvider.insert(item);
     }
     /* ---------------------------------- 更新庫存 ---------------------------------- */
     //合併同id商品數量
@@ -100,52 +102,49 @@ class CashierLogic {
     Map<int, double> shopItemsMerge = {};
     for (var item in originShopItems) {
       if (originItemsMerge.containsKey(item.id)) {
-        originItemsMerge[item.id] = originItemsMerge[item.id] ?? 0.0 + item.quantity;
+        originItemsMerge[item.id] = (originItemsMerge[item.id] ?? 0.0) + item.quantity;
       } else {
         originItemsMerge[item.id] = item.quantity.toDouble();
       }
     }
     for (var item in shopItemsNotifier.value) {
       if (shopItemsMerge.containsKey(item.id)) {
-        shopItemsMerge[item.id] = shopItemsMerge[item.id] ?? 0.0 + item.quantity;
+        shopItemsMerge[item.id] = (shopItemsMerge[item.id] ?? 0.0) + item.quantity;
       } else {
         shopItemsMerge[item.id] = item.quantity.toDouble();
       }
     }
-    print("原有商品庫存: ${originItemsMerge.length}");
-    print("新商品庫存: ${shopItemsMerge.length}");
     //比較原有商品與新商品的庫存變化
-    shopItemsMerge.forEach((key, value) async {
+    for (var item in shopItemsMerge.entries) {
+      int key = item.key;
+      double value = item.value;
       if (originItemsMerge.containsKey(key)) {
-        print('origin quntity: ${originItemsMerge[key]}, new quantity: ${value}');
         double changeQuantity = value - originItemsMerge[key]!;
         if (changeQuantity != 0) {
           Inventory? inventory = await inventoryProvider.getInventoryByGoodId(key);
-          print('inventory: $inventory');
           if (inventory != null) {
-            inventory.quantity -= changeQuantity;
-            inventoryProvider.update(inventory, mode: Inventory.COMPUTE_MODE);
+            inventory.quantity = inventory.quantity - changeQuantity;
+            await inventoryProvider.update(inventory, mode: Inventory.COMPUTE_MODE);
           } else {
             inventoryProvider.insert(Inventory(goodId: key, quantity: changeQuantity, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
           }
         }
         originItemsMerge.remove(key);
-        print("商品 $key 有原始資料庫存變化: ${changeQuantity}");
       } else {
         //如果新商品中有原有商品沒有的商品，則新增庫存
         Inventory? inventory = await inventoryProvider.getInventoryByGoodId(key);
         if (inventory != null) {
           inventory.quantity -= value;
-          inventoryProvider.update(inventory, mode: Inventory.COMPUTE_MODE);
+          await inventoryProvider.update(inventory, mode: Inventory.COMPUTE_MODE);
         } else {
-          inventoryProvider.insert(Inventory(goodId: key, quantity: value, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
+          await inventoryProvider.insert(Inventory(goodId: key, quantity: value, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
         }
-        print("商品 $key 庫存變化: ${value}");
       }
-      print('剩下的原有商品庫存: ${originItemsMerge.length}');
-    });
+    }
     //將剩下的原有商品加回庫存
-    originItemsMerge.forEach((key, value) async {
+    for (var item in originItemsMerge.entries) {
+      int key = item.key;
+      double value = item.value;
       Inventory? inventory = await inventoryProvider.getInventoryByGoodId(key);
       if (inventory != null) {
         inventory.quantity += value;
@@ -153,8 +152,7 @@ class CashierLogic {
       } else {
         inventoryProvider.insert(Inventory(goodId: key, quantity: value, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
       }
-      print("商品 $key 庫存變化: ${value}");
-    });
+    }
 
     shopItemsNotifier.value = [];
   }

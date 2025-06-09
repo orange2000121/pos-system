@@ -5,14 +5,16 @@ import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SellItem {
-  late int? id;
-  late int orderId;
-  late String name;
-  late double price;
-  late DateTime? createAt;
+  int? id;
+  int goodId;
+  int orderId;
+  String name;
+  double price;
+  DateTime? createAt;
   int quantity = 1;
   Map<String, dynamic> toMap() {
     return {
+      'goodId': goodId,
       'orderId': orderId,
       'name': name,
       'price': price,
@@ -23,10 +25,11 @@ class SellItem {
 
   static SellItem fromMapStatic(Map<String, dynamic> map) {
     SellItem item = SellItem(
-      map['orderId'],
-      map['name'],
-      map['price'],
-      map['quantity'],
+      goodId: map['goodId'],
+      orderId: map['orderId'],
+      name: map['name'],
+      price: map['price'],
+      quantity: map['quantity'],
       id: map['id'],
       createAt: DateTime.parse(map['createAt']),
     );
@@ -43,7 +46,15 @@ class SellItem {
     return this;
   }
 
-  SellItem(this.orderId, this.name, this.price, this.quantity, {this.id, this.createAt});
+  SellItem({
+    this.id,
+    required this.goodId,
+    required this.orderId,
+    required this.name,
+    required this.price,
+    required this.quantity,
+    this.createAt,
+  });
 }
 
 class SellProvider extends DatabaseHandler {
@@ -54,6 +65,7 @@ class SellProvider extends DatabaseHandler {
     await db!.execute('''
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
+            goodId integer not null,
             orderId integer not null,
             name text not null,
             price real not null,
