@@ -86,4 +86,49 @@ class InventoryProvider extends DatabaseHandler {
     inventory.recordTime = DateTime.now();
     return await db!.update(tableName, inventory.toMap(), where: 'good_id = ?', whereArgs: [inventory.goodId]);
   }
+
+  ///比較原有商品與新商品的庫存變化，並且更新庫存<br>
+  ///@param originalGoods 原有商品的庫存，key為貨物ID，value為原有訂單的數量 <br>
+  ///@param newGoods 新商品的庫存，key為貨物ID，value為修改後訂的數量
+  void compareNewOldOrder({required Map<int, double> originalGoods, required Map<int, double> newGoods}) async {
+    //比較原有商品與新商品的庫存變化
+    for (var item in newGoods.entries) {
+      int key = item.key;
+      double value = item.value;
+      if (originalGoods.containsKey(key)) {
+        double changeQuantity = value - originalGoods[key]!;
+        if (changeQuantity != 0) {
+          Inventory? inventory = await getInventoryByGoodId(key);
+          if (inventory != null) {
+            inventory.quantity = inventory.quantity - changeQuantity;
+            await update(inventory, mode: Inventory.COMPUTE_MODE);
+          } else {
+            insert(Inventory(goodId: key, quantity: changeQuantity, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
+          }
+        }
+        originalGoods.remove(key);
+      } else {
+        //如果新商品中有原有商品沒有的商品，則新增庫存
+        Inventory? inventory = await getInventoryByGoodId(key);
+        if (inventory != null) {
+          inventory.quantity -= value;
+          await update(inventory, mode: Inventory.COMPUTE_MODE);
+        } else {
+          await insert(Inventory(goodId: key, quantity: value, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
+        }
+      }
+    }
+    //將剩下的原有商品加回庫存
+    for (var item in originalGoods.entries) {
+      int key = item.key;
+      double value = item.value;
+      Inventory? inventory = await getInventoryByGoodId(key);
+      if (inventory != null) {
+        inventory.quantity += value;
+        update(inventory, mode: Inventory.COMPUTE_MODE);
+      } else {
+        insert(Inventory(goodId: key, quantity: value, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
+      }
+    }
+  }
 }

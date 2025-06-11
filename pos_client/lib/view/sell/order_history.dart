@@ -204,7 +204,7 @@ class _OrderHistoryState extends State<OrderHistory> {
             ),
             ElevatedButton(
               onPressed: () {
-                orderHistoryLogic.deleteOrder(order.id!);
+                orderHistoryLogic.deleteOrder(order.id!, sellItems: sellItems);
                 setState(() {
                   Navigator.of(context).pop();
                 });

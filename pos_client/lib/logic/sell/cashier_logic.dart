@@ -114,45 +114,10 @@ class CashierLogic {
         shopItemsMerge[item.id] = item.quantity.toDouble();
       }
     }
-    //比較原有商品與新商品的庫存變化
-    for (var item in shopItemsMerge.entries) {
-      int key = item.key;
-      double value = item.value;
-      if (originItemsMerge.containsKey(key)) {
-        double changeQuantity = value - originItemsMerge[key]!;
-        if (changeQuantity != 0) {
-          Inventory? inventory = await inventoryProvider.getInventoryByGoodId(key);
-          if (inventory != null) {
-            inventory.quantity = inventory.quantity - changeQuantity;
-            await inventoryProvider.update(inventory, mode: Inventory.COMPUTE_MODE);
-          } else {
-            inventoryProvider.insert(Inventory(goodId: key, quantity: changeQuantity, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
-          }
-        }
-        originItemsMerge.remove(key);
-      } else {
-        //如果新商品中有原有商品沒有的商品，則新增庫存
-        Inventory? inventory = await inventoryProvider.getInventoryByGoodId(key);
-        if (inventory != null) {
-          inventory.quantity -= value;
-          await inventoryProvider.update(inventory, mode: Inventory.COMPUTE_MODE);
-        } else {
-          await inventoryProvider.insert(Inventory(goodId: key, quantity: value, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
-        }
-      }
-    }
-    //將剩下的原有商品加回庫存
-    for (var item in originItemsMerge.entries) {
-      int key = item.key;
-      double value = item.value;
-      Inventory? inventory = await inventoryProvider.getInventoryByGoodId(key);
-      if (inventory != null) {
-        inventory.quantity += value;
-        inventoryProvider.update(inventory, mode: Inventory.COMPUTE_MODE);
-      } else {
-        inventoryProvider.insert(Inventory(goodId: key, quantity: value, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
-      }
-    }
+    inventoryProvider.compareNewOldOrder(
+      originalGoods: originItemsMerge,
+      newGoods: shopItemsMerge,
+    );
 
     shopItemsNotifier.value = [];
   }
