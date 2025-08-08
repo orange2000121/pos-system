@@ -15,7 +15,6 @@ class PurchasedLogic {
     );
     int goodId = await goodProvider.insert(good);
     PurchasedItem purchasedItem = PurchasedItem(
-      id: 0,
       goodId: goodId,
       vendorId: purchasedItemAndGood.vendorId,
       amount: 0,
@@ -31,7 +30,6 @@ class PurchasedLogic {
       image: purchasedItemAndGood.image,
     );
     PurchasedItem purchasedItem = PurchasedItem(
-      id: purchasedItemAndGood.purchasedItemId,
       goodId: purchasedItemAndGood.goodId,
       vendorId: purchasedItemAndGood.vendorId,
       amount: 0,
@@ -53,7 +51,6 @@ class PurchasedLogic {
 }
 
 class PurchasedItemAndGood {
-  final int purchasedItemId;
   final int goodId;
   final int vendorId;
   final String name;
@@ -61,7 +58,6 @@ class PurchasedItemAndGood {
   Uint8List? image;
 
   PurchasedItemAndGood({
-    required this.purchasedItemId,
     required this.goodId,
     required this.vendorId,
     required this.name,
@@ -74,7 +70,6 @@ class PurchasedItemAndGood {
     Good good,
   ) {
     return PurchasedItemAndGood(
-      purchasedItemId: purchasedItem.id!,
       goodId: purchasedItem.goodId,
       vendorId: purchasedItem.vendorId,
       name: good.name,
@@ -85,7 +80,6 @@ class PurchasedItemAndGood {
 
   PurchasedItem toPurchasedItem() {
     return PurchasedItem(
-      id: purchasedItemId,
       goodId: goodId,
       vendorId: vendorId,
       amount: 0,

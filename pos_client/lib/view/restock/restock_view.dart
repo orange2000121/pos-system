@@ -39,7 +39,7 @@ class _RestockViewState extends State<RestockView> {
           future: getAllPurchasedAndGoods(),
           builder: (context, purchasedItemSnapshot) {
             if (purchasedItemSnapshot.hasData) {
-              Map<int, PurchasedItemAndGood> purchasedItemMap = {for (var e in purchasedItemSnapshot.data!) e.purchasedItemId: e};
+              Map<int, PurchasedItemAndGood> purchasedItemMap = {for (var e in purchasedItemSnapshot.data!) e.goodId: e};
               restockViewLogic.purchasedItemsNotifier.value = purchasedItemSnapshot.data!;
               return Row(
                 children: [
@@ -145,6 +145,7 @@ class _RestockViewState extends State<RestockView> {
                   children: [
                     const SizedBox(height: 20),
                     IconButton(
+                      //todo 進貨時會更新錯誤的庫存
                       onPressed: () => restockViewLogic.saveRestockOrder(),
                       icon: const Icon(Icons.save),
                     ),
@@ -187,7 +188,7 @@ class _RestockViewState extends State<RestockView> {
                 await tagPurchasedItemRelationships.then((value) {
                   for (var tagPurchasedItemRelationship in value) {
                     if (tagPurchasedItemRelationship.tagId == purchasedItemsTag.id) {
-                      purchasedItems.add(purchasedItemSnapshot[tagPurchasedItemRelationship.purchasedItemId]!);
+                      purchasedItems.add(purchasedItemSnapshot[tagPurchasedItemRelationship.goodId]!);
                     }
                   }
                 });
@@ -222,7 +223,7 @@ class _RestockViewState extends State<RestockView> {
                 onTap: () async {
                   restockViewLogic.restockItemsNotifier.value.add(
                     Restock(
-                      purchasedItemId: purchasedItem.purchasedItemId,
+                      goodId: purchasedItem.goodId,
                       quantity: 1,
                       price: 0,
                       amount: 0,
@@ -309,9 +310,9 @@ class _RestockViewState extends State<RestockView> {
                   child: Row(
                     children: [
                       //name
-                      Expanded(flex: 2, child: Text(purchasedItemMap[restockItems[index].purchasedItemId]!.name)),
+                      Expanded(flex: 2, child: Text(purchasedItemMap[restockItems[index].goodId]!.name)),
                       //unit
-                      Expanded(flex: 1, child: Text(purchasedItemMap[restockItems[index].purchasedItemId]!.unit)),
+                      Expanded(flex: 1, child: Text(purchasedItemMap[restockItems[index].goodId]!.unit)),
                       //quantity
                       Expanded(
                         flex: 2,
@@ -418,11 +419,18 @@ class RestockViewLogic {
     for (Restock restock in restockItemsNotifier.value) {
       restock.restockOrderId = orderId;
       restock.restockDate = DateTime.now();
-      newGoods[restock.purchasedItemId] = restock.quantity; //todo確認是否是goodId
+      newGoods[restock.goodId] = restock.quantity; //todo確認是否是goodId
       await restockProvider.insert(restock);
+      //更新庫存
+      Inventory? inventory = await inventoryProvider.getInventoryByGoodId(restock.goodId);
+      if (inventory != null) {
+        inventory.quantity += restock.quantity;
+        await inventoryProvider.update(inventory, mode: Inventory.COMPUTE_MODE);
+      } else {
+        //如果庫存不存在，則新增庫存
+        await inventoryProvider.insert(Inventory(goodId: restock.goodId, quantity: restock.quantity, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
+      }
     }
-    // 更新庫存
-    inventoryProvider.updateWithNewOldOrder(originalGoods: {}, newGoods: newGoods);
     // 清空UI訂貨清單資訊
     restockItemsNotifier.value = [];
     restockOrderNoteController.text = '';

@@ -165,7 +165,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                 FutureBuilder(future: () async {
                   //標籤取得
                   List<PurchasedItemsTag> tags = [];
-                  var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItemAndGood!.purchasedItemId);
+                  var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByGoodId(purchasedItemAndGood!.goodId);
                   for (var relate in tagPurchasedRelates) {
                     var tag = await purchasedItemsTagProvider.getItem(relate.tagId);
                     tags.add(tag);
@@ -178,7 +178,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                         name: tag.name,
                         color: Color(tag.color),
                         onDeleted: () async {
-                          var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItemAndGood!.purchasedItemId);
+                          var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByGoodId(purchasedItemAndGood!.goodId);
                           for (var relate in tagPurchasedRelates) {
                             if (relate.tagId == tag.id) {
                               tagPurchasedItemRelationshipProvider.delete(relate.id!);
@@ -210,7 +210,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
               TextButton(
                 onPressed: () {
                   setState(() {
-                    purchasedItemProvider.delete(purchasedItemAndGood.purchasedItemId);
+                    purchasedItemProvider.delete(purchasedItemAndGood.goodId);
                     Navigator.of(context).pop();
                   });
                 },
@@ -224,7 +224,6 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                         ? () {
                             Navigator.of(context).pop(
                               PurchasedItemAndGood(
-                                purchasedItemId: -1,
                                 goodId: -1,
                                 vendorId: vendorIdNotifier.value!,
                                 name: name,
@@ -275,7 +274,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                               purchasedItemsTagProvider.insert(purchasedItemsTag).then((tagId) async {
                                 tagPurchasedItemRelationshipProvider
                                     .insert(
-                                      TagPurchasedItemRelationship(tagId: tagId, purchasedItemId: purchasedItem.id!), // 新增貨物和標籤的關係
+                                      TagPurchasedItemRelationship(tagId: tagId, goodId: purchasedItem.goodId), // 新增貨物和標籤的關係
                                     )
                                     .then(
                                       (relationshipId) => setState(() {
@@ -286,7 +285,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                                           name: purchasedItemsTag.name,
                                           color: Color(purchasedItemsTag.color),
                                           onDeleted: () async {
-                                            var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItem.id!); //找出所有和這個貨物有關的標籤
+                                            var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByGoodId(purchasedItem.goodId); //找出所有和這個貨物有關的標籤
                                             for (var relate in tagPurchasedRelates) {
                                               if (relate.tagId == relationshipId) {
                                                 //在這些標籤中有和要刪掉的標籤一樣的id，將其刪除
@@ -329,7 +328,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                                   showDeleteIcon: false,
                                   onTap: () {
                                     tagPurchasedItemRelationshipProvider.insert(
-                                      TagPurchasedItemRelationship(tagId: tag.id!, purchasedItemId: purchasedItem.id!),
+                                      TagPurchasedItemRelationship(tagId: tag.id!, goodId: purchasedItem.goodId),
                                     );
                                     //點擊標籤時，將標籤加入到顯示的標籤列表
                                     tagNotifier.value = TagsGridViewTag(
@@ -338,7 +337,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                                       color: Color(tag.color),
                                       onDeleted: () async {
                                         //刪除標籤時，將標籤從顯示的標籤列表中刪除
-                                        var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItem.id!);
+                                        var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByGoodId(purchasedItem.goodId);
                                         for (var relate in tagPurchasedRelates) {
                                           if (relate.tagId == tag.id) {
                                             tagPurchasedItemRelationshipProvider.delete(relate.id!);

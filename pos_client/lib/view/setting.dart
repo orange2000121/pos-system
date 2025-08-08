@@ -5,6 +5,8 @@ import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:pos/tool/database_backup.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Setting extends StatefulWidget {
   const Setting({super.key});
@@ -134,7 +136,24 @@ class _SettingState extends State<Setting> {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('匯出成功')));
                       },
                       child: const Text('匯出'),
-                    ))
+                    )),
+                ListTile(
+                    title: const Text('打開資料庫位置'),
+                    trailing: ElevatedButton(
+                      onPressed: () async {
+                        String dbPath = await getDatabasesPath();
+                        Uri uri = Uri.file(dbPath.split('/database').first);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri);
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('打開成功')));
+                        } else {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('無法打開資料庫位置')));
+                        }
+                      },
+                      child: const Text('打開'),
+                    )),
               ],
             );
           },

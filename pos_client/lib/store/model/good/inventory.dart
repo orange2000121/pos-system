@@ -133,9 +133,9 @@ class InventoryProvider extends DatabaseHandler {
       Inventory? inventory = await getInventoryByGoodId(key);
       if (inventory != null) {
         inventory.quantity += value;
-        update(inventory, mode: Inventory.COMPUTE_MODE);
+        await update(inventory, mode: Inventory.COMPUTE_MODE);
       } else {
-        insert(Inventory(goodId: key, quantity: value, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
+        await insert(Inventory(goodId: key, quantity: value, recodeMode: Inventory.CREATE_MODE, recordTime: DateTime.now()));
       }
     }
   }
