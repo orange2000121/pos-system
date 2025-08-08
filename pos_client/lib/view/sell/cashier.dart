@@ -217,7 +217,7 @@ class _CashierState extends State<Cashier> {
             context: context,
             builder: (context) => AlertDialog(
                   title: Text(item.name),
-                  content: abacus(ShopItem(item.id, item.name, item.price, 1, item.unit)),
+                  content: abacus(ShopItem(item.goodId, item.name, item.price, 1, item.unit)),
                 ));
         if (tempItem == null) return;
         cashierLogic.addItem(tempItem.id, tempItem.name, tempItem.price, tempItem.quantity, tempItem.unit, note: tempItem.note);
@@ -449,7 +449,6 @@ class _CashierState extends State<Cashier> {
 
   /// 顯示收銀員畫面左側的結帳區域。
   Widget settleAccount() {
-    // ValueNotifier<String> receivedCashNotifier = ValueNotifier('');
     double h = MediaQuery.of(context).size.height;
     return Column(
       children: [
@@ -485,19 +484,17 @@ class _CashierState extends State<Cashier> {
               ),
               onPressed: () async {
                 if (!widget.isEditMode) {
-                  int? isSettle; // -1: 取消, 其他: 客戶ID
+                  int? customerIdTemp; // -1: 取消, 其他: 客戶ID
                   if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
-                    isSettle = await showDialog(context: context, builder: (context) => receiptOption());
-                    if (isSettle == -1) {
+                    customerIdTemp = await showDialog(context: context, builder: (context) => receiptOption());
+                    if (customerIdTemp == -1) {
                       cashierLogic.clear();
-                      // receivedCashNotifier.value = '';
                       return;
                     }
-                    if (isSettle == null) return;
+                    if (customerIdTemp == null) return;
                   }
                   // 存入資料庫
-                  cashierLogic.settleAccount(isSettle, createAt: receiptDate);
-                  //? receivedCashNotifier.value = '';
+                  cashierLogic.settleAccount(customerIdTemp, createAt: receiptDate);
                 } else if (widget.isEditMode && widget.editShopItems != null) {
                   int? isSettle; // -1: 取消, 其他: 客戶ID
                   if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
@@ -517,7 +514,6 @@ class _CashierState extends State<Cashier> {
                   );
                   if (!mounted) return;
                   Navigator.pop(context);
-                  //todo 修改庫存
                 }
               },
             ),

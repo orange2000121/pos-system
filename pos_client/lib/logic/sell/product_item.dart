@@ -4,7 +4,6 @@ import 'package:pos/store/model/good/good.dart';
 import 'package:pos/store/model/sell/product_providers/product.dart';
 
 class ProductItem {
-  int id;
   int goodId;
   int groupId;
   String name;
@@ -12,7 +11,6 @@ class ProductItem {
   String unit;
   Uint8List? image;
   ProductItem({
-    required this.id,
     required this.goodId,
     required this.groupId,
     required this.name,
@@ -31,7 +29,6 @@ class ProductItems {
       Good? good = await goodProvider.getItem(products[i].goodId);
       if (good != null) {
         items.add(ProductItem(
-          id: products[i].id!,
           goodId: products[i].goodId,
           groupId: products[i].groupId,
           name: good.name,

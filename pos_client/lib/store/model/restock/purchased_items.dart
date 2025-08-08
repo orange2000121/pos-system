@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 /// 進貨品項，包含品項編號、進貨廠商編號、品項名稱、品項單位
 
 class PurchasedItem {
+  //todo刪除id
   final int? id;
   final int goodId;
   final int vendorId;

@@ -90,7 +90,15 @@ class InventoryProvider extends DatabaseHandler {
   ///比較原有商品與新商品的庫存變化，並且更新庫存<br>
   ///@param originalGoods 原有商品的庫存，key為貨物ID，value為原有訂單的數量 <br>
   ///@param newGoods 新商品的庫存，key為貨物ID，value為修改後訂的數量
+  @Deprecated('use updateWithNewOldOrder instead')
   void compareNewOldOrder({required Map<int, double> originalGoods, required Map<int, double> newGoods}) async {
+    updateWithNewOldOrder(originalGoods: originalGoods, newGoods: newGoods);
+  }
+
+  ///比較原有商品與新商品的庫存變化，並且更新庫存<br>
+  ///@param originalGoods 原有商品的庫存，key為貨物ID，value為原有訂單的數量 <br>
+  ///@param newGoods 新商品的庫存，key為貨物ID，value為修改後訂的數量
+  void updateWithNewOldOrder({required Map<int, double> originalGoods, required Map<int, double> newGoods}) async {
     //比較原有商品與新商品的庫存變化
     for (var item in newGoods.entries) {
       int key = item.key;

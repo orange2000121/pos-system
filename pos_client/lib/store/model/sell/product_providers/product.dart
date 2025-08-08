@@ -6,7 +6,6 @@ import 'package:pos/store/model/good/good.dart';
 import 'package:sqflite/sqflite.dart';
 
 class Product {
-  int? id;
   int groupId;
   int goodId;
   double price;
@@ -27,7 +26,6 @@ class Product {
       groupId: map['group_id'] as int,
       goodId: map['good_id'] as int,
       price: map['price'] as double,
-      id: map['id'] as int?,
       amount: map['amount'] ?? 0,
     );
   }
@@ -36,7 +34,6 @@ class Product {
     required this.groupId,
     required this.goodId,
     required this.price,
-    this.id,
     this.amount = 0,
   }) {
     length = toMap().length;
@@ -52,7 +49,6 @@ class ProductProvider extends DatabaseHandler {
     db = await super.open();
     await db!.execute('''
           create table if not exists $tableName (
-            id integer primary key autoincrement,
             group_id integer not null,
             good_id integer not null,
             price real not null,
@@ -68,9 +64,9 @@ class ProductProvider extends DatabaseHandler {
     return id;
   }
 
-  Future<Product> getItem(int id) async {
+  Future<Product> getItem(int goodId) async {
     db ??= await open();
-    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'id = ?', whereArgs: [id]);
+    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'good_id = ?', whereArgs: [goodId]);
     return Product.fromMap(maps.first);
   }
 
@@ -106,12 +102,12 @@ class ProductProvider extends DatabaseHandler {
 
   Future update(Product item) async {
     db ??= await open();
-    await db!.update(tableName, item.toMap(), where: 'id = ?', whereArgs: [item.id]);
+    await db!.update(tableName, item.toMap(), where: 'good_id = ?', whereArgs: [item.goodId]);
   }
 
-  Future delete(int id) async {
+  Future delete(int goodId) async {
     db ??= await open();
-    await db!.delete(tableName, where: 'id = ?', whereArgs: [id]);
+    await db!.delete(tableName, where: 'good_id = ?', whereArgs: [goodId]);
   }
 
   Future deleteAll() async {

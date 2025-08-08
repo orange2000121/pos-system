@@ -42,7 +42,6 @@ class CreateProductLogic {
       image: productItem.image,
     );
     Product product = Product(
-      id: productItem.id,
       groupId: productItem.groupId,
       goodId: productItem.goodId,
       price: productItem.price,

@@ -12,6 +12,6 @@ class OrderHistoryLogic {
     for (SellItem item in sellItems) {
       originalGoods[item.goodId] = item.quantity.toDouble();
     }
-    inventoryProvider.compareNewOldOrder(originalGoods: originalGoods, newGoods: <int, double>{});
+    inventoryProvider.updateWithNewOldOrder(originalGoods: originalGoods, newGoods: <int, double>{});
   }
 }

@@ -322,7 +322,7 @@ class _CreateProductState extends State<CreateProduct> {
                 ItemEditButton(
                   name: '取消銷售',
                   onPressed: () {
-                    productProvider.delete(product.id);
+                    productProvider.delete(product.goodId);
                     setState(() {});
                     Navigator.pop(context);
                   },

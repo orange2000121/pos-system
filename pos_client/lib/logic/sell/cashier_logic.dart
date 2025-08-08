@@ -114,7 +114,7 @@ class CashierLogic {
         shopItemsMerge[item.id] = item.quantity.toDouble();
       }
     }
-    inventoryProvider.compareNewOldOrder(
+    inventoryProvider.updateWithNewOldOrder(
       originalGoods: originItemsMerge,
       newGoods: shopItemsMerge,
     );
