@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pos/store/model/database_handler.dart';
 import 'package:pos/tool/csv_utils.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DataBaseBackup {
   String dbName = 'pos.db';
   Future<bool> backup({String? exportPath}) async {
-    String dbPath = await getDatabasesPath();
-    Database db = await openDatabase('$dbPath$dbName');
+    Database db = await openDatabase(await DatabaseHandler.getDBFilePath());
     String? downloadPath = exportPath ?? (await getDownloadsDirectory())?.path;
     if (downloadPath == null) return false;
     downloadPath += '/backup.db';

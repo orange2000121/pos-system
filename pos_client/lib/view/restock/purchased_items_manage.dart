@@ -224,7 +224,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                         ? () {
                             Navigator.of(context).pop(
                               PurchasedItemAndGood(
-                                goodId: -1,
+                                goodId: purchasedItemAndGood?.goodId ?? -1,
                                 vendorId: vendorIdNotifier.value!,
                                 name: name,
                                 unit: unit,

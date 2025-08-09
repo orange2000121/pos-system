@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:path/path.dart' as p;
 import 'package:pos/store/model/restock/purchased_items.dart';
 import 'package:pos/store/model/sell/product_providers/product.dart';
 import 'package:sqflite/sqflite.dart';
@@ -7,12 +8,16 @@ import 'package:sqflite/sqflite.dart';
 abstract class DatabaseHandler {
   Database? db;
   DatabaseHandler();
-  Future<Database> open() async {
+  static Future<String> getDBFilePath() async {
     String dbName = 'pos.db';
     var databasesPath = await getDatabasesPath();
-    String path = databasesPath + dbName;
+    return p.join(databasesPath, dbName);
+  }
+
+  Future<Database> open() async {
+    if (db != null) return db!;
     db = await openDatabase(
-      path,
+      await getDBFilePath(),
       version: 3,
       onCreate: (db, version) => _onCreate(db, version),
       onUpgrade: (db, oldVersion, newVersion) => _onUpgrade(db, oldVersion, newVersion),
