@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 // ignore: unused_import
-import 'package:pos/store/model/sell/good_providers/goods.dart';
+import 'package:pos/store/model/sell/product_providers/product.dart';
 import 'package:pos/template/routes_page.dart';
 import 'package:pos/tool/upgrade_app.dart';
+import 'package:pos/view/inventory/goods_manage.dart';
 import 'package:pos/view/restock/restock_history.dart';
 import 'package:pos/view/restock/restock_view.dart';
 import 'package:pos/view/restock/vendor_manage.dart';
@@ -81,15 +82,12 @@ class _HomeState extends State<Home> {
       children: [
         RoutesPageCard(name: '收銀台', icon: const Icon(Icons.attach_money), page: const Cashier()),
         RoutesPageCard(
-          name: '商品',
-          icon: const Icon(Icons.add),
-          page: const CreateProduct(),
-        ),
-        RoutesPageCard(
-          name: '銷售紀錄',
-          icon: const Icon(Icons.history),
-          page: const OrderOverview(),
-        ),
+            icon: const Icon(Icons.shopping_cart),
+            name: '銷售管理',
+            page: RoutesPage(children: [
+              RoutesPageCard(name: '商品', icon: const Icon(Icons.add), page: const CreateProduct()),
+              RoutesPageCard(name: '銷售紀錄', icon: const Icon(Icons.history), page: const OrderOverview()),
+            ])),
         RoutesPageCard(
           name: '進貨管理',
           icon: const Icon(Icons.input),
@@ -99,6 +97,11 @@ class _HomeState extends State<Home> {
             RoutesPageCard(name: '廠商管理', icon: const Icon(Icons.factory), page: const VendorManage()),
             RoutesPageCard(name: '進貨歷史', icon: const Icon(Icons.history), page: const RestockHistory()),
           ]),
+        ),
+        RoutesPageCard(
+          name: '庫存',
+          page: GoodsManage(),
+          icon: const Icon(Icons.inventory),
         ),
         RoutesPageCard(
           name: '設定',

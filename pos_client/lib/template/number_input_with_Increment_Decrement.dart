@@ -1,9 +1,17 @@
+// ignore_for_file: file_names
+
 import 'package:flutter/material.dart';
 
 class NumberInputWithIncrementDecrement extends StatefulWidget {
   final Function(double number)? onChanged;
-  final Function? onEditingComplete;
+  final Function(double number)? onEditingComplete;
   final double initialNumber;
+  final double minNumber; // 最小值
+  final double maxNumber; // 最大值
+  final double width;
+  final double height;
+  final TextEditingController? controller;
+  final FocusNode? focusNode;
 
   ///有上下箭頭的數字輸入框
   const NumberInputWithIncrementDecrement({
@@ -11,6 +19,12 @@ class NumberInputWithIncrementDecrement extends StatefulWidget {
     this.initialNumber = 1,
     this.onChanged,
     this.onEditingComplete,
+    this.width = 60,
+    this.height = 60,
+    this.minNumber = 1,
+    this.maxNumber = 100,
+    this.controller,
+    this.focusNode,
   });
 
   @override
@@ -22,8 +36,17 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
   @override
   void initState() {
     super.initState();
+    if (widget.controller != null) {
+      quantity = widget.controller!;
+    }
     quantity.text = widget.initialNumber.toString();
   }
+
+  // @override
+  // void didUpdateWidget(NumberInputWithIncrementDecrement oldWidget) {
+  //   super.didUpdateWidget(oldWidget);
+  //   quantity.text = widget.initialNumber.toString();
+  // }
 
   double str2double(String str) {
     try {
@@ -35,79 +58,85 @@ class _NumberInputWithIncrementDecrementState extends State<NumberInputWithIncre
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 30,
-          height: 60,
-          // margin: const EdgeInsets.all(10),
-          child: TextField(
-            key: widget.key,
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            controller: quantity,
-            onTap: () => quantity.value = TextEditingValue.empty,
-            decoration: const InputDecoration(border: UnderlineInputBorder()),
-            onChanged: (value) {
-              if (widget.onChanged != null) {
-                widget.onChanged!(str2double(value));
-              }
-            },
-            onEditingComplete: () {
-              if (widget.onEditingComplete != null) {
-                widget.onEditingComplete!();
-              }
-            },
-          ),
-        ),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextButton(
-              style: TextButton.styleFrom(
-                minimumSize: Size.zero,
-                padding: const EdgeInsets.all(0),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    return SizedBox(
+      width: widget.width,
+      height: widget.height,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              key: widget.key,
+              focusNode: widget.focusNode,
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              controller: quantity,
+              onTap: () => quantity.value = TextEditingValue(
+                text: quantity.text,
+                selection: TextSelection(
+                  baseOffset: 0,
+                  extentOffset: quantity.text.length,
+                ),
               ),
-              onPressed: () {
-                quantity.text = (str2double(quantity.text) + 1).toString();
+              decoration: const InputDecoration(border: UnderlineInputBorder()),
+              onChanged: (value) {
                 if (widget.onChanged != null) {
-                  widget.onChanged!(str2double(quantity.text));
+                  widget.onChanged!(str2double(value));
                 }
-                // if (widget.onEditingComplete != null) {
-                //   widget.onEditingComplete!();
-                // }
               },
-              child: const Icon(
-                Icons.arrow_drop_up,
-                color: Colors.grey,
-              ),
+              onEditingComplete: () {
+                if (widget.onEditingComplete != null) {
+                  widget.onEditingComplete!(str2double(quantity.text));
+                }
+              },
             ),
-            TextButton(
-              style: TextButton.styleFrom(
-                minimumSize: Size.zero,
-                padding: const EdgeInsets.all(0),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.all(0),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: () {
+                  if (str2double(quantity.text) >= widget.maxNumber) {
+                    return;
+                  }
+                  quantity.text = (str2double(quantity.text) + 1).toString();
+                  if (widget.onChanged != null) {
+                    widget.onChanged!(str2double(quantity.text));
+                  }
+                },
+                child: const Icon(
+                  Icons.arrow_drop_up,
+                  color: Colors.grey,
+                ),
               ),
-              onPressed: () {
-                if (str2double(quantity.text) > 1) {
+              TextButton(
+                style: TextButton.styleFrom(
+                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.all(0),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: () {
+                  if (str2double(quantity.text) <= widget.minNumber) {
+                    return;
+                  }
                   quantity.text = (str2double(quantity.text) - 1).toString();
                   if (widget.onChanged != null) {
                     widget.onChanged!(str2double(quantity.text));
                   }
-                  // if (widget.onEditingComplete != null) {
-                  //   widget.onEditingComplete!();
-                  // }
-                }
-              },
-              child: const Icon(
-                Icons.arrow_drop_down,
-                color: Colors.grey,
+                },
+                child: const Icon(
+                  Icons.arrow_drop_down,
+                  color: Colors.grey,
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

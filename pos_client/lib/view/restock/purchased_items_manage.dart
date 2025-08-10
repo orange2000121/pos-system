@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:pos/logic/restock/purchased_logic.dart';
 import 'package:pos/store/model/restock/purchased_items.dart';
 import 'package:pos/store/model/restock/purchased_items_tag.dart';
 import 'package:pos/store/model/restock/tag_purchased_item_relationship.dart';
@@ -20,6 +21,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
   VendorProvider vendorProvider = VendorProvider();
   TagPurchasedItemRelationshipProvider tagPurchasedItemRelationshipProvider = TagPurchasedItemRelationshipProvider();
   PurchasedItemsTagProvider purchasedItemsTagProvider = PurchasedItemsTagProvider();
+  PurchasedLogic purchasedLogic = PurchasedLogic();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,8 +29,8 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
         title: const Text('貨物管理'),
       ),
       body: FutureBuilder(
-          future: purchasedItemProvider.queryAll(),
-          builder: (context, snapshot) {
+          future: getAllPurchasedItems(),
+          builder: (context, purchasedItemAndGoodSnapshot) {
             return GridView(
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 200,
@@ -37,17 +39,13 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                 Card(
                   child: SizedBox(
                     child: InkWell(
-                      onTap: () async {
-                        PurchasedItem? result = await showDialog(
-                          context: context,
-                          builder: (context) {
-                            return purchasedDetail(context);
-                          },
-                        );
-                        if (result != null && result.name != '') {
-                          purchasedItemProvider.insert(result);
-                          setState(() {});
-                        }
+                      onTap: () {
+                        showPurchasedDetail(context).then((result) async {
+                          if (result != null && result.name != '') {
+                            await purchasedLogic.addNewPurchasedItem(result);
+                            setState(() {});
+                          }
+                        });
                       },
                       child: const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -59,15 +57,15 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                     ),
                   ),
                 ),
-                if (snapshot.hasData)
-                  ...snapshot.data!.map((e) {
+                if (purchasedItemAndGoodSnapshot.hasData)
+                  ...purchasedItemAndGoodSnapshot.data!.map((e) {
                     return Card(
                       child: SizedBox(
                         child: InkWell(
                           onTap: () {
-                            showDialog(context: context, builder: (context) => purchasedDetail(context, purchasedItem: e)).then((value) {
+                            showPurchasedDetail(context, purchasedItemAndGood: e).then((value) async {
                               if (value != null) {
-                                purchasedItemProvider.update(e.id!, value);
+                                await purchasedLogic.updatePurchasedItemAndGood(value);
                                 setState(() {});
                               }
                             });
@@ -82,172 +80,165 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                         ),
                       ),
                     );
-                  }).toList(),
+                  }),
               ],
             );
           }),
     );
   }
 
-  AlertDialog purchasedDetail(BuildContext context, {PurchasedItem? purchasedItem}) {
-    ValueNotifier<int> vendorIdNotifier = ValueNotifier(0);
+  Future<List<PurchasedItemAndGood>> getAllPurchasedItems() async {
+    List<PurchasedItem> purchasedItems = await purchasedItemProvider.queryAll();
+    return await purchasedLogic.convertPurchasedItems2PurchasedItemAndGoods(purchasedItems);
+  }
+
+  Future<PurchasedItemAndGood?> showPurchasedDetail(BuildContext context, {PurchasedItemAndGood? purchasedItemAndGood}) async {
+    ValueNotifier<int?> vendorIdNotifier = ValueNotifier(null);
     ValueNotifier<TagsGridViewTag> tagNotifier = ValueNotifier(const TagsGridViewTag(id: 0, name: '', color: Color(-1)));
     List<TagsGridViewTag> tagGridViewTags = [];
     String name = '';
     String unit = '';
-    if (purchasedItem != null) {
-      vendorIdNotifier.value = purchasedItem.vendorId;
-      name = purchasedItem.name;
-      unit = purchasedItem.unit;
+    if (purchasedItemAndGood != null) {
+      vendorIdNotifier.value = purchasedItemAndGood.vendorId;
+      name = purchasedItemAndGood.name;
+      unit = purchasedItemAndGood.unit;
     }
-    return AlertDialog(
-      title: purchasedItem != null ? const Text('品項設定') : const Text('新增品項'),
-      content: SizedBox(
-        width: 300,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: purchasedItemAndGood != null ? const Text('品項設定') : const Text('新增品項'),
+          content: SizedBox(
+            width: 300,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('供應商：'),
-                FutureBuilder(
-                    future: vendorProvider.getAll(),
-                    initialData: [Vendor.initial()],
-                    builder: (context, snapshot) {
-                      // if (purchasedItem == null && snapshot.data!.isNotEmpty) {
-                      //   vendorIdNotifier.value = snapshot.data!.first.id!;
-                      //   print('vendor id: ${vendorIdNotifier.value}');
-                      // }
-                      return ValueListenableBuilder<int>(
-                          valueListenable: vendorIdNotifier,
-                          builder: (context, value, child) {
-                            return DropdownButton(
-                              value: vendorIdNotifier.value,
-                              onChanged: (value) {
-                                // setState(() {
-                                //   vendorIdNotifier.value = value!;
-                                // });
-                                vendorIdNotifier.value = value!;
-                                // vendorIdNotifier.notifyListeners();
-                              },
-                              items: [
-                                DropdownMenuItem<int>(
-                                  value: Vendor.initial().id,
-                                  child: const Text('請選擇供應商'),
-                                ),
-                                ...snapshot.data!.map((e) {
-                                  return DropdownMenuItem<int>(
-                                    value: e.id,
-                                    child: Text(e.name),
-                                  );
-                                }).toList(),
-                                if (snapshot.data!.isEmpty)
-                                  DropdownMenuItem<int>(
-                                    value: Vendor.initial().id,
-                                    child: const Text('無供應商'),
-                                  ),
-                                // DropdownMenuItem<int>(
-                                //   value: Vendor.initial().id,
-                                //   child: TextButton(
-                                //       onPressed: () {
-                                //         Navigator.push(context, MaterialPageRoute(builder: (context) => VendorDetail(vendor: Vendor.initial(), isCreate: true))).then((value) {
-                                //           if (value != null) {
-                                //             setState(() {});
-                                //           }
-                                //         });
-                                //       },
-                                //       child: Text('新增供應商')),
-                                // ),
-                              ],
-                            );
-                          });
-                    }),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    const Text('供應商：'),
+                    FutureBuilder(
+                        future: vendorProvider.getAll(),
+                        builder: (context, snapshot) {
+                          return ValueListenableBuilder<int?>(
+                              valueListenable: vendorIdNotifier,
+                              builder: (context, selectValue, child) {
+                                List<DropdownMenuItem<int>> items = [];
+                                if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                                  for (var vendor in snapshot.data!) {
+                                    items.add(DropdownMenuItem<int>(
+                                      value: vendor.id,
+                                      child: Text(vendor.name),
+                                    ));
+                                  }
+                                }
+                                return DropdownButton<int>(
+                                  value: selectValue,
+                                  hint: snapshot.hasData && snapshot.data!.isNotEmpty ? const Text('請選擇供應商') : const Text('無供應商'),
+                                  onChanged: (selectValue) {
+                                    vendorIdNotifier.value = selectValue!;
+                                  },
+                                  items: items,
+                                );
+                              });
+                        }),
+                  ],
+                ),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: '品項名稱',
+                  ),
+                  initialValue: name,
+                  onChanged: (value) {
+                    name = value;
+                  },
+                ),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: '單位',
+                  ),
+                  initialValue: unit,
+                  onChanged: (value) {
+                    unit = value;
+                  },
+                ),
+                FutureBuilder(future: () async {
+                  //標籤取得
+                  List<PurchasedItemsTag> tags = [];
+                  var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByGoodId(purchasedItemAndGood!.goodId);
+                  for (var relate in tagPurchasedRelates) {
+                    var tag = await purchasedItemsTagProvider.getItem(relate.tagId);
+                    tags.add(tag);
+                  }
+                  return tags;
+                }(), builder: (context, tagsSnapshot) {
+                  for (PurchasedItemsTag tag in tagsSnapshot.data ?? []) {
+                    tagGridViewTags.add(TagsGridViewTag(
+                        id: tag.id!,
+                        name: tag.name,
+                        color: Color(tag.color),
+                        onDeleted: () async {
+                          var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByGoodId(purchasedItemAndGood!.goodId);
+                          for (var relate in tagPurchasedRelates) {
+                            if (relate.tagId == tag.id) {
+                              tagPurchasedItemRelationshipProvider.delete(relate.id!);
+                              break;
+                            }
+                          }
+                        }));
+                  }
+                  return ValueListenableBuilder(
+                      valueListenable: tagNotifier,
+                      builder: (context, value, child) {
+                        if (value.color.toARGB32() != 0xFFFFFFFF) {
+                          tagGridViewTags.add(value);
+                        }
+                        return TagsGridView(
+                          tags: tagGridViewTags,
+                          onChanged: (t) {
+                            tagGridViewTags = t;
+                          },
+                        );
+                      });
+                }),
               ],
             ),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: '品項名稱',
-              ),
-              initialValue: name,
-              onChanged: (value) => name = value,
-            ),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: '單位',
-              ),
-              initialValue: unit,
-              onChanged: (value) => unit = value,
-            ),
-            FutureBuilder(future: () async {
-              //標籤取得
-              List<PurchasedItemsTag> tags = [];
-              var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItem!.id!);
-              for (var relate in tagPurchasedRelates) {
-                var tag = await purchasedItemsTagProvider.getItem(relate.tagId);
-                tags.add(tag);
-              }
-              return tags;
-            }(), builder: (context, tagsSnapshot) {
-              for (PurchasedItemsTag tag in tagsSnapshot.data ?? []) {
-                tagGridViewTags.add(TagsGridViewTag(
-                    id: tag.id!,
-                    name: tag.name,
-                    color: Color(tag.color),
-                    onDeleted: () async {
-                      var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItem!.id!);
-                      for (var relate in tagPurchasedRelates) {
-                        if (relate.tagId == tag.id) {
-                          tagPurchasedItemRelationshipProvider.delete(relate.id!);
-                          break;
-                        }
-                      }
-                    }));
-              }
-              return ValueListenableBuilder(
-                  valueListenable: tagNotifier,
-                  builder: (context, value, child) {
-                    if (value.color.value != 4294967295) {
-                      tagGridViewTags.add(value);
-                    }
-                    return TagsGridView(
-                      tags: tagGridViewTags,
-                      onChanged: (t) {
-                        tagGridViewTags = t;
-                      },
-                    );
-                  });
-            }),
-          ],
-        ),
-      ),
-      actions: [
-        if (purchasedItem != null) addTag(context, purchasedItem, tagNotifier, tagGridViewTags),
-        if (purchasedItem != null)
-          TextButton(
-            onPressed: () {
-              setState(() {
-                purchasedItemProvider.delete(purchasedItem.id!);
-                Navigator.of(context).pop();
-              });
-            },
-            child: const Text('刪除', style: TextStyle(color: Colors.red)),
           ),
-        ValueListenableBuilder(
-            valueListenable: vendorIdNotifier,
-            builder: (context, value, child) {
-              return TextButton(
-                onPressed: vendorIdNotifier.value != Vendor.initial().id
-                    ? () {
-                        Navigator.of(context).pop(
-                          PurchasedItem(vendorId: vendorIdNotifier.value, name: name, unit: unit),
-                        );
-                      }
-                    : null,
-                child: purchasedItem == null ? const Text('新增') : const Text('修改'),
-              );
-            }),
-      ],
+          actions: [
+            if (purchasedItemAndGood != null) addTag(context, purchasedItemAndGood.toPurchasedItem(), tagNotifier, tagGridViewTags),
+            if (purchasedItemAndGood != null)
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    purchasedItemProvider.delete(purchasedItemAndGood.goodId);
+                    Navigator.of(context).pop();
+                  });
+                },
+                child: const Text('刪除', style: TextStyle(color: Colors.red)),
+              ),
+            ValueListenableBuilder(
+                valueListenable: vendorIdNotifier,
+                builder: (context, value, child) {
+                  return TextButton(
+                    onPressed: vendorIdNotifier.value != Vendor.initial().id && vendorIdNotifier.value != null
+                        ? () {
+                            Navigator.of(context).pop(
+                              PurchasedItemAndGood(
+                                goodId: purchasedItemAndGood?.goodId ?? -1,
+                                vendorId: vendorIdNotifier.value!,
+                                name: name,
+                                unit: unit,
+                              ),
+                            );
+                          }
+                        : null,
+                    child: purchasedItemAndGood == null ? const Text('新增') : const Text('修改'),
+                  );
+                }),
+          ],
+        );
+      },
     );
   }
 
@@ -284,7 +275,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                               purchasedItemsTagProvider.insert(purchasedItemsTag).then((tagId) async {
                                 tagPurchasedItemRelationshipProvider
                                     .insert(
-                                      TagPurchasedItemRelationship(tagId: tagId, purchasedItemId: purchasedItem.id!), // 新增貨物和標籤的關係
+                                      TagPurchasedItemRelationship(tagId: tagId, goodId: purchasedItem.goodId), // 新增貨物和標籤的關係
                                     )
                                     .then(
                                       (relationshipId) => setState(() {
@@ -295,7 +286,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                                           name: purchasedItemsTag.name,
                                           color: Color(purchasedItemsTag.color),
                                           onDeleted: () async {
-                                            var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItem.id!); //找出所有和這個貨物有關的標籤
+                                            var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByGoodId(purchasedItem.goodId); //找出所有和這個貨物有關的標籤
                                             for (var relate in tagPurchasedRelates) {
                                               if (relate.tagId == relationshipId) {
                                                 //在這些標籤中有和要刪掉的標籤一樣的id，將其刪除
@@ -338,7 +329,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                                   showDeleteIcon: false,
                                   onTap: () {
                                     tagPurchasedItemRelationshipProvider.insert(
-                                      TagPurchasedItemRelationship(tagId: tag.id!, purchasedItemId: purchasedItem.id!),
+                                      TagPurchasedItemRelationship(tagId: tag.id!, goodId: purchasedItem.goodId),
                                     );
                                     //點擊標籤時，將標籤加入到顯示的標籤列表
                                     tagNotifier.value = TagsGridViewTag(
@@ -347,7 +338,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                                       color: Color(tag.color),
                                       onDeleted: () async {
                                         //刪除標籤時，將標籤從顯示的標籤列表中刪除
-                                        var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByPurchasedItemId(purchasedItem.id!);
+                                        var tagPurchasedRelates = await tagPurchasedItemRelationshipProvider.getItemsByGoodId(purchasedItem.goodId);
                                         for (var relate in tagPurchasedRelates) {
                                           if (relate.tagId == tag.id) {
                                             tagPurchasedItemRelationshipProvider.delete(relate.id!);

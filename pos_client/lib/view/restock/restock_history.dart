@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pos/logic/restock/purchased_logic.dart';
 import 'package:pos/store/model/restock/purchased_items.dart';
 import 'package:pos/store/model/restock/restock.dart';
 import 'package:pos/store/model/restock/restock_order.dart';
@@ -20,7 +21,8 @@ class _RestockHistoryState extends State<RestockHistory> {
   final RestockOrderProvider restockOrderProvider = RestockOrderProvider();
   final RestockProvider restockProvider = RestockProvider();
   final PurchasedItemProvider purchasedItemProvider = PurchasedItemProvider();
-  ValueNotifier<Map<int, PurchasedItem>> purchasedItemsNotifier = ValueNotifier({}); //Map<purchasedItemId, PurchasedItem>
+  final PurchasedLogic purchasedLogic = PurchasedLogic();
+  ValueNotifier<Map<int, PurchasedItemAndGood>> purchasedItemsNotifier = ValueNotifier({}); //Map<purchasedItemId, PurchasedItem>
   ValueNotifier<List<RestockOrder>> restockOrdersNotifier = ValueNotifier([]);
   ValueNotifier<Map<int, List<Restock>>> allRestocksNotifier = ValueNotifier({}); //Map<restockOrderId, List<Restock>>
   ValueNotifier<Map<int, Vendor>> vendorsNotifier = ValueNotifier({}); //Map<vendorId, Vendor>
@@ -115,7 +117,7 @@ class _RestockHistoryState extends State<RestockHistory> {
                                                       if (purchasedItems.isEmpty) {
                                                         return const SizedBox();
                                                       }
-                                                      return Text(purchasedItems[restock.purchasedItemId]?.name ?? '已刪除貨物');
+                                                      return Text(purchasedItems[restock.goodId]?.name ?? '已刪除貨物');
                                                     },
                                                   ),
                                                 ),
@@ -216,7 +218,7 @@ class _RestockHistoryState extends State<RestockHistory> {
                 Map<String, double> purchaseTotal = {};
                 for (List<Restock> restocks in allRestocks.values.toList()) {
                   for (Restock restock in restocks) {
-                    purchaseTotal[purchasedItem[restock.purchasedItemId]?.name ?? '已刪除貨物'] = (purchaseTotal[purchasedItem[restock.purchasedItemId]?.name ?? '已刪除貨物'] ?? 0) + restock.amount;
+                    purchaseTotal[purchasedItem[restock.goodId]?.name ?? '已刪除貨物'] = (purchaseTotal[purchasedItem[restock.goodId]?.name ?? '已刪除貨物'] ?? 0) + restock.amount;
                   }
                 }
 
@@ -234,7 +236,9 @@ class _RestockHistoryState extends State<RestockHistory> {
   /*                                  Function                                  */
   /* -------------------------------------------------------------------------- */
   void asyncInit() async {
-    purchasedItemsNotifier.value = {for (var purchasedItem in await purchasedItemProvider.queryAll()) purchasedItem.id!: purchasedItem};
+    var purchasedItems = await purchasedItemProvider.queryAll();
+    var convertedItems = await purchasedLogic.convertPurchasedItems2PurchasedItemAndGoods(purchasedItems);
+    purchasedItemsNotifier.value = {for (var purchasedItem in convertedItems) purchasedItem.goodId: purchasedItem};
     vendorsNotifier.value = {for (var vendor in await VendorProvider().getAll()) vendor.id!: vendor};
   }
 

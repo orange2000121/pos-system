@@ -1,18 +1,23 @@
 import 'dart:async';
 
+import 'package:path/path.dart' as p;
 import 'package:pos/store/model/restock/purchased_items.dart';
-import 'package:pos/store/model/sell/good_providers/goods.dart';
+import 'package:pos/store/model/sell/product_providers/product.dart';
 import 'package:sqflite/sqflite.dart';
 
 abstract class DatabaseHandler {
   Database? db;
   DatabaseHandler();
-  Future<Database> open() async {
+  static Future<String> getDBFilePath() async {
     String dbName = 'pos.db';
     var databasesPath = await getDatabasesPath();
-    String path = databasesPath + dbName;
+    return p.join(databasesPath, dbName);
+  }
+
+  Future<Database> open() async {
+    if (db != null) return db!;
     db = await openDatabase(
-      path,
+      await getDBFilePath(),
       version: 3,
       onCreate: (db, version) => _onCreate(db, version),
       onUpgrade: (db, oldVersion, newVersion) => _onUpgrade(db, oldVersion, newVersion),
@@ -27,13 +32,11 @@ abstract class DatabaseHandler {
       switch (version) {
         case 1:
           // 新增 amount 欄位，在 GoodsProvider 和 PurchasedItemProvider 中
-          print('update database case 1');
-          if (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='${GoodsProvider().tableName}';").then((value) => value.isNotEmpty)) {
-            if (!await columnExists(db, GoodsProvider().tableName, 'amount')) {
-              await db.execute("ALTER TABLE ${GoodsProvider().tableName} ADD COLUMN amount real not null DEFAULT 0;");
+          if (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='${ProductProvider().tableName}';").then((value) => value.isNotEmpty)) {
+            if (!await columnExists(db, ProductProvider().tableName, 'amount')) {
+              await db.execute("ALTER TABLE ${ProductProvider().tableName} ADD COLUMN amount real not null DEFAULT 0;");
             }
           }
-
           if (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='${PurchasedItemProvider().tableName}';").then((value) => value.isNotEmpty)) {
             if (!await columnExists(db, PurchasedItemProvider().tableName, 'amount')) {
               await db.execute("ALTER TABLE ${PurchasedItemProvider().tableName} ADD COLUMN amount real not null DEFAULT 0;");
@@ -42,7 +45,6 @@ abstract class DatabaseHandler {
           break;
         case 2:
           // 假設 restock 表的名稱是 restockTableName
-          print('update database case 2');
           String restockTableName = "restock";
           String tempTableName = "temp_restock";
           if (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='$restockTableName';").then((value) => value.isEmpty)) {
@@ -61,20 +63,20 @@ abstract class DatabaseHandler {
             note text
           );
         """);
-
           // 2. 將原表的數據轉移到新的臨時表中
           await db.execute("""
             INSERT INTO $tempTableName (id, restockOrderId, purchasedItemId, quantity, price, amount, restockDate, note)
             SELECT id, restockOrderId, purchasedItemId, CAST(quantity AS REAL), price, amount, restockDate, note
             FROM $restockTableName;
           """);
-
           // 3. 刪除原表
           await db.execute("DROP TABLE $restockTableName;");
-
           // 4. 將臨時表重命名為原表的名稱
           await db.execute("ALTER TABLE $tempTableName RENAME TO $restockTableName;");
           break;
+        //todo update goods table to product table
+        //todo update goods_group table to product_group table
+        //todo delete goods table
       }
     }
   }

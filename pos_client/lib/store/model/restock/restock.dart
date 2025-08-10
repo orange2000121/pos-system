@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 class Restock {
   int? id;
   int? restockOrderId;
-  int purchasedItemId;
+  int goodId;
   double quantity;
   double price;
   double amount;
@@ -16,7 +16,7 @@ class Restock {
   Restock({
     this.id,
     this.restockOrderId,
-    required this.purchasedItemId,
+    required this.goodId,
     required this.quantity,
     required this.price,
     required this.amount,
@@ -28,7 +28,7 @@ class Restock {
     return Restock(
       id: json['id'],
       restockOrderId: json['restockOrderId'],
-      purchasedItemId: json['purchasedItemId'],
+      goodId: json['goodId'],
       quantity: json['quantity'],
       price: json['price'],
       amount: json['amount'],
@@ -41,7 +41,7 @@ class Restock {
     return {
       if (id != null) 'id': id,
       'restockOrderId': restockOrderId,
-      'purchasedItemId': purchasedItemId,
+      'goodId': goodId,
       'quantity': quantity,
       'price': price,
       'amount': amount,
@@ -60,7 +60,7 @@ class RestockProvider extends DatabaseHandler {
           create table if not exists $tableName ( 
             id integer primary key autoincrement, 
             restockOrderId integer not null,
-            purchasedItemId integer not null,
+            goodId integer not null,
             quantity real not null,
             price real not null,
             amount real not null,

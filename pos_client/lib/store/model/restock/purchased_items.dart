@@ -4,26 +4,21 @@ import 'package:sqflite/sqflite.dart';
 /// 進貨品項，包含品項編號、進貨廠商編號、品項名稱、品項單位
 
 class PurchasedItem {
-  final int? id;
+  //todo刪除id
+  final int goodId;
   final int vendorId;
-  final String name;
-  final String unit;
   double? amount;
 
   PurchasedItem({
-    this.id,
+    required this.goodId,
     required this.vendorId,
-    required this.name,
-    required this.unit,
     this.amount = 0,
   });
 
   factory PurchasedItem.fromJson(Map<String, dynamic> json) {
     return PurchasedItem(
-      id: json['id'],
+      goodId: json['goodId'],
       vendorId: json['vendorId'],
-      name: json['name'],
-      unit: json['unit'],
       amount: json['amount'] ?? 0,
     );
   }
@@ -31,8 +26,7 @@ class PurchasedItem {
   Map<String, dynamic> toInsertMap() {
     return {
       'vendorId': vendorId,
-      'name': name,
-      'unit': unit,
+      'goodId': goodId,
       'amount': amount ?? 0,
     };
   }
@@ -45,10 +39,8 @@ class PurchasedItemProvider extends DatabaseHandler {
     db = await super.open();
     await db!.execute('''
           create table if not exists $tableName ( 
-            id integer primary key autoincrement, 
+            goodId integer not null,
             vendorId integer not null,
-            name text not null,
-            unit text not null,
             amount real not null
           )
           ''');
@@ -71,22 +63,22 @@ class PurchasedItemProvider extends DatabaseHandler {
     return result;
   }
 
-  Future<PurchasedItem?> queryById(int id) async {
+  Future<PurchasedItem?> queryById(int goodId) async {
     db ??= await open();
-    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'id = ?', whereArgs: [id], limit: 1);
+    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'goodId = ?', whereArgs: [goodId], limit: 1);
     if (maps.isEmpty) {
       return null;
     }
     return PurchasedItem.fromJson(maps.first);
   }
 
-  Future update(int id, PurchasedItem item) async {
+  Future update(PurchasedItem item) async {
     db ??= await open();
-    await db!.update(tableName, item.toInsertMap(), where: 'id = ?', whereArgs: [id]);
+    await db!.update(tableName, item.toInsertMap(), where: 'goodId = ?', whereArgs: [item.goodId]);
   }
 
-  Future delete(int id) async {
+  Future delete(int goodId) async {
     db ??= await open();
-    await db!.delete(tableName, where: 'id = ?', whereArgs: [id]);
+    await db!.delete(tableName, where: 'goodId = ?', whereArgs: [goodId]);
   }
 }

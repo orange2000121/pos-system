@@ -7,12 +7,13 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
-import 'package:pos/logic/cashier_logic.dart';
+import 'package:pos/logic/sell/cashier_logic.dart';
+import 'package:pos/logic/sell/product_item.dart';
 import 'package:pos/store/sharePreferenes/setting_key.dart';
 import 'package:pos/store/sharePreferenes/sharepreference_helper.dart';
 import 'package:pos/store/model/sell/customer.dart';
-import 'package:pos/store/model/sell/good_providers/goods.dart';
-import 'package:pos/store/model/sell/good_providers/goods_group.dart';
+import 'package:pos/store/model/sell/product_providers/product.dart';
+import 'package:pos/store/model/sell/product_providers/product_group.dart';
 import 'package:pos/store/sharePreferenes/user_info_key.dart';
 import 'package:pos/template/button/text_icon_button.dart';
 import 'package:pos/template/date_picker.dart';
@@ -72,11 +73,12 @@ class _CashierState extends State<Cashier> {
       throw Exception('editShopItems is null');
     }
     if (widget.isEditMode) {
-      cashierLogic.shopItemsNotifier.value = widget.editShopItems!.shopItems;
+      cashierLogic.shopItemsNotifier.value = widget.editShopItems!.shopItems.map((item) => item.copyWith()).toList();
       customerProvider.getItem(widget.editShopItems!.customerId).then((value) {
         customerValueNotifier.value = value;
       });
-      receiptDate = widget.editShopItems!.createAt;
+      receiptDate = DateTime(
+          widget.editShopItems!.createAt.year, widget.editShopItems!.createAt.month, widget.editShopItems!.createAt.day, widget.editShopItems!.createAt.hour, widget.editShopItems!.createAt.minute);
     } else {
       customerProvider.getAll().then((value) {
         if (value.isNotEmpty) {
@@ -110,7 +112,7 @@ class _CashierState extends State<Cashier> {
                   children: [
                     groupList(),
                     const Divider(),
-                    goodsList(),
+                    productList(),
                   ],
                 ),
               ),
@@ -143,8 +145,8 @@ class _CashierState extends State<Cashier> {
   /// 這個 widget 會顯示一個卡片，包含商品分類的圖片和名稱。
   /// 當用戶點擊這個項目時，會通過 [groupIdNotifier] 通知父 widget，以便更新商品列表。
   ///
-  /// [item] 是一個 [GoodsGroupItem] 對象，包含了分類的名稱、ID 和圖片。
-  Widget cashierGroupItem(GoodsGroupItem item) {
+  /// [item] 是一個 [ProductGroupItem] 對象，包含了分類的名稱、ID 和圖片。
+  Widget cashierGroupItem(ProductGroupItem item) {
     return InkWell(
       onTap: () => groupIdNotifier.value = item.id!,
       child: SizedBox(
@@ -185,7 +187,7 @@ class _CashierState extends State<Cashier> {
     return SizedBox(
       height: size,
       child: FutureBuilder(
-        future: GoodsGroupProvider().getAll(),
+        future: ProductGroupProvider().getAll(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             List<Widget> groupListWidgets = [];
@@ -195,7 +197,7 @@ class _CashierState extends State<Cashier> {
             return ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                cashierGroupItem(GoodsGroupItem('全部', id: -1, image: Uint8List(0))),
+                cashierGroupItem(ProductGroupItem('全部', id: -1, image: Uint8List(0))),
                 ...groupListWidgets,
               ],
             );
@@ -207,7 +209,7 @@ class _CashierState extends State<Cashier> {
     );
   }
 
-  Widget cashierProduct(Good item) {
+  Widget cashierProduct(ProductItem item) {
     return InkWell(
       onTap: () async {
         // 新增商品
@@ -215,10 +217,10 @@ class _CashierState extends State<Cashier> {
             context: context,
             builder: (context) => AlertDialog(
                   title: Text(item.name),
-                  content: abacus(ShopItem(item.id ?? -1, item.name, item.price, 1, item.unit)),
+                  content: abacus(ShopItem(item.goodId, item.name, item.price, 1, item.unit)),
                 ));
         if (tempItem == null) return;
-        cashierLogic.addItem(tempItem.id, tempItem.name, tempItem.price, tempItem.ice ?? '', tempItem.sugar ?? '', tempItem.quantity, tempItem.unit, note: tempItem.note);
+        cashierLogic.addItem(tempItem.id, tempItem.name, tempItem.price, tempItem.quantity, tempItem.unit, note: tempItem.note);
       },
       child: ProductCard(
         title: item.name,
@@ -234,13 +236,20 @@ class _CashierState extends State<Cashier> {
     );
   }
 
-  Widget goodsList() {
+  Widget productList() {
+    Future<List<ProductItem>> getProductList() async {
+      // 取得所有商品，並結合good資料
+      List<Product> products = await ProductProvider().getAll();
+      return await ProductItems().convertProducts2ProductItems(products);
+    }
+
     return FutureBuilder(
-        future: GoodsProvider().getAll(),
+        future: getProductList(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            Map<int, List<Good>> groupMap = {};
+            Map<int, List<ProductItem>> groupMap = {};
             for (var i = 0; i < snapshot.data!.length; i++) {
+              // 將商品依照分類ID分組
               if (groupMap.containsKey(snapshot.data![i].groupId)) {
                 groupMap[snapshot.data![i].groupId]!.add(snapshot.data![i]);
               } else {
@@ -251,18 +260,19 @@ class _CashierState extends State<Cashier> {
                 child: ValueListenableBuilder(
                     valueListenable: groupIdNotifier,
                     builder: (context, groupId, child) {
-                      int goodListLength;
+                      int productListLength;
                       if (groupId == -1) {
-                        goodListLength = snapshot.data!.length;
+                        productListLength = snapshot.data!.length;
                       } else {
-                        goodListLength = groupMap[groupId]?.length ?? 0;
+                        productListLength = groupMap[groupId]?.length ?? 0;
                       }
                       return GridView.builder(
                         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 200,
                         ),
-                        itemCount: goodListLength,
+                        itemCount: productListLength,
                         itemBuilder: (context, index) {
+                          //如果沒有選擇分類，顯示所有商品
                           if (groupId == -1) {
                             return cashierProduct(snapshot.data![index]);
                           } else {
@@ -279,18 +289,13 @@ class _CashierState extends State<Cashier> {
 
   Widget abacus(ShopItem item, {int num = 1, String ice = '', String sugar = ''}) {
     /* -------------------------------- variable -------------------------------- */
-    List<Widget> sugarChoseWidgets = [];
-    List<Widget> iceChoseWidgets = [];
     double w = MediaQuery.of(context).size.width;
-    List<String> sugarList = ['正常糖', '少糖', '半糖', '微糖', '無糖'];
-    List<String> iceList = ['正常冰', '少冰', '半冰', '微冰', '去冰'];
-    String chosenSugar = sugar, chosenIce = ice;
     TextEditingController quantity = TextEditingController(text: num.toString());
     TextEditingController noteEditingController = TextEditingController(text: item.note);
     TextEditingController discountEditingController = TextEditingController();
     ValueNotifier<List<Widget>> annotationOptions = ValueNotifier(
         [TextField(keyboardType: TextInputType.number, decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '%off'), controller: discountEditingController)]); // 備註選項
-    finishEdit() {
+    void finishEdit() {
       item.note = noteEditingController.text;
       if (discountEditingController.text.isNotEmpty) {
         item.price = item.price * (1 - double.parse(discountEditingController.text) / 100);
@@ -304,28 +309,10 @@ class _CashierState extends State<Cashier> {
             item.price,
             double.parse(quantity.text).toInt(),
             item.unit,
-            ice: chosenIce,
-            sugar: chosenSugar,
             note: item.note,
           ));
     }
 
-    for (var i = 0; i < sugarList.length; i++) {
-      sugarChoseWidgets.add(ElevatedButton(
-        onPressed: () {
-          chosenSugar = sugarList[i];
-        },
-        child: Text(sugarList[i]),
-      ));
-    }
-    for (var i = 0; i < iceList.length; i++) {
-      iceChoseWidgets.add(ElevatedButton(
-        onPressed: () {
-          chosenIce = iceList[i];
-        },
-        child: Text(iceList[i]),
-      ));
-    }
     return SizedBox(
       height: 300,
       child: Column(
@@ -403,7 +390,7 @@ class _CashierState extends State<Cashier> {
                     onChanged: (value) {
                       quantity.text = value.toString();
                     },
-                    onEditingComplete: finishEdit,
+                    onEditingComplete: (number) => finishEdit(),
                   )
                 ],
               ),
@@ -450,7 +437,7 @@ class _CashierState extends State<Cashier> {
                               num: shopItems[index].quantity,
                             ),
                           ));
-                  if (item != null) cashierLogic.editItem(shopItems[index], ice: item.ice, sugar: item.sugar, quantity: item.quantity);
+                  if (item != null) cashierLogic.editItem(shopItems[index], quantity: item.quantity);
                 },
               ),
             );
@@ -462,7 +449,6 @@ class _CashierState extends State<Cashier> {
 
   /// 顯示收銀員畫面左側的結帳區域。
   Widget settleAccount() {
-    ValueNotifier<String> receivedCashNotifier = ValueNotifier('');
     double h = MediaQuery.of(context).size.height;
     return Column(
       children: [
@@ -498,19 +484,17 @@ class _CashierState extends State<Cashier> {
               ),
               onPressed: () async {
                 if (!widget.isEditMode) {
-                  int? isSettle; // -1: 取消, 其他: 客戶ID
+                  int? customerIdTemp; // -1: 取消, 其他: 客戶ID
                   if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
-                    isSettle = await showDialog(context: context, builder: (context) => receiptOption());
-                    if (isSettle == -1) {
+                    customerIdTemp = await showDialog(context: context, builder: (context) => receiptOption());
+                    if (customerIdTemp == -1) {
                       cashierLogic.clear();
-                      receivedCashNotifier.value = '';
                       return;
                     }
-                    if (isSettle == null) return;
+                    if (customerIdTemp == null) return;
                   }
                   // 存入資料庫
-                  cashierLogic.settleAccount(isSettle, createAt: receiptDate);
-                  receivedCashNotifier.value = '';
+                  cashierLogic.settleAccount(customerIdTemp, createAt: receiptDate);
                 } else if (widget.isEditMode && widget.editShopItems != null) {
                   int? isSettle; // -1: 取消, 其他: 客戶ID
                   if (cashierInit.sharedPreferenceHelper.setting.getSetting(BoolSettingKey.useReceiptPrinter) ?? false) {
@@ -523,9 +507,10 @@ class _CashierState extends State<Cashier> {
                     return;
                   }
                   await cashierLogic.editOrder(
-                    widget.editShopItems!.orderId,
-                    isSettle,
-                    receiptDate,
+                    orderId: widget.editShopItems!.orderId,
+                    originShopItems: widget.editShopItems!.shopItems,
+                    customerId: isSettle,
+                    createAt: receiptDate,
                   );
                   if (!mounted) return;
                   Navigator.pop(context);
@@ -568,8 +553,8 @@ class _CashierState extends State<Cashier> {
           valueListenable: showPriceNotifier,
           builder: (context, showPrice, child) => Switch(
               value: showPriceNotifier.value,
-              thumbIcon: MaterialStateProperty.resolveWith<Icon?>((Set<MaterialState> states) {
-                if (states.contains(MaterialState.selected)) {
+              thumbIcon: WidgetStateProperty.resolveWith<Icon?>((Set<WidgetState> states) {
+                if (states.contains(WidgetState.selected)) {
                   return const Icon(Icons.attach_money);
                 }
                 return const Icon(Icons.money_off);

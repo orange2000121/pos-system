@@ -37,7 +37,7 @@ class _ProductCardState extends State<ProductCard> {
                   child: Container(
                     width: constraints.maxWidth,
                     // width: widget.width,
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     child: Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: Text(
@@ -54,7 +54,7 @@ class _ProductCardState extends State<ProductCard> {
                     right: 0,
                     child: Container(
                       // width: constraints.maxWidth,
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       child: Padding(
                         padding: const EdgeInsets.all(2.0),
                         child: Text(

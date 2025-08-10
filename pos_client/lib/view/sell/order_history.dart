@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pos/logic/cashier_logic.dart';
+import 'package:pos/logic/sell/cashier_logic.dart';
+import 'package:pos/logic/sell/order_history_logic.dart';
 import 'package:pos/store/model/sell/customer.dart';
 import 'package:pos/store/model/sell/order.dart';
 import 'package:pos/store/model/sell/sell.dart';
@@ -23,7 +24,7 @@ class OrderHistory extends StatefulWidget {
 }
 
 class _OrderHistoryState extends State<OrderHistory> {
-  OrderProvider orderProvider = OrderProvider();
+  final OrderHistoryLogic orderHistoryLogic = OrderHistoryLogic();
   SellProvider sellProvider = SellProvider();
   CustomerProvider customerProvider = CustomerProvider();
   ValueNotifier<DateTime?> startDateNotifier = ValueNotifier(null);
@@ -156,7 +157,6 @@ class _OrderHistoryState extends State<OrderHistory> {
           detailedInfo: sellItems.map((e) {
             return ListTile(
               title: Text(e.name),
-              subtitle: Text('${e.sugar} ${e.ice}'),
               trailing: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.2,
                 child: Row(
@@ -175,13 +175,11 @@ class _OrderHistoryState extends State<OrderHistory> {
                 List<ShopItem> shopItems = [];
                 for (var element in sellItems) {
                   shopItems.add(ShopItem(
-                    element.id!,
+                    element.goodId,
                     element.name,
                     element.price,
                     element.quantity,
                     '',
-                    ice: element.ice,
-                    sugar: element.sugar,
                   ));
                 }
                 ShopItemEditData shopItemEditData = ShopItemEditData(
@@ -206,7 +204,7 @@ class _OrderHistoryState extends State<OrderHistory> {
             ),
             ElevatedButton(
               onPressed: () {
-                orderProvider.delete(order.id!);
+                orderHistoryLogic.deleteOrder(order.id!, sellItems: sellItems);
                 setState(() {
                   Navigator.of(context).pop();
                 });
@@ -220,44 +218,6 @@ class _OrderHistoryState extends State<OrderHistory> {
           ],
         );
       },
-    );
-  }
-
-  AlertDialog editSellItem(BuildContext context, SellItem e) {
-    return AlertDialog(
-      title: const Text('編輯商品紀錄'),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.height * 0.8,
-        height: MediaQuery.of(context).size.height * 0.8,
-        child: GridView(
-          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: MediaQuery.of(context).size.width * 0.2,
-          ),
-          children: [
-            editCard(context, '商品名稱', e.name, (value) => e.name = value),
-            editCard(context, '糖度', e.sugar, (value) => e.sugar = value),
-            editCard(context, '冰塊', e.ice, (value) => e.ice = value),
-            editCard(context, '數量', e.quantity.toString(), (value) => e.quantity = int.parse(value)),
-          ],
-        ),
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () {
-            // sellProvider.update(e.id!, e);
-            setState(() {
-              Navigator.of(context).pop();
-            });
-          },
-          child: const Text('確認'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('關閉'),
-        ),
-      ],
     );
   }
 
@@ -292,7 +252,7 @@ class _OrderHistoryState extends State<OrderHistory> {
   Future<Map<OrderItem, List<SellItem>>> getOrders() async {
     List orders;
 
-    orders = await orderProvider.getAllFromCustomerIdAndDateRange(customerId, startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
+    orders = await orderHistoryLogic.orderProvider.getAllFromCustomerIdAndDateRange(customerId, startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
     Map<OrderItem, List<SellItem>> orderMap = {};
     for (var i = 0; i < orders.length; i++) {
       orderMap[orders[i]] = await sellProvider.getItemByOrderId(orders[i].id!);

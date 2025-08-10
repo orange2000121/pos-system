@@ -23,7 +23,7 @@ class _ItemEditTextFieldState extends State<ItemEditTextField> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8),
-      child: TextField(
+      child: TextFormField(
         controller: widget.controller,
         keyboardType: widget.keyboardType,
         decoration: InputDecoration(

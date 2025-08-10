@@ -1,0 +1,231 @@
+import 'package:flutter/widgets.dart';
+import 'package:pos/store/model/good/bom.dart';
+import 'package:pos/store/model/good/good.dart';
+import 'package:pos/store/model/good/inventory.dart';
+import 'package:pos/store/model/restock/purchased_items.dart';
+import 'package:pos/store/model/sell/product_providers/product.dart';
+
+class GoodManageLogic {
+  GoodProvider goodProvider = GoodProvider();
+  InventoryProvider inventoryProvider = InventoryProvider();
+
+  List<Good> allGoods = [];
+  List<Inventory> allInventories = [];
+  Map<int, Map<String, dynamic>> allGoodInfo = {};
+  Future<Map<int, Map<String, dynamic>>> getAllGoodsInfo() async {
+    allGoods = await goodProvider.getAll();
+    allInventories = await inventoryProvider.getAll();
+    for (var good in allGoods) {
+      var inventory = allInventories.firstWhere(
+        (inventory) => inventory.goodId == good.id,
+        orElse: () => Inventory(
+          goodId: good.id,
+          quantity: 0,
+          recodeMode: Inventory.CREATE_MODE,
+          recordTime: DateTime.now(),
+        ),
+      );
+      allGoodInfo[good.id] = {
+        'good': good,
+        'inventory': inventory,
+      };
+    }
+    return allGoodInfo;
+  }
+}
+
+class GoodDetailLogic {
+  final Good mainGood;
+  final Inventory mainGoodInventory;
+  GoodDetailLogic({required this.mainGoodInventory, required this.mainGood}) {
+    listeners();
+  }
+
+  BomProvider bomProvider = BomProvider();
+  GoodProvider goodProvider = GoodProvider();
+  InventoryProvider inventoryProvider = InventoryProvider();
+  ProductProvider productProvider = ProductProvider();
+  PurchasedItemProvider purchasedItemProvider = PurchasedItemProvider();
+
+  ValueNotifier<List<BomAndMaterial>> bomAndMaterialsNotifier = ValueNotifier([]);
+  ValueNotifier<double> manufactureQuantityNotifier = ValueNotifier(0);
+  ValueNotifier<bool> isAutoCreateNotifier = ValueNotifier(false);
+
+  TextEditingController manufactureQuantityController = TextEditingController();
+  TextEditingController inventoryQuantityController = TextEditingController();
+
+  FocusNode inventoryQuantityFocusNode = FocusNode();
+
+  List<Good> getAvailableMaterials({
+    required List<Good> allGoods,
+  }) {
+    return allGoods.where((good) => good.id != mainGood.id).toList();
+  }
+
+  Future<List<BomAndMaterial>> getBomsByGoodId(int goodId) async {
+    var boms = await bomProvider.getItemsByProductId(goodId) ?? [];
+    List<BomAndMaterial> tempBomAndMaterials = [];
+    for (var bom in boms) {
+      var material = await goodProvider.getItem(bom.materialId);
+      if (material != null) {
+        tempBomAndMaterials.add(BomAndMaterial(bom: bom, material: material));
+      }
+    }
+    bomAndMaterialsNotifier.value = tempBomAndMaterials;
+    return bomAndMaterialsNotifier.value;
+  }
+
+  void addBomSetting({required int productId}) {
+    BomAndMaterial bomAndMaterial = BomAndMaterial(
+      bom: Bom(
+        productId: productId,
+        materialId: 0,
+        quantity: 0,
+        createdAt: DateTime.now(),
+      ),
+      material: Good(
+        id: 0,
+        name: '',
+        unit: '',
+        image: null,
+      ),
+    );
+    bomAndMaterialsNotifier.value = List.from(bomAndMaterialsNotifier.value)..add(bomAndMaterial);
+  }
+
+  Future<Inventory> safetyGetInventory(int goodId) async {
+    Inventory? inventoryOfMaterial = await inventoryProvider.getInventoryByGoodId(goodId);
+    if (inventoryOfMaterial == null) {
+      inventoryOfMaterial = Inventory(
+        goodId: goodId,
+        quantity: 0,
+        recodeMode: Inventory.CREATE_MODE,
+        recordTime: DateTime.now(),
+      );
+      await inventoryProvider.insert(inventoryOfMaterial);
+    }
+    return inventoryOfMaterial;
+  }
+
+  /// 啟動產品製造流程。
+  ///
+  /// 此非同步方法負責處理產品製造的相關邏輯。
+  /// 使用前需完成以下前置作業：
+  /// 1. 取得所有物料的庫存資訊。(bomAndMaterialsNotifier.value)
+  /// 2. 設定製造數量。(manufactureQuantityNotifier.value)
+  ///
+  /// 方法可能包含更新庫存、建立產品紀錄或觸發相關流程等操作。
+  void manufactureProduct() async {
+    //扣除原料數量
+    for (BomAndMaterial bomAndMaterial in bomAndMaterialsNotifier.value) {
+      double requiredQuantity = bomAndMaterial.bom.quantity * manufactureQuantityNotifier.value;
+      Inventory inventoryOfMaterial = await safetyGetInventory(bomAndMaterial.material.id);
+      inventoryOfMaterial.quantity -= requiredQuantity;
+      inventoryProvider.update(inventoryOfMaterial, mode: Inventory.COMPUTE_MODE);
+    }
+    //增加產品數量
+    Inventory inventoryOfProduct = await safetyGetInventory(mainGood.id);
+    inventoryOfProduct.quantity += manufactureQuantityNotifier.value;
+    inventoryProvider.update(inventoryOfProduct, mode: Inventory.COMPUTE_MODE);
+    //製作數量歸0
+    manufactureQuantityNotifier.value = 0;
+    manufactureQuantityController.text = '0';
+    inventoryQuantityController.text = inventoryOfProduct.quantity.toString();
+  }
+
+  Future<void> makeInventory(double quantity) async {
+    Inventory productInventory = await safetyGetInventory(mainGood.id);
+    productInventory.quantity = quantity;
+    await inventoryProvider.update(productInventory, mode: Inventory.MANUAL_MODE);
+  }
+
+  void listeners() {
+    inventoryQuantityFocusNode.addListener(() async {
+      if (!inventoryQuantityFocusNode.hasFocus) {
+        Inventory productInventory = await safetyGetInventory(mainGood.id);
+        double quantity = productInventory.quantity;
+        inventoryQuantityController.text = quantity.toString();
+      }
+    });
+  }
+
+  Future<bool> isProduct(Good good) async {
+    return await productProvider.getItem(good.id) != null;
+  }
+
+  Future<bool> isPurchasedItem(Good good) async {
+    return await purchasedItemProvider.queryById(good.id) != null;
+  }
+
+  Future<bool> isAutoCreate() async {
+    Product? product = await productProvider.getItem(mainGood.id);
+    if (product == null) return false;
+    if (product.autoCreate) return true;
+    return false;
+  }
+
+  Future<void> setAutoCreate({required bool value}) async {
+    Product? product = await productProvider.getItem(mainGood.id);
+    if (product != null) {
+      product.autoCreate = value;
+      await productProvider.update(product);
+    }
+  }
+}
+
+class BomDetailLogic {
+  ValueNotifier<int> materialSelectorNotifier = ValueNotifier(0);
+  BomProvider bomProvider = BomProvider();
+  BomAndMaterial mainBomAndMaterial;
+  BomDetailLogic({required this.mainBomAndMaterial});
+
+  Future<void> setMaterialSelector({
+    required int value,
+    required Map<int, Good> allGoodsMap,
+    required BomAndMaterial bomAndMaterial,
+  }) async {
+    materialSelectorNotifier.value = value;
+    Good selectedGood = allGoodsMap[value] ?? Good(id: 0, name: '', unit: '');
+    bomAndMaterial.material = selectedGood;
+    bomAndMaterial.bom.materialId = selectedGood.id;
+    if (bomAndMaterial.bom.materialId != 0 && bomAndMaterial.bom.quantity != 0) {
+      if (bomAndMaterial.bom.id == 0 || bomAndMaterial.bom.id == null) {
+        bomAndMaterial.bom.id = await bomProvider.insert(bomAndMaterial.bom);
+      } else {
+        bomProvider.update(bomAndMaterial.bom);
+      }
+    }
+  }
+
+  Future<void> setBomQuantity({
+    required double value,
+    required BomAndMaterial bomAndMaterial,
+  }) async {
+    bomAndMaterial.bom.quantity = value;
+    if (bomAndMaterial.bom.materialId != 0 && bomAndMaterial.bom.quantity != 0) {
+      if (bomAndMaterial.bom.id == 0 || bomAndMaterial.bom.id == null) {
+        bomAndMaterial.bom.id = await bomProvider.insert(bomAndMaterial.bom);
+      } else {
+        bomProvider.update(bomAndMaterial.bom);
+      }
+    }
+  }
+
+  Future<void> deleteBom({
+    required Bom bom,
+    required ValueNotifier<List<BomAndMaterial>> bomAndMaterialsNotifier,
+  }) async {
+    await bomProvider.delete(bom.id!);
+    bomAndMaterialsNotifier.value = List.from(bomAndMaterialsNotifier.value)..removeWhere((element) => element.bom.id == bom.id);
+  }
+}
+
+class BomAndMaterial {
+  Bom bom;
+  Good material;
+
+  BomAndMaterial({
+    required this.bom,
+    required this.material,
+  });
+}

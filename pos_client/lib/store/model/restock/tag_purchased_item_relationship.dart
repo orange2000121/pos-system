@@ -4,18 +4,18 @@ import 'package:sqflite/sqflite.dart';
 class TagPurchasedItemRelationship {
   int? id;
   int tagId;
-  int purchasedItemId;
+  int goodId;
 
   TagPurchasedItemRelationship({
     required this.tagId,
-    required this.purchasedItemId,
+    required this.goodId,
     this.id,
   });
 
   factory TagPurchasedItemRelationship.fromMap(Map<String, dynamic> map) {
     return TagPurchasedItemRelationship(
       tagId: map['tag_id'] as int,
-      purchasedItemId: map['purchased_item_id'] as int,
+      goodId: map['good_id'] as int,
       id: map['id'] as int?,
     );
   }
@@ -24,7 +24,7 @@ class TagPurchasedItemRelationship {
     return {
       if (id != null) 'id': id,
       'tag_id': tagId,
-      'purchased_item_id': purchasedItemId,
+      'good_id': goodId,
     };
   }
 }
@@ -38,7 +38,7 @@ class TagPurchasedItemRelationshipProvider extends DatabaseHandler {
           create table if not exists $tableName ( 
             id integer primary key autoincrement,
             tag_id integer not null,
-            purchased_item_id integer not null
+            good_id integer not null
           )
           ''');
     return db!;
@@ -66,9 +66,14 @@ class TagPurchasedItemRelationshipProvider extends DatabaseHandler {
     return items;
   }
 
-  Future<List<TagPurchasedItemRelationship>> getItemsByPurchasedItemId(int purchasedItemId) async {
+  @Deprecated("Use getItemsByGoodId instead")
+  Future<List<TagPurchasedItemRelationship>> getItemsByPurchasedItemId(int goodId) async {
+    return getItemsByGoodId(goodId);
+  }
+
+  Future<List<TagPurchasedItemRelationship>> getItemsByGoodId(int goodId) async {
     db ??= await open();
-    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'purchased_item_id = ?', whereArgs: [purchasedItemId]);
+    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'good_id = ?', whereArgs: [goodId]);
     List<TagPurchasedItemRelationship> items = [];
     for (var map in maps) {
       items.add(TagPurchasedItemRelationship.fromMap(map));

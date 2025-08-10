@@ -1,23 +1,24 @@
 /// 販賣的商品分類，包含名稱、圖片
+library;
 
 import 'dart:typed_data';
 
 import 'package:pos/store/model/database_handler.dart';
 import 'package:sqflite/sqflite.dart';
 
-class GoodsGroupItem {
+class ProductGroupItem {
   int? id;
   late String name;
   Uint8List? image;
 
-  GoodsGroupItem fromMap(Map<String, dynamic> map) {
+  ProductGroupItem fromMap(Map<String, dynamic> map) {
     name = map['name'];
     image = map['image'];
     return this;
   }
 
-  static GoodsGroupItem fromMapStatic(Map<String, dynamic> map) {
-    return GoodsGroupItem(
+  static ProductGroupItem fromMapStatic(Map<String, dynamic> map) {
+    return ProductGroupItem(
       map['name'] as String,
       image: map['image'] as Uint8List?,
       id: map['id'] as int?,
@@ -31,11 +32,11 @@ class GoodsGroupItem {
     };
   }
 
-  GoodsGroupItem(this.name, {this.image, this.id});
+  ProductGroupItem(this.name, {this.image, this.id});
 }
 
-class GoodsGroupProvider extends DatabaseHandler {
-  String tableName = 'goods_group';
+class ProductGroupProvider extends DatabaseHandler {
+  String tableName = 'product_group';
   @override
   Future<Database> open() async {
     db = await super.open();
@@ -49,13 +50,13 @@ class GoodsGroupProvider extends DatabaseHandler {
     return db!;
   }
 
-  Future<int> insert(GoodsGroupItem item) async {
+  Future<int> insert(ProductGroupItem item) async {
     db ??= await open();
     int id = await db!.insert(tableName, item.toMap());
     return id;
   }
 
-  Future update(int id, GoodsGroupItem item) async {
+  Future update(int id, ProductGroupItem item) async {
     db ??= await open();
     await db!.update(tableName, item.toMap(), where: 'id = ?', whereArgs: [id]);
   }
@@ -65,11 +66,11 @@ class GoodsGroupProvider extends DatabaseHandler {
     await db!.delete(tableName, where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<List<GoodsGroupItem>> getAll() async {
+  Future<List<ProductGroupItem>> getAll() async {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName);
     return List.generate(maps.length, (i) {
-      return GoodsGroupItem.fromMapStatic(maps[i]);
+      return ProductGroupItem.fromMapStatic(maps[i]);
     });
   }
 
