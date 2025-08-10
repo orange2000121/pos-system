@@ -2,6 +2,8 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:pos/logic/inventory/good_manage_logic.dart';
+import 'package:pos/store/model/good/good.dart';
 import 'package:pos/store/model/good/inventory.dart';
 import 'package:pos/store/model/sell/order.dart';
 import 'package:pos/store/model/sell/sell.dart';
@@ -62,6 +64,23 @@ class CashierLogic {
       //更新庫存
       Inventory? inventory = await inventoryProvider.getInventoryByGoodId(shopItemTemp.id);
       if (inventory != null) {
+        GoodDetailLogic goodDetailLogic = GoodDetailLogic(
+          mainGoodInventory: inventory,
+          mainGood: Good(id: shopItemTemp.id, name: shopItemTemp.name, unit: shopItemTemp.unit),
+        );
+        //檢查需不需要自動扣除原物料
+        if (await goodDetailLogic.isAutoCreate()) {
+          goodDetailLogic.manufactureQuantityNotifier.value = 0;
+          if (inventory.quantity < shopItemTemp.quantity) {
+            goodDetailLogic.manufactureQuantityNotifier.value = shopItemTemp.quantity - inventory.quantity; //計算需要製作的數量
+            goodDetailLogic.getBomsByGoodId(shopItemTemp.id).then((bomAndMaterials) {
+              //如果有bom和材料，則製作商品
+              if (bomAndMaterials.isNotEmpty) {
+                goodDetailLogic.manufactureProduct();
+              }
+            });
+          }
+        }
         inventory.quantity -= shopItemTemp.quantity;
         await inventoryProvider.update(inventory, mode: Inventory.COMPUTE_MODE);
       } else {

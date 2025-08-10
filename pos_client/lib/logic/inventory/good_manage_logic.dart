@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'package:pos/store/model/good/bom.dart';
 import 'package:pos/store/model/good/good.dart';
 import 'package:pos/store/model/good/inventory.dart';
+import 'package:pos/store/model/restock/purchased_items.dart';
+import 'package:pos/store/model/sell/product_providers/product.dart';
 
 class GoodManageLogic {
   GoodProvider goodProvider = GoodProvider();
@@ -42,10 +44,16 @@ class GoodDetailLogic {
   BomProvider bomProvider = BomProvider();
   GoodProvider goodProvider = GoodProvider();
   InventoryProvider inventoryProvider = InventoryProvider();
+  ProductProvider productProvider = ProductProvider();
+  PurchasedItemProvider purchasedItemProvider = PurchasedItemProvider();
+
   ValueNotifier<List<BomAndMaterial>> bomAndMaterialsNotifier = ValueNotifier([]);
   ValueNotifier<double> manufactureQuantityNotifier = ValueNotifier(0);
+  ValueNotifier<bool> isAutoCreateNotifier = ValueNotifier(false);
+
   TextEditingController manufactureQuantityController = TextEditingController();
   TextEditingController inventoryQuantityController = TextEditingController();
+
   FocusNode inventoryQuantityFocusNode = FocusNode();
 
   List<Good> getAvailableMaterials({
@@ -56,7 +64,7 @@ class GoodDetailLogic {
 
   Future<List<BomAndMaterial>> getBomsByGoodId(int goodId) async {
     var boms = await bomProvider.getItemsByProductId(goodId) ?? [];
-    var tempBomAndMaterials = bomAndMaterialsNotifier.value;
+    List<BomAndMaterial> tempBomAndMaterials = [];
     for (var bom in boms) {
       var material = await goodProvider.getItem(bom.materialId);
       if (material != null) {
@@ -99,6 +107,14 @@ class GoodDetailLogic {
     return inventoryOfMaterial;
   }
 
+  /// 啟動產品製造流程。
+  ///
+  /// 此非同步方法負責處理產品製造的相關邏輯。
+  /// 使用前需完成以下前置作業：
+  /// 1. 取得所有物料的庫存資訊。(bomAndMaterialsNotifier.value)
+  /// 2. 設定製造數量。(manufactureQuantityNotifier.value)
+  ///
+  /// 方法可能包含更新庫存、建立產品紀錄或觸發相關流程等操作。
   void manufactureProduct() async {
     //扣除原料數量
     for (BomAndMaterial bomAndMaterial in bomAndMaterialsNotifier.value) {
@@ -117,7 +133,7 @@ class GoodDetailLogic {
     inventoryQuantityController.text = inventoryOfProduct.quantity.toString();
   }
 
-  void makeInventory(double quantity) async {
+  Future<void> makeInventory(double quantity) async {
     Inventory productInventory = await safetyGetInventory(mainGood.id);
     productInventory.quantity = quantity;
     await inventoryProvider.update(productInventory, mode: Inventory.MANUAL_MODE);
@@ -131,6 +147,29 @@ class GoodDetailLogic {
         inventoryQuantityController.text = quantity.toString();
       }
     });
+  }
+
+  Future<bool> isProduct(Good good) async {
+    return await productProvider.getItem(good.id) != null;
+  }
+
+  Future<bool> isPurchasedItem(Good good) async {
+    return await purchasedItemProvider.queryById(good.id) != null;
+  }
+
+  Future<bool> isAutoCreate() async {
+    Product? product = await productProvider.getItem(mainGood.id);
+    if (product == null) return false;
+    if (product.autoCreate) return true;
+    return false;
+  }
+
+  Future<void> setAutoCreate({required bool value}) async {
+    Product? product = await productProvider.getItem(mainGood.id);
+    if (product != null) {
+      product.autoCreate = value;
+      await productProvider.update(product);
+    }
   }
 }
 
@@ -150,7 +189,7 @@ class BomDetailLogic {
     bomAndMaterial.material = selectedGood;
     bomAndMaterial.bom.materialId = selectedGood.id;
     if (bomAndMaterial.bom.materialId != 0 && bomAndMaterial.bom.quantity != 0) {
-      if (bomAndMaterial.bom.id == 0) {
+      if (bomAndMaterial.bom.id == 0 || bomAndMaterial.bom.id == null) {
         bomAndMaterial.bom.id = await bomProvider.insert(bomAndMaterial.bom);
       } else {
         bomProvider.update(bomAndMaterial.bom);

@@ -27,7 +27,7 @@ class CreateProductLogic {
       groupId: group.id!,
       goodId: goodId,
       price: price,
-      amount: 0,
+      // amount: 0,
     );
     productProvider.insert(product);
   }
@@ -45,7 +45,7 @@ class CreateProductLogic {
       groupId: productItem.groupId,
       goodId: productItem.goodId,
       price: productItem.price,
-      amount: 0,
+      // amount: 0,
     );
     goodProvider.update(good);
     productProvider.update(product);

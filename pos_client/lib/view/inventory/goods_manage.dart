@@ -28,11 +28,12 @@ class _GoodsManageState extends State<GoodsManage> {
                   maxCrossAxisExtent: 200,
                 ),
                 children: [
-                  goodCard(
-                    onTap: () => null,
-                    title: '新增貨物',
-                    icon: const Icon(Icons.add),
-                  ),
+                  //todo 新增貨物
+                  // goodCard(
+                  //   onTap: () => null,
+                  //   title: '新增貨物',
+                  //   icon: const Icon(Icons.add),
+                  // ),
                   if (goodsInfoSnapshot.hasData)
                     ...goodsInfoSnapshot.data!.values.map((goodInfo) {
                       return goodCard(
@@ -98,15 +99,21 @@ class _GoodsManageState extends State<GoodsManage> {
     await showDialog(
       context: context,
       builder: (context) {
-        Widget leftColumn = Column(
-          mainAxisSize: MainAxisSize.min,
+        Widget leftColumn = ListView(
+          padding: const EdgeInsets.all(16),
           children: [
             ChoseImage(
               size: 100,
               initialImage: good.image,
             ),
-            Text(good.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text('單位：${good.unit}'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [Text(good.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [Text('單位：${good.unit}')],
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -118,8 +125,9 @@ class _GoodsManageState extends State<GoodsManage> {
                   width: 100,
                   height: 50,
                   controller: goodDetailLogic.inventoryQuantityController,
-                  onEditingComplete: (number) {
-                    goodDetailLogic.makeInventory(number);
+                  onEditingComplete: (number) async {
+                    await goodDetailLogic.makeInventory(number);
+                    goodDetailLogic.inventoryQuantityFocusNode.unfocus();
                   },
                 ),
               ],
@@ -132,7 +140,11 @@ class _GoodsManageState extends State<GoodsManage> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     const Text('銷售'),
-                    Switch(value: false, onChanged: (value) {}),
+                    FutureBuilder(
+                        future: goodDetailLogic.isProduct(good),
+                        builder: (context, asyncSnapshot) {
+                          return Switch(value: asyncSnapshot.data ?? false, onChanged: (value) {});
+                        }),
                   ],
                 ),
                 const SizedBox(height: 50, child: VerticalDivider()),
@@ -140,11 +152,16 @@ class _GoodsManageState extends State<GoodsManage> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     const Text('進貨'),
-                    Switch(value: false, onChanged: (value) {}),
+                    FutureBuilder(
+                        future: goodDetailLogic.isPurchasedItem(good),
+                        builder: (context, asyncSnapshot) {
+                          return Switch(value: asyncSnapshot.data ?? false, onChanged: (value) {});
+                        }),
                   ],
                 ),
               ],
             ),
+            const SizedBox(width: 100, child: Divider()),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -183,6 +200,38 @@ class _GoodsManageState extends State<GoodsManage> {
                         }),
                   );
                 }),
+            FutureBuilder(
+                future: goodDetailLogic.isProduct(good),
+                builder: (context, isProductSnapshot) {
+                  if (isProductSnapshot.connectionState == ConnectionState.waiting || isProductSnapshot.data == false) {
+                    return const SizedBox();
+                  }
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.7 / 3 * 0.7 - (MediaQuery.of(context).size.width * 0.7 / 3 * 0.3 < 100 ? 100 : 0),
+                        child: Text('庫存不足自動扣物料'),
+                      ),
+                      FutureBuilder(
+                          future: goodDetailLogic.isAutoCreate(),
+                          builder: (context, isAutoCreateSnapshot) {
+                            goodDetailLogic.isAutoCreateNotifier.value = isAutoCreateSnapshot.data ?? false;
+                            return ValueListenableBuilder(
+                                valueListenable: goodDetailLogic.isAutoCreateNotifier,
+                                builder: (context, isAutoCreate, child) {
+                                  return Switch(
+                                      value: isAutoCreate,
+                                      onChanged: (value) {
+                                        goodDetailLogic.setAutoCreate(value: value);
+                                        goodDetailLogic.isAutoCreateNotifier.value = value;
+                                      });
+                                });
+                          }),
+                    ],
+                  );
+                })
           ],
         );
         Widget rightColumn = Column(
@@ -249,11 +298,11 @@ class _GoodsManageState extends State<GoodsManage> {
                                 children: [
                                   const Text('數量：'),
                                   Expanded(
-                                    child: TextFormField(
+                                    child: NumberInputWithIncrementDecrement(
                                       key: ValueKey(bomAndMaterial.bom.id),
-                                      initialValue: bomAndMaterial.bom.quantity.toString(),
-                                      keyboardType: TextInputType.number,
-                                      onChanged: (value) => bomDetailLogic.setBomQuantity(value: double.parse(value), bomAndMaterial: bomAndMaterial),
+                                      initialNumber: bomAndMaterial.bom.quantity,
+                                      minNumber: 0,
+                                      onChanged: (value) => bomDetailLogic.setBomQuantity(value: value, bomAndMaterial: bomAndMaterial),
                                     ),
                                   )
                                 ],
@@ -273,8 +322,8 @@ class _GoodsManageState extends State<GoodsManage> {
         );
         return AlertDialog(
           content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.45,
-            height: MediaQuery.of(context).size.height * 0.5,
+            width: MediaQuery.of(context).size.width * 0.7,
+            height: MediaQuery.of(context).size.height * 0.7,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

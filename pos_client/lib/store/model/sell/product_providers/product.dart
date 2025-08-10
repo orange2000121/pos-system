@@ -9,39 +9,41 @@ class Product {
   int groupId;
   int goodId;
   double price;
-  double? amount;
-  int length = 0;
+  // double? amount;
+  // int length = 0;
+  bool autoCreate;
 
   Map<String, dynamic> toMap() {
     var map = <String, Object>{};
     map['group_id'] = groupId;
     map['good_id'] = goodId;
     map['price'] = price;
-    map['amount'] = amount ?? 0;
+    map['auto_create'] = autoCreate ? 1 : 0;
+    // map['amount'] = amount ?? 0;
     return map;
   }
 
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
-      groupId: map['group_id'] as int,
-      goodId: map['good_id'] as int,
-      price: map['price'] as double,
-      amount: map['amount'] ?? 0,
-    );
+        groupId: map['group_id'] as int,
+        goodId: map['good_id'] as int,
+        price: map['price'] as double,
+        // amount: map['amount'] ?? 0,
+        autoCreate: map['auto_create'] == 1);
   }
 
   Product({
     required this.groupId,
     required this.goodId,
     required this.price,
-    this.amount = 0,
+    // this.amount = 0,
+    this.autoCreate = false,
   }) {
-    length = toMap().length;
+    // length = toMap().length;
   }
 }
 
 class ProductProvider extends DatabaseHandler {
-  // ignore: avoid_init_to_null
   String tableName = 'product';
   String dbName = 'pos.db';
   @override
@@ -52,7 +54,7 @@ class ProductProvider extends DatabaseHandler {
             group_id integer not null,
             good_id integer not null,
             price real not null,
-            amount real not null,
+            auto_create INTEGER NOT NULL DEFAULT 0,
             foreign key (group_id) references product_group(id) on delete cascade on update cascade)
           ''');
     return db!;
@@ -64,9 +66,10 @@ class ProductProvider extends DatabaseHandler {
     return id;
   }
 
-  Future<Product> getItem(int goodId) async {
+  Future<Product?> getItem(int goodId) async {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'good_id = ?', whereArgs: [goodId]);
+    if (maps.isEmpty) return null;
     return Product.fromMap(maps.first);
   }
 

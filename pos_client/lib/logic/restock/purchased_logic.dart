@@ -6,7 +6,7 @@ import 'package:pos/store/model/restock/purchased_items.dart';
 class PurchasedLogic {
   PurchasedItemProvider purchasedItemProvider = PurchasedItemProvider();
   GoodProvider goodProvider = GoodProvider();
-  void addNewPurchasedItem(PurchasedItemAndGood purchasedItemAndGood) async {
+  Future<void> addNewPurchasedItem(PurchasedItemAndGood purchasedItemAndGood) async {
     Good good = Good(
       id: 0,
       name: purchasedItemAndGood.name,
@@ -22,7 +22,7 @@ class PurchasedLogic {
     purchasedItemProvider.insert(purchasedItem);
   }
 
-  void updatePurchasedItemAndGood(PurchasedItemAndGood purchasedItemAndGood) {
+  Future<void> updatePurchasedItemAndGood(PurchasedItemAndGood purchasedItemAndGood) async {
     Good good = Good(
       id: purchasedItemAndGood.goodId,
       name: purchasedItemAndGood.name,
@@ -34,8 +34,8 @@ class PurchasedLogic {
       vendorId: purchasedItemAndGood.vendorId,
       amount: 0,
     );
-    goodProvider.update(good);
-    purchasedItemProvider.update(purchasedItem);
+    await goodProvider.update(good);
+    await purchasedItemProvider.update(purchasedItem);
   }
 
   Future<List<PurchasedItemAndGood>> convertPurchasedItems2PurchasedItemAndGoods(List<PurchasedItem> purchasedItems) async {

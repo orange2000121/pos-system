@@ -39,12 +39,13 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                 Card(
                   child: SizedBox(
                     child: InkWell(
-                      onTap: () async {
-                        PurchasedItemAndGood? result = await showPurchasedDetail(context);
-                        if (result != null && result.name != '') {
-                          purchasedLogic.addNewPurchasedItem(result);
-                          setState(() {});
-                        }
+                      onTap: () {
+                        showPurchasedDetail(context).then((result) async {
+                          if (result != null && result.name != '') {
+                            await purchasedLogic.addNewPurchasedItem(result);
+                            setState(() {});
+                          }
+                        });
                       },
                       child: const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -62,9 +63,9 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                       child: SizedBox(
                         child: InkWell(
                           onTap: () {
-                            showPurchasedDetail(context, purchasedItemAndGood: e).then((value) {
+                            showPurchasedDetail(context, purchasedItemAndGood: e).then((value) async {
                               if (value != null) {
-                                purchasedLogic.updatePurchasedItemAndGood(value);
+                                await purchasedLogic.updatePurchasedItemAndGood(value);
                                 setState(() {});
                               }
                             });
@@ -214,7 +215,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                     Navigator.of(context).pop();
                   });
                 },
-                child: const Text('取消進貨', style: TextStyle(color: Colors.red)),
+                child: const Text('刪除', style: TextStyle(color: Colors.red)),
               ),
             ValueListenableBuilder(
                 valueListenable: vendorIdNotifier,
