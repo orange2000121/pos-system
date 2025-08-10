@@ -14,7 +14,12 @@ class UpgradeApp {
       if (downloadUrl != null) {
         if (!await DataBaseBackup().backup()) return false; // 備份資料庫
         final tempFilePath = await downloadFile(downloadUrl, progress: progress); // 下載安裝檔
-        if (!await executeSetupEXE(tempFilePath)) return false; // 執行安裝檔
+        print('下載完成，檔案路徑: $tempFilePath');
+        if (Platform.isWindows) {
+          if (!await executeSetupEXE(tempFilePath)) return false; // 執行安裝檔
+        } else if (Platform.isMacOS) {
+          await installDMG(tempFilePath!);
+        }
       } else {
         return false;
       }
@@ -53,7 +58,21 @@ class UpgradeApp {
     if (response.statusCode == 200) {
       final json = response.data;
       final version = json['name'];
-      final asset = json['assets'][0];
+      var asset = json['assets'][0];
+      for (int i = 0; i < json['assets'].length; i++) {
+        if (Platform.isWindows) {
+          if ((json['assets'][i]['name'] as String).toLowerCase().endsWith('.exe')) {
+            asset = json['assets'][i];
+            break;
+          }
+        } else if (Platform.isMacOS) {
+          if ((json['assets'][i]['name'] as String).toLowerCase().endsWith('.dmg')) {
+            asset = json['assets'][i];
+            break;
+          }
+        }
+      }
+      print('最新版本: $version, 下載連結: ${asset['browser_download_url']}');
       return {
         'version': version.toString(),
         'downloadUrl': asset['browser_download_url'],
@@ -64,7 +83,14 @@ class UpgradeApp {
 
   Future<String?> downloadFile(String url, {Function(double percentageValue)? progress}) async {
     final tempDir = Directory.systemTemp;
-    final tempFile = File('${tempDir.path}/setupPOS.exe');
+    File tempFile;
+    if (Platform.isWindows) {
+      tempFile = File('${tempDir.path}/setupPOS.exe');
+    } else if (Platform.isMacOS) {
+      tempFile = File('${tempDir.path}/POS.dmg');
+    } else {
+      return null;
+    }
 
     final response = await Dio().get(
       url,
