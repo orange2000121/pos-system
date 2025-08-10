@@ -18,7 +18,7 @@ class UpgradeApp {
         if (Platform.isWindows) {
           if (!await executeSetupEXE(tempFilePath)) return false; // 執行安裝檔
         } else if (Platform.isMacOS) {
-          await installDMG(tempFilePath!);
+          // await installDMG(tempFilePath!);
         }
       } else {
         return false;
