@@ -14,7 +14,6 @@ class UpgradeApp {
       if (downloadUrl != null) {
         if (!await DataBaseBackup().backup()) return false; // 備份資料庫
         final tempFilePath = await downloadFile(downloadUrl, progress: progress); // 下載安裝檔
-        print('下載完成，檔案路徑: $tempFilePath');
         if (Platform.isWindows) {
           if (!await executeSetupEXE(tempFilePath)) return false; // 執行安裝檔
         } else if (Platform.isMacOS) {
@@ -72,7 +71,6 @@ class UpgradeApp {
           }
         }
       }
-      print('最新版本: $version, 下載連結: ${asset['browser_download_url']}');
       return {
         'version': version.toString(),
         'downloadUrl': asset['browser_download_url'],

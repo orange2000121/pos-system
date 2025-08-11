@@ -200,37 +200,41 @@ class _GoodsManageState extends State<GoodsManage> {
                         }),
                   );
                 }),
-            FutureBuilder(
-                future: goodDetailLogic.isProduct(good),
-                builder: (context, isProductSnapshot) {
-                  if (isProductSnapshot.connectionState == ConnectionState.waiting || isProductSnapshot.data == false) {
-                    return const SizedBox();
-                  }
-
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.7 / 3 * 0.7 - (MediaQuery.of(context).size.width * 0.7 / 3 * 0.3 < 100 ? 100 : 0),
-                        child: Text('庫存不足自動扣物料'),
-                      ),
-                      FutureBuilder(
-                          future: goodDetailLogic.isAutoCreate(),
-                          builder: (context, isAutoCreateSnapshot) {
-                            goodDetailLogic.isAutoCreateNotifier.value = isAutoCreateSnapshot.data ?? false;
-                            return ValueListenableBuilder(
-                                valueListenable: goodDetailLogic.isAutoCreateNotifier,
-                                builder: (context, isAutoCreate, child) {
-                                  return Switch(
-                                      value: isAutoCreate,
-                                      onChanged: (value) {
-                                        goodDetailLogic.setAutoCreate(value: value);
-                                        goodDetailLogic.isAutoCreateNotifier.value = value;
+            ValueListenableBuilder(
+                valueListenable: goodDetailLogic.bomAndMaterialsNotifier,
+                builder: (context, bomAndMaterials, child) {
+                  return FutureBuilder(
+                      future: goodDetailLogic.isProduct(good),
+                      builder: (context, isProductSnapshot) {
+                        if (isProductSnapshot.connectionState == ConnectionState.waiting || isProductSnapshot.data == false || bomAndMaterials.isEmpty) {
+                          return const SizedBox();
+                        }
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.7 / 3 * 0.7 - (MediaQuery.of(context).size.width * 0.7 / 3 * 0.3 < 100 ? 100 : 0),
+                              child: Text('庫存不足自動扣物料'),
+                            ),
+                            FutureBuilder(
+                                future: goodDetailLogic.isAutoCreate(),
+                                builder: (context, isAutoCreateSnapshot) {
+                                  goodDetailLogic.isAutoCreateNotifier.value = isAutoCreateSnapshot.data ?? false;
+                                  return ValueListenableBuilder(
+                                      valueListenable: goodDetailLogic.isAutoCreateNotifier,
+                                      builder: (context, isAutoCreate, child) {
+                                        //todo 沒有bom時不要顯示
+                                        return Switch(
+                                            value: isAutoCreate,
+                                            onChanged: (value) {
+                                              goodDetailLogic.setAutoCreate(value: value);
+                                              goodDetailLogic.isAutoCreateNotifier.value = value;
+                                            });
                                       });
-                                });
-                          }),
-                    ],
-                  );
+                                }),
+                          ],
+                        );
+                      });
                 })
           ],
         );
