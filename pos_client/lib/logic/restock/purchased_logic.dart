@@ -17,7 +17,6 @@ class PurchasedLogic {
     PurchasedItem purchasedItem = PurchasedItem(
       goodId: goodId,
       vendorId: purchasedItemAndGood.vendorId,
-      amount: 0,
     );
     purchasedItemProvider.insert(purchasedItem);
   }
@@ -32,7 +31,6 @@ class PurchasedLogic {
     PurchasedItem purchasedItem = PurchasedItem(
       goodId: purchasedItemAndGood.goodId,
       vendorId: purchasedItemAndGood.vendorId,
-      amount: 0,
     );
     await goodProvider.update(good);
     await purchasedItemProvider.update(purchasedItem);
@@ -82,7 +80,6 @@ class PurchasedItemAndGood {
     return PurchasedItem(
       goodId: goodId,
       vendorId: vendorId,
-      amount: 0,
     );
   }
 

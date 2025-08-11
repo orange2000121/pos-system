@@ -25,7 +25,7 @@ class DataBaseBackup {
   }
 
   Future<bool> restore() async {
-    String dbPath = await getDatabasesPath() + dbName;
+    String dbPath = await DatabaseHandler.getDBFilePath();
     FilePickerResult? backupFile = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['db'],
@@ -44,9 +44,9 @@ class DataBaseBackup {
   }
 
   Future<bool> exportCSV() async {
-    String dbPath = await getDatabasesPath();
+    String dbPath = await DatabaseHandler.getDBFilePath();
     String exportFolderName = 'export';
-    Database db = await openDatabase('$dbPath$dbName');
+    Database db = await openDatabase(dbPath);
     String exportPath = await FilePicker.platform.getDirectoryPath() ?? '';
     if (exportPath.isEmpty) return false;
     try {

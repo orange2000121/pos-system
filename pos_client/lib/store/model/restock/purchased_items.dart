@@ -7,19 +7,16 @@ class PurchasedItem {
   //todo刪除id
   final int goodId;
   final int vendorId;
-  double? amount;
 
   PurchasedItem({
     required this.goodId,
     required this.vendorId,
-    this.amount = 0,
   });
 
   factory PurchasedItem.fromJson(Map<String, dynamic> json) {
     return PurchasedItem(
       goodId: json['goodId'],
       vendorId: json['vendorId'],
-      amount: json['amount'] ?? 0,
     );
   }
 
@@ -27,7 +24,6 @@ class PurchasedItem {
     return {
       'vendorId': vendorId,
       'goodId': goodId,
-      'amount': amount ?? 0,
     };
   }
 }
@@ -40,8 +36,7 @@ class PurchasedItemProvider extends DatabaseHandler {
     await db!.execute('''
           create table if not exists $tableName ( 
             goodId integer not null,
-            vendorId integer not null,
-            amount real not null
+            vendorId integer not null
           )
           ''');
     return db!;

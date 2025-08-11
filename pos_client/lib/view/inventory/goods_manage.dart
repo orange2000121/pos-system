@@ -153,6 +153,7 @@ class _GoodsManageState extends State<GoodsManage> {
                   children: [
                     const Text('進貨'),
                     FutureBuilder(
+                        //todo 無法顯示是否為進貨商品
                         future: goodDetailLogic.isPurchasedItem(good),
                         builder: (context, asyncSnapshot) {
                           return Switch(value: asyncSnapshot.data ?? false, onChanged: (value) {});
@@ -221,6 +222,7 @@ class _GoodsManageState extends State<GoodsManage> {
                             return ValueListenableBuilder(
                                 valueListenable: goodDetailLogic.isAutoCreateNotifier,
                                 builder: (context, isAutoCreate, child) {
+                                  //todo 沒有bom時不要顯示
                                   return Switch(
                                       value: isAutoCreate,
                                       onChanged: (value) {
