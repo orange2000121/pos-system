@@ -27,7 +27,6 @@ class CreateProductLogic {
       groupId: group.id!,
       goodId: goodId,
       price: price,
-      // amount: 0,
     );
     productProvider.insert(product);
   }
@@ -45,9 +44,18 @@ class CreateProductLogic {
       groupId: productItem.groupId,
       goodId: productItem.goodId,
       price: productItem.price,
-      // amount: 0,
+      status: productItem.status,
+      autoCreate: productItem.autoCreate,
     );
     goodProvider.update(good);
     productProvider.update(product);
+  }
+
+  void disableProduct({required ProductItem productItem}) async {
+    Product? product = await productProvider.getItem(productItem.goodId);
+    if (product != null) {
+      product.status = 0; // Disable the product
+      await productProvider.update(product);
+    }
   }
 }

@@ -143,7 +143,17 @@ class _GoodsManageState extends State<GoodsManage> {
                     FutureBuilder(
                         future: goodDetailLogic.isProduct(good),
                         builder: (context, asyncSnapshot) {
-                          return Switch(value: asyncSnapshot.data ?? false, onChanged: (value) {});
+                          goodDetailLogic.isProductNotifier.value = asyncSnapshot.data ?? false;
+                          return ValueListenableBuilder(
+                              valueListenable: goodDetailLogic.isProductNotifier,
+                              builder: (context, isProduct, child) {
+                                return Switch(
+                                    value: isProduct,
+                                    onChanged: (value) {
+                                      goodDetailLogic.isProductNotifier.value = value;
+                                      goodDetailLogic.setProductStatus(value: value, good: good);
+                                    });
+                              });
                         }),
                   ],
                 ),
@@ -155,7 +165,17 @@ class _GoodsManageState extends State<GoodsManage> {
                     FutureBuilder(
                         future: goodDetailLogic.isPurchasedItem(good),
                         builder: (context, asyncSnapshot) {
-                          return Switch(value: asyncSnapshot.data ?? false, onChanged: (value) {});
+                          goodDetailLogic.isPurchasedNotifier.value = asyncSnapshot.data ?? false;
+                          return ValueListenableBuilder(
+                              valueListenable: goodDetailLogic.isPurchasedNotifier,
+                              builder: (context, isPurchased, child) {
+                                return Switch(
+                                    value: isPurchased,
+                                    onChanged: (value) {
+                                      goodDetailLogic.isPurchasedNotifier.value = value;
+                                      goodDetailLogic.setPurchasedStatus(value: value, good: good);
+                                    });
+                              });
                         }),
                   ],
                 ),

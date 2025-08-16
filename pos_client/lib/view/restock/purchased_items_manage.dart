@@ -88,7 +88,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
   }
 
   Future<List<PurchasedItemAndGood>> getAllPurchasedItems() async {
-    List<PurchasedItem> purchasedItems = await purchasedItemProvider.queryAll();
+    List<PurchasedItem> purchasedItems = await purchasedItemProvider.queryByStatus(true);
     return await purchasedLogic.convertPurchasedItems2PurchasedItemAndGoods(purchasedItems);
   }
 
@@ -124,6 +124,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                           return ValueListenableBuilder<int?>(
                               valueListenable: vendorIdNotifier,
                               builder: (context, selectValue, child) {
+                                if (selectValue == 0) selectValue = null;
                                 List<DropdownMenuItem<int>> items = [];
                                 if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                                   for (var vendor in snapshot.data!) {
@@ -211,11 +212,12 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
               TextButton(
                 onPressed: () {
                   setState(() {
-                    purchasedItemProvider.delete(purchasedItemAndGood.goodId);
+                    // purchasedItemProvider.delete(purchasedItemAndGood.goodId);
+                    purchasedLogic.disablePurchasedItem(purchasedItemAndGood.goodId);
                     Navigator.of(context).pop();
                   });
                 },
-                child: const Text('刪除', style: TextStyle(color: Colors.red)),
+                child: const Text('取消庫存', style: TextStyle(color: Colors.red)),
               ),
             ValueListenableBuilder(
                 valueListenable: vendorIdNotifier,
@@ -229,6 +231,7 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
                                 vendorId: vendorIdNotifier.value!,
                                 name: name,
                                 unit: unit,
+                                status: 1,
                               ),
                             );
                           }
@@ -365,35 +368,4 @@ class _PurchasedItemsManageState extends State<PurchasedItemsManage> {
       child: const Text('新增標籤', textAlign: TextAlign.center),
     );
   }
-
-  // Future<dynamic> newTag(
-  //     BuildContext context, PurchasedItemsTagProvider purchasedItemsTagProvider, TagPurchasedItemRelationshipProvider tagPurchasedItemRelationshipProvider, PurchasedItem? purchasedItem) {
-  //   return showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       String tagName = '';
-  //       return AlertDialog(
-  //           title: const Text('新增標籤'),
-  //           content: ItemEdit(
-  //             textFields: [
-  //               ItemEditTextField(
-  //                 labelText: '標籤名稱',
-  //                 controller: TextEditingController(text: tagName),
-  //               ),
-  //             ],
-  //             buttons: [
-  //               ItemEditButton(
-  //                 name: '新增',
-  //                 onPressed: () {
-  //                   purchasedItemsTagProvider.insert(PurchasedItemsTag(name: tagName, color:Random().nextInt(0xFF051B2B))).then((value) {
-  //                     tagPurchasedItemRelationshipProvider.insert(TagPurchasedItemRelationship(tagId: value, purchasedItemId: purchasedItem!.id!));
-  //                     setState(() {});
-  //                   });
-  //                 },
-  //               ),
-  //             ],
-  //           ));
-  //     },
-  //   );
-  // }
 }

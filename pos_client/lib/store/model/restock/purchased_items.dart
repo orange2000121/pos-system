@@ -4,19 +4,21 @@ import 'package:sqflite/sqflite.dart';
 /// 進貨品項，包含品項編號、進貨廠商編號、品項名稱、品項單位
 
 class PurchasedItem {
-  //todo刪除id
   final int goodId;
   final int vendorId;
+  int status;
 
   PurchasedItem({
     required this.goodId,
     required this.vendorId,
+    this.status = 1,
   });
 
   factory PurchasedItem.fromJson(Map<String, dynamic> json) {
     return PurchasedItem(
       goodId: json['goodId'],
       vendorId: json['vendorId'],
+      status: json['status'] ?? 1,
     );
   }
 
@@ -24,6 +26,7 @@ class PurchasedItem {
     return {
       'vendorId': vendorId,
       'goodId': goodId,
+      'status': status,
     };
   }
 }
@@ -36,7 +39,8 @@ class PurchasedItemProvider extends DatabaseHandler {
     await db!.execute('''
           create table if not exists $tableName ( 
             goodId integer not null,
-            vendorId integer not null
+            vendorId integer not null,
+            status integer not null default 1
           )
           ''');
     return db!;
@@ -51,6 +55,16 @@ class PurchasedItemProvider extends DatabaseHandler {
   Future<List<PurchasedItem>> queryAll() async {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName);
+    List<PurchasedItem> result = [];
+    for (var map in maps) {
+      result.add(PurchasedItem.fromJson(map));
+    }
+    return result;
+  }
+
+  Future<List<PurchasedItem>> queryByStatus(bool status) async {
+    db ??= await open();
+    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'status = ?', whereArgs: [status ? 1 : 0]);
     List<PurchasedItem> result = [];
     for (var map in maps) {
       result.add(PurchasedItem.fromJson(map));

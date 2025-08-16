@@ -66,27 +66,33 @@ class _CreateProductState extends State<CreateProduct> {
         if (snapshot.hasData) {
           List<Widget> widgets = [];
           for (ProductItem item in snapshot.data ?? []) {
-            widgets.add(ListTile(
-              leading: Image.memory(
-                width: 50,
-                height: 50,
-                fit: BoxFit.cover,
-                item.image!,
-                errorBuilder: (context, error, stackTrace) => const FlutterLogo(size: 50),
-              ),
-              title: Text(item.name),
-              subtitle: Text('單價: ${item.price}'),
-              trailing: IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () => editProduct(item),
-              ),
-            ));
+            widgets.add(productTile(item));
           }
           return Column(children: widgets);
         } else {
           return const Text('no data');
         }
       },
+    );
+  }
+
+  ListTile productTile(ProductItem item) {
+    return ListTile(
+      leading: item.image != null && item.image!.isNotEmpty
+          ? Image.memory(
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+              item.image!,
+              errorBuilder: (context, error, stackTrace) => const FlutterLogo(size: 50),
+            )
+          : null,
+      title: Text(item.name),
+      subtitle: Text('單價: ${item.price}'),
+      trailing: IconButton(
+        icon: const Icon(Icons.edit),
+        onPressed: () => editProduct(item),
+      ),
     );
   }
 
@@ -108,6 +114,12 @@ class _CreateProductState extends State<CreateProduct> {
         return ListView(
           children: [
             ...widgets,
+            Column(
+              children: [
+                groupBar('未分類', () => null),
+                product(0),
+              ],
+            ),
             groupBar('新增群組', addGroup),
           ],
         );
@@ -277,62 +289,105 @@ class _CreateProductState extends State<CreateProduct> {
     TextEditingController nameController = TextEditingController(text: product.name);
     TextEditingController priceController = TextEditingController(text: product.price.toString());
     TextEditingController unitController = TextEditingController(text: product.unit);
+
     ValueNotifier showImageNotifier = ValueNotifier<Uint8List?>(product.image);
+    ValueNotifier<int?> productGroupIdNotifier = ValueNotifier<int?>(product.groupId);
+
+    ProductGroupProvider productGroupProvider = ProductGroupProvider();
+
     showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text('修改 ${product.name}'),
-            content: ItemEdit(
-              choseImage: ChoseImage(
-                size: 100,
-                initialImage: product.image,
-                onImageChanged: (img) {
-                  product.image = img;
-                  showImageNotifier.value = product.image;
-                },
-              ),
-              textFields: [
-                ItemEditTextField(
-                  labelText: '產品名稱',
-                  controller: nameController,
+            content: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    const Text('供應商：'),
+                    FutureBuilder(
+                        future: productGroupProvider.getAll(),
+                        builder: (context, snapshot) {
+                          return ValueListenableBuilder<int?>(
+                              valueListenable: productGroupIdNotifier,
+                              builder: (context, selectValue, child) {
+                                if (selectValue == 0) selectValue = null;
+                                List<DropdownMenuItem<int>> items = [];
+                                if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                                  for (var vendor in snapshot.data!) {
+                                    items.add(DropdownMenuItem<int>(
+                                      value: vendor.id,
+                                      child: Text(vendor.name),
+                                    ));
+                                  }
+                                }
+                                return DropdownButton<int>(
+                                  value: selectValue,
+                                  hint: snapshot.hasData && snapshot.data!.isNotEmpty ? const Text('請選擇供應商') : const Text('無供應商'),
+                                  onChanged: (selectValue) {
+                                    productGroupIdNotifier.value = selectValue!;
+                                  },
+                                  items: items,
+                                );
+                              });
+                        }),
+                  ],
                 ),
-                ItemEditTextField(
-                  labelText: '產品單位',
-                  controller: unitController,
-                ),
-                ItemEditTextField(
-                  labelText: '產品單價',
-                  controller: priceController,
-                  keyboardType: TextInputType.number,
-                ),
-              ],
-              buttons: [
-                ItemEditButton(
-                  name: '修改產品',
-                  onPressed: () {
-                    product.name = nameController.text;
-                    product.price = double.parse(priceController.text);
-                    product.unit = unitController.text;
-                    createProductLogic.editProduct(productItem: product);
-                    Navigator.pop(context);
-                    setState(() {});
-                  },
-                ),
-                ItemEditButton(
-                  name: '取消銷售',
-                  onPressed: () {
-                    productProvider.delete(product.goodId);
-                    setState(() {});
-                    Navigator.pop(context);
-                  },
-                  foregroundColor: Colors.red,
-                ),
-                ItemEditButton(
-                  name: '取消',
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                ItemEdit(
+                  choseImage: ChoseImage(
+                    size: 100,
+                    initialImage: product.image,
+                    onImageChanged: (img) {
+                      product.image = img;
+                      showImageNotifier.value = product.image;
+                    },
+                  ),
+                  textFields: [
+                    ItemEditTextField(
+                      labelText: '產品名稱',
+                      controller: nameController,
+                    ),
+                    ItemEditTextField(
+                      labelText: '產品單位',
+                      controller: unitController,
+                    ),
+                    ItemEditTextField(
+                      labelText: '產品單價',
+                      controller: priceController,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
+                  buttons: [
+                    ItemEditButton(
+                      name: '修改產品',
+                      onPressed: () {
+                        product.groupId = productGroupIdNotifier.value ?? 0;
+                        product.name = nameController.text;
+                        product.price = double.parse(priceController.text);
+                        product.unit = unitController.text;
+                        createProductLogic.editProduct(productItem: product);
+                        Navigator.pop(context);
+                        setState(() {});
+                      },
+                    ),
+                    ItemEditButton(
+                      name: '取消銷售',
+                      onPressed: () {
+                        // productProvider.delete(product.goodId);
+                        createProductLogic.disableProduct(productItem: product);
+                        setState(() {});
+                        Navigator.pop(context);
+                      },
+                      foregroundColor: Colors.red,
+                    ),
+                    ItemEditButton(
+                      name: '取消',
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),

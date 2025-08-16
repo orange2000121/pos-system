@@ -18,9 +18,9 @@ abstract class DatabaseHandler {
     if (db != null) return db!;
     db = await openDatabase(
       await getDBFilePath(),
-      version: 4,
+      version: 5,
       onCreate: (db, version) => _onCreate(db, version),
-      onUpgrade: (db, oldVersion, newVersion) => _onUpgrade(db, oldVersion, newVersion),
+      onUpgrade: (db, oldVersion, newVersion) async => await _onUpgrade(db, oldVersion, newVersion),
     );
     return db!;
   }
@@ -28,6 +28,8 @@ abstract class DatabaseHandler {
   Future _onCreate(Database db, int version) async {}
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    print('new version $newVersion');
+    print('old version $oldVersion');
     for (int version = oldVersion; version < newVersion; version++) {
       switch (version) {
         case 1:
@@ -241,6 +243,12 @@ abstract class DatabaseHandler {
             );
           """);
           break;
+        case 4:
+          /* ---------------- tag_purchased_item_relationship migration --------------- */
+          await db.execute("ALTER TABLE tag_purchased_item_relationship ADD COLUMN good_id INTEGER NOT NULL DEFAULT 0;");
+          await db.execute("ALTER TABLE tag_purchased_item_relationship DROP COLUMN purchased_item_id;");
+          await db.execute("ALTER TABLE product ADD COLUMN status INTEGER NOT NULL DEFAULT 1;");
+          await db.execute("ALTER TABLE purchased_item ADD COLUMN status INTEGER NOT NULL DEFAULT 1;");
       }
     }
   }

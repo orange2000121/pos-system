@@ -50,6 +50,8 @@ class GoodDetailLogic {
   ValueNotifier<List<BomAndMaterial>> bomAndMaterialsNotifier = ValueNotifier([]);
   ValueNotifier<double> manufactureQuantityNotifier = ValueNotifier(0);
   ValueNotifier<bool> isAutoCreateNotifier = ValueNotifier(false);
+  ValueNotifier<bool> isProductNotifier = ValueNotifier(false);
+  ValueNotifier<bool> isPurchasedNotifier = ValueNotifier(false);
 
   TextEditingController manufactureQuantityController = TextEditingController();
   TextEditingController inventoryQuantityController = TextEditingController();
@@ -149,12 +151,16 @@ class GoodDetailLogic {
     });
   }
 
-  Future<bool> isProduct(Good good) async {
-    return await productProvider.getItem(good.id) != null;
+  Future<bool> isProduct(Good good, {bool isActive = true}) async {
+    Product? product = await productProvider.getItem(good.id);
+    if (product == null) return false;
+    return ((product.status == 1 ? true : false) == isActive);
   }
 
-  Future<bool> isPurchasedItem(Good good) async {
-    return await purchasedItemProvider.queryById(good.id) != null;
+  Future<bool> isPurchasedItem(Good good, {bool isActive = true}) async {
+    PurchasedItem? purchasedItem = await purchasedItemProvider.queryById(good.id);
+    if (purchasedItem == null) return false;
+    return ((purchasedItem.status == 1 ? true : false) == isActive);
   }
 
   Future<bool> isAutoCreate() async {
@@ -169,6 +175,32 @@ class GoodDetailLogic {
     if (product != null) {
       product.autoCreate = value;
       await productProvider.update(product);
+    }
+  }
+
+  void setProductStatus({required bool value, required Good good}) async {
+    Product? product = await productProvider.getItem(good.id);
+    if (product != null) {
+      product.status = value ? 1 : 0;
+      await productProvider.update(product);
+    } else {
+      if (value) {
+        product = Product(groupId: 0, goodId: good.id, price: 0);
+        await productProvider.insert(product);
+      }
+    }
+  }
+
+  void setPurchasedStatus({required bool value, required Good good}) async {
+    PurchasedItem? purchasedItem = await purchasedItemProvider.queryById(good.id);
+    if (purchasedItem != null) {
+      purchasedItem.status = value ? 1 : 0;
+      await purchasedItemProvider.update(purchasedItem);
+    } else {
+      if (value) {
+        purchasedItem = PurchasedItem(goodId: good.id, vendorId: 0, status: 1);
+        await purchasedItemProvider.insert(purchasedItem);
+      }
     }
   }
 }

@@ -9,9 +9,8 @@ class Product {
   int groupId;
   int goodId;
   double price;
-  // double? amount;
-  // int length = 0;
   bool autoCreate;
+  int status;
 
   Map<String, dynamic> toMap() {
     var map = <String, Object>{};
@@ -19,28 +18,27 @@ class Product {
     map['good_id'] = goodId;
     map['price'] = price;
     map['auto_create'] = autoCreate ? 1 : 0;
-    // map['amount'] = amount ?? 0;
+    map['status'] = status;
     return map;
   }
 
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
-        groupId: map['group_id'] as int,
-        goodId: map['good_id'] as int,
-        price: map['price'] as double,
-        // amount: map['amount'] ?? 0,
-        autoCreate: map['auto_create'] == 1);
+      groupId: map['group_id'] as int,
+      goodId: map['good_id'] as int,
+      price: map['price'] as double,
+      autoCreate: map['auto_create'] == 1,
+      status: map['status'] as int,
+    );
   }
 
   Product({
     required this.groupId,
     required this.goodId,
     required this.price,
-    // this.amount = 0,
     this.autoCreate = false,
-  }) {
-    // length = toMap().length;
-  }
+    this.status = 1,
+  });
 }
 
 class ProductProvider extends DatabaseHandler {
@@ -55,6 +53,7 @@ class ProductProvider extends DatabaseHandler {
             good_id integer not null,
             price real not null,
             auto_create INTEGER NOT NULL DEFAULT 0,
+            status INTEGER NOT NULL DEFAULT 1,
             foreign key (group_id) references product_group(id) on delete cascade on update cascade)
           ''');
     return db!;
@@ -83,9 +82,13 @@ class ProductProvider extends DatabaseHandler {
     return Product.fromMap(maps.first);
   }
 
-  Future<List<Product>> getItemsByGroupId(int groupId) async {
+  Future<List<Product>> getItemsByGroupId(int groupId, {bool isActive = true}) async {
     db ??= await open();
-    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'group_id = ?', whereArgs: [groupId]);
+    List<Map<String, dynamic>> maps = await db!.query(
+      tableName,
+      where: 'group_id = ? AND status = ?',
+      whereArgs: [groupId, isActive ? 1 : 0],
+    );
     List<Product> items = [];
     for (var map in maps) {
       items.add(Product.fromMap(map));
@@ -96,6 +99,16 @@ class ProductProvider extends DatabaseHandler {
   Future<List<Product>> getAll() async {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName);
+    List<Product> items = [];
+    for (var map in maps) {
+      items.add(Product.fromMap(map));
+    }
+    return items;
+  }
+
+  Future<List<Product>> getAllByStatus(bool isActive) async {
+    db ??= await open();
+    List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'status = ?', whereArgs: [isActive ? 1 : 0]);
     List<Product> items = [];
     for (var map in maps) {
       items.add(Product.fromMap(map));

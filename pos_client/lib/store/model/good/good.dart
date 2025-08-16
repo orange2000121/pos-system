@@ -55,7 +55,7 @@ class GoodProvider extends DatabaseHandler {
             name text not null,
             unit text not null,
             image blob,
-            status integer not null
+            status integer not null default 1
           )
           ''');
     return db!;

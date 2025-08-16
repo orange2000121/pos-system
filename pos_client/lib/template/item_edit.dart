@@ -111,9 +111,9 @@ class _ChoseImageState extends State<ChoseImage> {
               return Image.memory(
                 showImage,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const Icon(
+                errorBuilder: (context, error, stackTrace) => Icon(
                   Icons.image,
-                  size: 80,
+                  size: widget.size,
                 ),
               );
             }),

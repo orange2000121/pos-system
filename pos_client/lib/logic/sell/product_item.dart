@@ -10,12 +10,16 @@ class ProductItem {
   double price;
   String unit;
   Uint8List? image;
+  bool autoCreate;
+  int status;
   ProductItem({
     required this.goodId,
     required this.groupId,
     required this.name,
     required this.price,
     required this.unit,
+    required this.autoCreate,
+    required this.status,
     this.image,
   });
 }
@@ -35,6 +39,8 @@ class ProductItems {
           price: products[i].price,
           unit: good.unit,
           image: good.image,
+          autoCreate: products[i].autoCreate,
+          status: products[i].status,
         ));
       }
     }

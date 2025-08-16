@@ -46,6 +46,14 @@ class PurchasedLogic {
     }
     return purchasedItemAndGoods;
   }
+
+  void disablePurchasedItem(int goodId) async {
+    PurchasedItem? purchasedItem = await purchasedItemProvider.queryById(goodId);
+    if (purchasedItem != null) {
+      purchasedItem.status = 0; // Disable the item
+      await purchasedItemProvider.update(purchasedItem);
+    }
+  }
 }
 
 class PurchasedItemAndGood {
@@ -54,6 +62,7 @@ class PurchasedItemAndGood {
   final String name;
   final String unit;
   Uint8List? image;
+  int status;
 
   PurchasedItemAndGood({
     required this.goodId,
@@ -61,6 +70,7 @@ class PurchasedItemAndGood {
     required this.name,
     required this.unit,
     this.image,
+    required this.status,
   });
 
   factory PurchasedItemAndGood.combinePurchasedItemAndGood(
@@ -73,6 +83,7 @@ class PurchasedItemAndGood {
       name: good.name,
       unit: good.unit,
       image: good.image,
+      status: purchasedItem.status,
     );
   }
 
@@ -80,6 +91,7 @@ class PurchasedItemAndGood {
     return PurchasedItem(
       goodId: goodId,
       vendorId: vendorId,
+      status: status,
     );
   }
 

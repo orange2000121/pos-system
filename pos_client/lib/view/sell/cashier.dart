@@ -239,7 +239,7 @@ class _CashierState extends State<Cashier> {
   Widget productList() {
     Future<List<ProductItem>> getProductList() async {
       // 取得所有商品，並結合good資料
-      List<Product> products = await ProductProvider().getAll();
+      List<Product> products = await ProductProvider().getAllByStatus(true);
       return await ProductItems().convertProducts2ProductItems(products);
     }
 
