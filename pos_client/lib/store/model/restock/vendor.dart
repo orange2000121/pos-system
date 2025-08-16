@@ -113,9 +113,10 @@ class VendorProvider extends DatabaseHandler {
     return id;
   }
 
-  Future<Vendor> getItem(int id) async {
+  Future<Vendor?> getItem(int id) async {
     db ??= await open();
     List<Map<String, dynamic>> maps = await db!.query(tableName, where: 'id = ?', whereArgs: [id], limit: 1);
+    if (maps.isEmpty) return null;
     return Vendor.fromJson(maps.first);
   }
 

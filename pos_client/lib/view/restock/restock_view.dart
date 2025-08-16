@@ -231,7 +231,11 @@ class _RestockViewState extends State<RestockView> {
                     ),
                   );
                   if (restockViewLogic.restockItemsNotifier.value.length == 1) {
-                    restockViewLogic.restockOrderVendorNotifier.value = await VendorProvider().getItem(purchasedItem.vendorId);
+                    Vendor vendor;
+                    vendor = await VendorProvider()
+                        .getItem(purchasedItem.vendorId)
+                        .then((value) => value ?? Vendor(id: 0, name: '未知廠商', address: '', phone: '', fax: '', contactPerson: '', contactPersonPhone: '', contactPersonEmail: '', status: ''));
+                    restockViewLogic.restockOrderVendorNotifier.value = vendor;
                   }
                   // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
                   restockViewLogic.restockItemsNotifier.notifyListeners();
@@ -321,7 +325,7 @@ class _RestockViewState extends State<RestockView> {
                           initialNumber: restockItems[index].quantity,
                           onChanged: (number) {
                             restockItems[index].quantity = number;
-                            restockItems = List.from(restockItems);
+                            restockViewLogic.restockItemsNotifier.value = List.from(restockItems);
                           },
                           // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
                           onEditingComplete: (number) => restockViewLogic.restockItemsNotifier.notifyListeners(),
