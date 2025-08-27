@@ -42,18 +42,31 @@ class _OrderHistoryState extends State<OrderHistory> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: FutureBuilder(
-              future: customerId != null ? customerProvider.getItem(customerId!) : Future(() => Customer('', '', '', '')),
-              builder: (context, AsyncSnapshot<Customer> snapshot) {
-                if (snapshot.hasData) {
-                  return Text('『${snapshot.data!.name}』歷史訂單');
-                } else {
-                  return const Text('歷史訂單');
-                }
-              })),
+        toolbarHeight: 70,
+        flexibleSpace: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FutureBuilder(
+                future: customerId != null ? customerProvider.getItem(customerId!) : Future(() => Customer('', '', '', '')),
+                builder: (context, AsyncSnapshot<Customer> snapshot) {
+                  if (snapshot.hasData) {
+                    return Text('『${snapshot.data!.name}』歷史訂單');
+                  } else {
+                    return const Text('歷史訂單');
+                  }
+                }),
+            filterBar(
+              startDateNotifier: startDateNotifier,
+              endDateNotifier: endDateNotifier,
+              onChanged: () {
+                setState(() {});
+              },
+            ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
-          filterBar(startDateNotifier: startDateNotifier, endDateNotifier: endDateNotifier, onChanged: () => setState(() {})),
           Expanded(
             child: FutureBuilder(
                 future: getOrders(),

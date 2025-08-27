@@ -33,15 +33,18 @@ class _OrderOverviewState extends State<OrderOverview> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 70,
         title: const Text('訂單總覽'),
-      ),
-      body: Column(
-        children: [
-          filterBar(
+        flexibleSpace: Center(
+          child: filterBar(
             startDateNotifier: startDateNotifier,
             endDateNotifier: endDateNotifier,
             onChanged: () => setState(() {}),
           ),
+        ),
+      ),
+      body: Column(
+        children: [
           FutureBuilder(
               future: customerProvider.getAll(),
               builder: (context, AsyncSnapshot<List<Customer>> customersSnapshot) {
@@ -213,28 +216,29 @@ class _OrderOverviewState extends State<OrderOverview> {
         }
       }
     }
-    return PieChartAndDetail(title: '產品銷售', itemNames: productSales.keys.toList(), itemValues: productSales.values.toList());
+    final productSort = productSales.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    return PieChartAndDetail(title: '產品銷售', itemNames: productSort.map((e) => e.key).toList(), itemValues: productSort.map((e) => e.value).toList());
   }
 
-  List<PieChartSectionData> showSections(AsyncSnapshot<List<OrderItem>> ordersSnapshot, AsyncSnapshot<List<Customer>> allCustomerSnapshot, ValueNotifier<dynamic> touchedIndexNotifier) {
-    List<PieChartSectionData> pieChartSectionDataList = [];
-    List<Color> colors = [Colors.red, Colors.blue, Colors.green, Colors.yellow, Colors.purple, Colors.orange, Colors.pink, Colors.teal, Colors.indigo, Colors.lime];
-    double total = ordersSnapshot.data!.fold(0, (previousValue, element) => (previousValue + element.totalPrice));
-    allCustomerSnapshot.data!.asMap().forEach((index, customer) {
-      double customerTotal = 0;
-      for (OrderItem order in ordersSnapshot.data!) {
-        if (order.customerId == customer.id) {
-          customerTotal += order.totalPrice;
-        }
-      }
-      pieChartSectionDataList.add(PieChartSectionData(
-        color: colors[index % colors.length],
-        value: customerTotal,
-        title: '${customer.name} ${(customerTotal / total * 100).toStringAsFixed(2)}%',
-        radius: index == touchedIndexNotifier.value ? 100 : 80,
-        titleStyle: const TextStyle(fontSize: 20),
-      ));
-    });
-    return pieChartSectionDataList;
-  }
+  // List<PieChartSectionData> showSections(AsyncSnapshot<List<OrderItem>> ordersSnapshot, AsyncSnapshot<List<Customer>> allCustomerSnapshot, ValueNotifier<dynamic> touchedIndexNotifier) {
+  //   List<PieChartSectionData> pieChartSectionDataList = [];
+  //   List<Color> colors = [Colors.red, Colors.blue, Colors.green, Colors.yellow, Colors.purple, Colors.orange, Colors.pink, Colors.teal, Colors.indigo, Colors.lime];
+  //   double total = ordersSnapshot.data!.fold(0, (previousValue, element) => (previousValue + element.totalPrice));
+  //   allCustomerSnapshot.data!.asMap().forEach((index, customer) {
+  //     double customerTotal = 0;
+  //     for (OrderItem order in ordersSnapshot.data!) {
+  //       if (order.customerId == customer.id) {
+  //         customerTotal += order.totalPrice;
+  //       }
+  //     }
+  //     pieChartSectionDataList.add(PieChartSectionData(
+  //       color: colors[index % colors.length],
+  //       value: customerTotal,
+  //       title: '${customer.name} ${(customerTotal / total * 100).toStringAsFixed(2)}%',
+  //       radius: index == touchedIndexNotifier.value ? 100 : 80,
+  //       titleStyle: const TextStyle(fontSize: 20),
+  //     ));
+  //   });
+  //   return pieChartSectionDataList;
+  // }
 }
