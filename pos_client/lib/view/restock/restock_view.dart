@@ -36,7 +36,7 @@ class _RestockViewState extends State<RestockView> {
         ],
       ),
       body: FutureBuilder(
-          future: getAllPurchasedAndGoods(),
+          future: restockViewLogic.getAllPurchasedAndGoods(),
           builder: (context, purchasedItemSnapshot) {
             if (purchasedItemSnapshot.hasData) {
               Map<int, PurchasedItemAndGood> purchasedItemMap = {for (var e in purchasedItemSnapshot.data!) e.goodId: e};
@@ -74,12 +74,6 @@ class _RestockViewState extends State<RestockView> {
             }
           }),
     );
-  }
-
-  Future<List<PurchasedItemAndGood>> getAllPurchasedAndGoods() async {
-    var purchasedItems = await restockViewLogic.purchasedItemProvider.queryAll();
-    var purchasedItemAndGoods = PurchasedLogic().convertPurchasedItems2PurchasedItemAndGoods(purchasedItems);
-    return purchasedItemAndGoods;
   }
 
   Widget restockOrderSave() {
@@ -423,7 +417,7 @@ class RestockViewLogic {
     for (Restock restock in restockItemsNotifier.value) {
       restock.restockOrderId = orderId;
       restock.restockDate = DateTime.now();
-      newGoods[restock.goodId] = restock.quantity; //todo確認是否是goodId
+      newGoods[restock.goodId] = restock.quantity;
       await restockProvider.insert(restock);
       //更新庫存
       Inventory? inventory = await inventoryProvider.getInventoryByGoodId(restock.goodId);
@@ -438,5 +432,11 @@ class RestockViewLogic {
     // 清空UI訂貨清單資訊
     restockItemsNotifier.value = [];
     restockOrderNoteController.text = '';
+  }
+
+  Future<List<PurchasedItemAndGood>> getAllPurchasedAndGoods() async {
+    var purchasedItems = await purchasedItemProvider.queryByStatus(true);
+    var purchasedItemAndGoods = PurchasedLogic().convertPurchasedItems2PurchasedItemAndGoods(purchasedItems);
+    return purchasedItemAndGoods;
   }
 }

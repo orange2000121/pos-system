@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pos/logic/restock/purchased_logic.dart';
+import 'package:pos/store/model/good/inventory.dart';
 import 'package:pos/store/model/restock/purchased_items.dart';
 import 'package:pos/store/model/restock/restock.dart';
 import 'package:pos/store/model/restock/restock_order.dart';
@@ -21,6 +22,7 @@ class _RestockHistoryState extends State<RestockHistory> {
   final RestockOrderProvider restockOrderProvider = RestockOrderProvider();
   final RestockProvider restockProvider = RestockProvider();
   final PurchasedItemProvider purchasedItemProvider = PurchasedItemProvider();
+  final InventoryProvider inventoryProvider = InventoryProvider();
   final PurchasedLogic purchasedLogic = PurchasedLogic();
   ValueNotifier<Map<int, PurchasedItemAndGood>> purchasedItemsNotifier = ValueNotifier({}); //Map<purchasedItemId, PurchasedItem>
   ValueNotifier<List<RestockOrder>> restockOrdersNotifier = ValueNotifier([]);
@@ -40,15 +42,20 @@ class _RestockHistoryState extends State<RestockHistory> {
   Widget build(BuildContext context) {
     getRestockData();
     return Scaffold(
-      appBar: AppBar(title: const Text('進貨總覽')),
-      body: Column(children: [
-        filterBar(
-          startDateNotifier: startDateNotifier,
-          endDateNotifier: endDateNotifier,
-          onChanged: () {
-            setState(() {});
-          },
+      appBar: AppBar(
+        toolbarHeight: 70,
+        title: const Text('進貨總覽'),
+        flexibleSpace: Center(
+          child: filterBar(
+            startDateNotifier: startDateNotifier,
+            endDateNotifier: endDateNotifier,
+            onChanged: () {
+              setState(() {});
+            },
+          ),
         ),
+      ),
+      body: Column(children: [
         Expanded(
           child: ListView(
             // gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -146,6 +153,14 @@ class _RestockHistoryState extends State<RestockHistory> {
                                             ElevatedButton(
                                               onPressed: () async {
                                                 await restockOrderProvider.delete(order.id!);
+                                                for (Restock restock in restocks) {
+                                                  await restockProvider.delete(restock.id!);
+                                                  Inventory? inventory = await inventoryProvider.getInventoryByGoodId(restock.goodId);
+                                                  if (inventory == null) continue;
+                                                  inventory.quantity -= restock.quantity;
+                                                  await inventoryProvider.update(inventory, mode: Inventory.COMPUTE_MODE);
+                                                }
+
                                                 if (!context.mounted) return;
                                                 Navigator.of(context).pop();
                                                 Navigator.of(context).pop();
