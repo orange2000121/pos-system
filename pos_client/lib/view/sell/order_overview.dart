@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:pos/store/model/sell/customer.dart';
 import 'package:pos/store/model/sell/order.dart';
+import 'package:pos/store/model/sell/sell.dart';
 import 'package:pos/template/charts/pie_chart_and_detail.dart';
 import 'package:pos/template/date_picker.dart';
 import 'package:pos/view/sell/order_history.dart';
@@ -16,6 +17,7 @@ class OrderOverview extends StatefulWidget {
 class _OrderOverviewState extends State<OrderOverview> {
   final CustomerProvider customerProvider = CustomerProvider();
   final OrderProvider orderProvider = OrderProvider();
+  final SellProvider sellProvider = SellProvider();
   final ValueNotifier<DateTime?> startDateNotifier = ValueNotifier(null);
   final ValueNotifier<DateTime?> endDateNotifier = ValueNotifier(null);
   @override
@@ -63,6 +65,13 @@ class _OrderOverviewState extends State<OrderOverview> {
                                     Wrap(
                                       children: [
                                         customerChartCard(ordersSnapshot, customersSnapshot),
+                                        FutureBuilder(
+                                          future: productChartCard(ordersSnapshot),
+                                          initialData: const SizedBox(),
+                                          builder: (BuildContext context, AsyncSnapshot productChartSnapshot) {
+                                            return productChartSnapshot.data ?? const SizedBox();
+                                          },
+                                        ),
                                       ],
                                     ),
                                   ],
@@ -190,6 +199,21 @@ class _OrderOverviewState extends State<OrderOverview> {
       customerValues.add(customerTotal);
     });
     return PieChartAndDetail(title: '客戶', itemNames: customerNames, itemValues: customerValues);
+  }
+
+  Future<Widget> productChartCard(AsyncSnapshot<List<OrderItem>> orderSnapshot) async {
+    Map<String, double> productSales = {};
+    for (OrderItem order in orderSnapshot.data!) {
+      List<SellItem> sellItems = await sellProvider.getItemByOrderId(order.id!);
+      for (SellItem sellItem in sellItems) {
+        if (productSales.containsKey(sellItem.name)) {
+          productSales[sellItem.name] = productSales[sellItem.name]! + sellItem.price * sellItem.quantity;
+        } else {
+          productSales[sellItem.name] = sellItem.price * sellItem.quantity;
+        }
+      }
+    }
+    return PieChartAndDetail(title: '產品銷售', itemNames: productSales.keys.toList(), itemValues: productSales.values.toList());
   }
 
   List<PieChartSectionData> showSections(AsyncSnapshot<List<OrderItem>> ordersSnapshot, AsyncSnapshot<List<Customer>> allCustomerSnapshot, ValueNotifier<dynamic> touchedIndexNotifier) {

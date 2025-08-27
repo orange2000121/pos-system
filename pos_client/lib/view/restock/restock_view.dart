@@ -417,7 +417,7 @@ class RestockViewLogic {
     for (Restock restock in restockItemsNotifier.value) {
       restock.restockOrderId = orderId;
       restock.restockDate = DateTime.now();
-      newGoods[restock.goodId] = restock.quantity; //todo確認是否是goodId
+      newGoods[restock.goodId] = restock.quantity;
       await restockProvider.insert(restock);
       //更新庫存
       Inventory? inventory = await inventoryProvider.getInventoryByGoodId(restock.goodId);
