@@ -96,7 +96,7 @@ jobs:
     - name: Set up Flutter # 設定 Flutter 環境
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.41.0'
+        flutter-version: '3.38.9'
         channel: 'stable' # 指定 Flutter 頻道 (stable, beta, dev)
 
     - name: Clean Flutter Project # 清理 Flutter 專案，確保乾淨的編譯環境
