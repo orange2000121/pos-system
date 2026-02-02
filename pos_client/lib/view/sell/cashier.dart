@@ -568,33 +568,75 @@ class _CashierState extends State<Cashier> {
             onPressed: () async {
               String receiptFolder = 'receipt';
               String customerName = _name.text;
+              String safeCustomerName = customerName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+
               // 建立pdf儲存資料夾
               final output = await getApplicationDocumentsDirectory();
-              if (File('${output.path}/$receiptFolder').existsSync() == false) {
-                Directory('${output.path}/$receiptFolder').createSync();
+              Directory receiptDir = Directory('${output.path}/$receiptFolder');
+              if (!receiptDir.existsSync()) {
+                receiptDir.createSync(recursive: true);
               }
-              if (File('${output.path}/$receiptFolder/$customerName').existsSync() == false) {
-                Directory('${output.path}/$receiptFolder/$customerName').createSync();
+              Directory customerDir = Directory('${receiptDir.path}/$safeCustomerName');
+              if (!customerDir.existsSync()) {
+                customerDir.createSync(recursive: true);
               }
-              String formattedDate = '${receiptDate.year}-${receiptDate.month}-${receiptDate.day}-${receiptDate.hour}-${receiptDate.minute}-${receiptDate.second}';
-              final file = File('${output.path}/$receiptFolder/$customerName/$customerName$formattedDate.pdf');
-              // 最後更新客戶資料
-              receiptSample.customName = _name.text;
-              receiptSample.contactPerson = _contactPerson.text;
-              receiptSample.phone = _phone.text;
-              receiptSample.address = _address.text;
+
+              String pad(int n) => n.toString().padLeft(2, '0');
+              String formattedDate = '${receiptDate.year}-${pad(receiptDate.month)}-${pad(receiptDate.day)}-${pad(receiptDate.hour)}-${pad(receiptDate.minute)}-${pad(receiptDate.second)}';
+              final file = File('${customerDir.path}/$safeCustomerName$formattedDate.pdf');
+
               // 更新客戶資料
+              customerValueNotifier.value.name = _name.text;
+              customerValueNotifier.value.contactPerson = _contactPerson.text;
+              customerValueNotifier.value.phone = _phone.text;
+              customerValueNotifier.value.address = _address.text;
+
               if (customerValueNotifier.value.id != null) {
-                customerProvider.update(customerValueNotifier.value.id!, customerValueNotifier.value);
+                await customerProvider.update(customerValueNotifier.value.id!, customerValueNotifier.value);
               }
               customerValueNotifier.notifyListeners();
-              // ignore: await_only_futures
-              await receiptSample.updatePdf;
-              // pdf存檔
-              Uint8List bytes = await receiptSample.pdf.save();
+
+              // 準備 SaleItems
+              List<SaleItemData> saleItems = cashierLogic.shopItemsNotifier.value.map((item) {
+                return SaleItemData(
+                  id: item.id.toString(),
+                  name: item.name,
+                  price: item.price.toDouble(),
+                  num: item.quantity.toDouble(),
+                  unit: item.unit,
+                  note: item.note,
+                );
+              }).toList();
+
+              // 設定 PDF 格式
+              double? shippingPaperWidth = cashierInit.sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperWidth);
+              double? shippingPaperHeight = cashierInit.sharedPreferenceHelper.setting.getDoubleSetting(DoubleSettingKey.shippingPaperHeight);
+              PdfPageFormat? pdfPageFormat;
+              if (shippingPaperWidth != null && shippingPaperHeight != null) {
+                pdfPageFormat = PdfPageFormat(shippingPaperWidth * PdfPageFormat.mm, shippingPaperHeight * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm);
+              }
+
+              // 建立 CreateReceipt 產生器
+              CreateReceipt createReceipt = CreateReceipt(
+                userName: cashierInit.sharedPreferenceHelper.userInfo.getUserInfo(UserInfoKey.userName) ?? '',
+                customName: customerValueNotifier.value.name,
+                contactPerson: customerValueNotifier.value.contactPerson,
+                phone: customerValueNotifier.value.phone,
+                address: customerValueNotifier.value.address,
+                data: saleItems,
+                formattedDate: '${receiptDate.year}-${pad(receiptDate.month)}-${pad(receiptDate.day)}',
+                pdfPageFormat: pdfPageFormat ?? const PdfPageFormat(190 * PdfPageFormat.mm, 139.7 * PdfPageFormat.mm, marginAll: 10 * PdfPageFormat.mm),
+                showPrice: showPriceNotifier.value,
+              );
+
+              // 產生並儲存 PDF
+              final pdfDoc = await createReceipt.addPage();
+              Uint8List bytes = await pdfDoc.save();
               await file.writeAsBytes(bytes);
-              // 列印pdf
-              receiptSample.layout();
+
+              // 列印
+              await createReceipt.layout();
+
               Customer? insertCustomer;
               if (customerValueNotifier.value.id == null) {
                 insertCustomer = await customerProvider.insert(customerValueNotifier.value);
@@ -670,8 +712,8 @@ class _CashierState extends State<Cashier> {
               SaleItemData(
                 id: cashierLogic.shopItemsNotifier.value[i].id.toString(),
                 name: cashierLogic.shopItemsNotifier.value[i].name,
-                price: cashierLogic.shopItemsNotifier.value[i].price.toInt(),
-                num: cashierLogic.shopItemsNotifier.value[i].quantity.toInt(),
+                price: cashierLogic.shopItemsNotifier.value[i].price.toDouble(),
+                num: cashierLogic.shopItemsNotifier.value[i].quantity.toDouble(),
                 unit: cashierLogic.shopItemsNotifier.value[i].unit,
                 note: cashierLogic.shopItemsNotifier.value[i].note,
               ),

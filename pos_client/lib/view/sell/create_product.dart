@@ -305,7 +305,7 @@ class _CreateProductState extends State<CreateProduct> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    const Text('供應商：'),
+                    const Text('類別：'),
                     FutureBuilder(
                         future: productGroupProvider.getAll(),
                         builder: (context, snapshot) {

@@ -28,8 +28,8 @@ abstract class DatabaseHandler {
   Future _onCreate(Database db, int version) async {}
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    print('new version $newVersion');
-    print('old version $oldVersion');
+    // print('new version $newVersion');
+    // print('old version $oldVersion');
     for (int version = oldVersion; version < newVersion; version++) {
       switch (version) {
         case 1:

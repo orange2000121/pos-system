@@ -9,8 +9,8 @@ import 'package:printing/printing.dart';
 class SaleItemData {
   String id;
   String name;
-  int num;
-  int price;
+  double num;
+  double price;
   String unit;
   String? note;
   SaleItemData({
@@ -232,7 +232,7 @@ class CreateReceipt {
             ],
           ),
           ...data.sublist(min((page - 1) * pageNum, data.length - 1), min((page - 1) * pageNum + pageNum, data.length)).map((item) {
-            int subtotal = item.num * item.price;
+            double subtotal = item.num * item.price;
             return pw.TableRow(
               children: [
                 pw.Text(item.id, style: pw.TextStyle(font: ttf, fontSize: textSize)),
@@ -253,7 +253,7 @@ class CreateReceipt {
   pw.Widget total(pw.Font ttf) {
     double allPrice = 0;
     for (var item in data) {
-      int subtotal = item.num * item.price;
+      double subtotal = item.num * item.price;
       allPrice += subtotal;
     }
     return pw.Container(
