@@ -43,27 +43,28 @@ class _OrderHistoryState extends State<OrderHistory> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70,
-        flexibleSpace: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            FutureBuilder(
-                future: customerId != null ? customerProvider.getItem(customerId!) : Future(() => Customer('', '', '', '')),
-                builder: (context, AsyncSnapshot<Customer> snapshot) {
-                  if (snapshot.hasData) {
-                    return Text('『${snapshot.data!.name}』歷史訂單');
-                  } else {
-                    return const Text('歷史訂單');
-                  }
-                }),
-            filterBar(
-              startDateNotifier: startDateNotifier,
-              endDateNotifier: endDateNotifier,
-              onChanged: () {
-                setState(() {});
-              },
-            ),
-          ],
-        ),
+        titleSpacing: 16,
+        title: FutureBuilder(
+            future: customerId != null
+                ? customerProvider.getItem(customerId!)
+                : Future(() => Customer('', '', '', '')),
+            builder: (context, AsyncSnapshot<Customer> snapshot) {
+              if (snapshot.hasData) {
+                return Text('『${snapshot.data!.name}』歷史訂單');
+              } else {
+                return const Text('歷史訂單');
+              }
+            }),
+        actions: [
+          filterBar(
+            startDateNotifier: startDateNotifier,
+            endDateNotifier: endDateNotifier,
+            onChanged: () {
+              setState(() {});
+            },
+            showMonthSelector: true,
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -100,7 +101,8 @@ class _OrderHistoryState extends State<OrderHistory> {
         if (sellMap.containsKey(element.name)) {
           sellMap[element.name] = {
             'quantity': sellMap[element.name]!['quantity']! + element.quantity,
-            'totalPrice': sellMap[element.name]!['totalPrice']! + element.price.toInt() * element.quantity,
+            'totalPrice': sellMap[element.name]!['totalPrice']! +
+                element.price.toInt() * element.quantity,
           };
         } else {
           sellMap[element.name] = {
@@ -128,15 +130,23 @@ class _OrderHistoryState extends State<OrderHistory> {
           children: sellMap.keys.map((e) {
             return Card(
               child: SizedBox(
-                width: (MediaQuery.of(context).size.width * 0.2) > 200 ? MediaQuery.of(context).size.width * 0.2 : 200,
+                width: (MediaQuery.of(context).size.width * 0.2) > 200
+                    ? MediaQuery.of(context).size.width * 0.2
+                    : 200,
                 child: Column(
                   children: [
                     Text(e),
                     Expanded(
                       child: ListView(
                         children: [
-                          Text('${(sellMap[e]!['quantity']! / totalQuantity * 100).toStringAsFixed(2)}%' '  ' '銷售數量：${sellMap[e]?['quantity']}'),
-                          Text('${(sellMap[e]!['totalPrice']! / totalPrice * 100).toStringAsFixed(2)}%' '  ' '總銷售額：${sellMap[e]?['totalPrice']}'),
+                          Text(
+                              '${(sellMap[e]!['quantity']! / totalQuantity * 100).toStringAsFixed(2)}%'
+                              '  '
+                              '銷售數量：${sellMap[e]?['quantity']}'),
+                          Text(
+                              '${(sellMap[e]!['totalPrice']! / totalPrice * 100).toStringAsFixed(2)}%'
+                              '  '
+                              '總銷售額：${sellMap[e]?['totalPrice']}'),
                         ],
                       ),
                     ),
@@ -234,7 +244,8 @@ class _OrderHistoryState extends State<OrderHistory> {
     );
   }
 
-  Card editCard(BuildContext context, String hint, String initialValue, Function(String value) onChanged) {
+  Card editCard(BuildContext context, String hint, String initialValue,
+      Function(String value) onChanged) {
     return Card(
       color: const Color.fromARGB(188, 184, 156, 184),
       child: Column(
@@ -265,7 +276,11 @@ class _OrderHistoryState extends State<OrderHistory> {
   Future<Map<OrderItem, List<SellItem>>> getOrders() async {
     List orders;
 
-    orders = await orderHistoryLogic.orderProvider.getAllFromCustomerIdAndDateRange(customerId, startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
+    orders = await orderHistoryLogic.orderProvider
+        .getAllFromCustomerIdAndDateRange(
+            customerId,
+            startDateNotifier.value ?? DateTime(2000),
+            endDateNotifier.value ?? DateTime(2100));
     Map<OrderItem, List<SellItem>> orderMap = {};
     for (var i = 0; i < orders.length; i++) {
       orderMap[orders[i]] = await sellProvider.getItemByOrderId(orders[i].id!);

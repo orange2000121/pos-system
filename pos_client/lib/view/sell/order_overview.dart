@@ -33,20 +33,23 @@ class _OrderOverviewState extends State<OrderOverview> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70,
+        titleSpacing: 16,
         title: const Text('訂單總覽'),
-        flexibleSpace: Center(
-          child: filterBar(
+        actions: [
+          filterBar(
             startDateNotifier: startDateNotifier,
             endDateNotifier: endDateNotifier,
             onChanged: () => setState(() {}),
+            showMonthSelector: true,
           ),
-        ),
+        ],
       ),
       body: Column(
         children: [
           FutureBuilder(
               future: customerProvider.getAll(),
-              builder: (context, AsyncSnapshot<List<Customer>> customersSnapshot) {
+              builder:
+                  (context, AsyncSnapshot<List<Customer>> customersSnapshot) {
                 if (customersSnapshot.hasData) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,22 +59,31 @@ class _OrderOverviewState extends State<OrderOverview> {
                         padding: const EdgeInsets.all(8.0),
                         child: FutureBuilder(
                           future: () async {
-                            return await orderProvider.getAllFromDateRange(startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
+                            return await orderProvider.getAllFromDateRange(
+                                startDateNotifier.value ?? DateTime(2000),
+                                endDateNotifier.value ?? DateTime(2100));
                           }(),
                           builder: (context, ordersSnapshot) {
                             if (ordersSnapshot.hasData) {
                               return SizedBox(
-                                height: MediaQuery.of(context).size.height - 200 - 138,
+                                height: MediaQuery.of(context).size.height -
+                                    200 -
+                                    138,
                                 child: ListView(
                                   children: [
                                     Wrap(
                                       children: [
-                                        customerChartCard(ordersSnapshot, customersSnapshot),
+                                        customerChartCard(
+                                            ordersSnapshot, customersSnapshot),
                                         FutureBuilder(
-                                          future: productChartCard(ordersSnapshot),
+                                          future:
+                                              productChartCard(ordersSnapshot),
                                           initialData: const SizedBox(),
-                                          builder: (BuildContext context, AsyncSnapshot productChartSnapshot) {
-                                            return productChartSnapshot.data ?? const SizedBox();
+                                          builder: (BuildContext context,
+                                              AsyncSnapshot
+                                                  productChartSnapshot) {
+                                            return productChartSnapshot.data ??
+                                                const SizedBox();
                                           },
                                         ),
                                       ],
@@ -96,7 +108,8 @@ class _OrderOverviewState extends State<OrderOverview> {
     );
   }
 
-  SizedBox customerOrderHorList(AsyncSnapshot<List<Customer>> allCustomerSnapshot) {
+  SizedBox customerOrderHorList(
+      AsyncSnapshot<List<Customer>> allCustomerSnapshot) {
     //列出所有的客戶，並顯示他們的訂單數量與總金額，點擊後進入訂單紀錄
     return SizedBox(
       height: 200,
@@ -107,7 +120,8 @@ class _OrderOverviewState extends State<OrderOverview> {
           try {
             return SizedBox(
               width: 200,
-              child: customerInfoCard(context, allCustomerSnapshot.data![index]),
+              child:
+                  customerInfoCard(context, allCustomerSnapshot.data![index]),
             );
           } catch (e) {
             return SizedBox(
@@ -156,7 +170,10 @@ class _OrderOverviewState extends State<OrderOverview> {
             ),
             FutureBuilder(
               future: () async {
-                return await orderProvider.getAllFromCustomerIdAndDateRange(customer.id, startDateNotifier.value ?? DateTime(2000), endDateNotifier.value ?? DateTime(2100));
+                return await orderProvider.getAllFromCustomerIdAndDateRange(
+                    customer.id,
+                    startDateNotifier.value ?? DateTime(2000),
+                    endDateNotifier.value ?? DateTime(2100));
               }(),
               builder: (context, ordersSnapshot) {
                 if (ordersSnapshot.hasData) {
@@ -183,7 +200,8 @@ class _OrderOverviewState extends State<OrderOverview> {
     );
   }
 
-  Widget customerChartCard(AsyncSnapshot<List<OrderItem>> ordersSnapshot, AsyncSnapshot<List<Customer>> allCustomerSnapshot) {
+  Widget customerChartCard(AsyncSnapshot<List<OrderItem>> ordersSnapshot,
+      AsyncSnapshot<List<Customer>> allCustomerSnapshot) {
     //包含圓餅圖與客戶資訊的卡片
     List<String> customerNames = [];
     List<double> customerValues = [];
@@ -200,23 +218,30 @@ class _OrderOverviewState extends State<OrderOverview> {
       customerNames.add(customer.name);
       customerValues.add(customerTotal);
     });
-    return PieChartAndDetail(title: '客戶', itemNames: customerNames, itemValues: customerValues);
+    return PieChartAndDetail(
+        title: '客戶', itemNames: customerNames, itemValues: customerValues);
   }
 
-  Future<Widget> productChartCard(AsyncSnapshot<List<OrderItem>> orderSnapshot) async {
+  Future<Widget> productChartCard(
+      AsyncSnapshot<List<OrderItem>> orderSnapshot) async {
     Map<String, double> productSales = {};
     for (OrderItem order in orderSnapshot.data!) {
       List<SellItem> sellItems = await sellProvider.getItemByOrderId(order.id!);
       for (SellItem sellItem in sellItems) {
         if (productSales.containsKey(sellItem.name)) {
-          productSales[sellItem.name] = productSales[sellItem.name]! + sellItem.price * sellItem.quantity;
+          productSales[sellItem.name] =
+              productSales[sellItem.name]! + sellItem.price * sellItem.quantity;
         } else {
           productSales[sellItem.name] = sellItem.price * sellItem.quantity;
         }
       }
     }
-    final productSort = productSales.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-    return PieChartAndDetail(title: '產品銷售', itemNames: productSort.map((e) => e.key).toList(), itemValues: productSort.map((e) => e.value).toList());
+    final productSort = productSales.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return PieChartAndDetail(
+        title: '產品銷售',
+        itemNames: productSort.map((e) => e.key).toList(),
+        itemValues: productSort.map((e) => e.value).toList());
   }
 
   // List<PieChartSectionData> showSections(AsyncSnapshot<List<OrderItem>> ordersSnapshot, AsyncSnapshot<List<Customer>> allCustomerSnapshot, ValueNotifier<dynamic> touchedIndexNotifier) {

@@ -58,7 +58,9 @@ class _DatePickerFieldState extends State<DatePickerField> {
           children: [
             const Icon(Icons.calendar_today),
             Text(
-              _selectedDate == null ? 'Select a date' : '${_selectedDate!.toLocal()}'.split(' ')[0],
+              _selectedDate == null
+                  ? 'Select a date'
+                  : '${_selectedDate!.toLocal()}'.split(' ')[0],
             ),
           ],
         ),
@@ -71,6 +73,7 @@ Widget filterBar({
   required ValueNotifier<DateTime?> startDateNotifier,
   required ValueNotifier<DateTime?> endDateNotifier,
   required Function onChanged,
+  bool showMonthSelector = false,
 }) {
   /// 選擇日期範圍
   return Container(
@@ -81,8 +84,10 @@ Widget filterBar({
         ElevatedButton(
             onPressed: () {
               DateTime now = DateTime.now();
-              startDateNotifier.value = DateTime(now.year, now.month, now.day, 0, 0, 0);
-              endDateNotifier.value = DateTime(now.year, now.month, now.day, 23, 59, 59);
+              startDateNotifier.value =
+                  DateTime(now.year, now.month, now.day, 0, 0, 0);
+              endDateNotifier.value =
+                  DateTime(now.year, now.month, now.day, 23, 59, 59);
               onChanged();
             },
             child: const Text('今天')),
@@ -90,7 +95,8 @@ Widget filterBar({
             onPressed: () {
               DateTime now = DateTime.now();
               startDateNotifier.value = DateTime(now.year, now.month, 1);
-              endDateNotifier.value = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+              endDateNotifier.value =
+                  DateTime(now.year, now.month + 1, 0, 23, 59, 59);
               onChanged();
             },
             child: const Text('這個月')),
@@ -102,6 +108,47 @@ Widget filterBar({
               onChanged();
             },
             child: const Text('今年')),
+        if (showMonthSelector)
+          ValueListenableBuilder(
+              valueListenable: startDateNotifier,
+              builder: (context, startDate, child) {
+                return ValueListenableBuilder(
+                    valueListenable: endDateNotifier,
+                    builder: (context, endDate, child) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
+                            hint: const Text('月份'),
+                            value: _selectedMonth(startDate, endDate),
+                            items: List.generate(
+                              12,
+                              (index) => DropdownMenuItem(
+                                value: index + 1,
+                                child: Text('${index + 1}月'),
+                              ),
+                            ),
+                            onChanged: (month) {
+                              if (month == null) {
+                                return;
+                              }
+                              DateTime now = DateTime.now();
+                              startDateNotifier.value =
+                                  DateTime(now.year, month, 1);
+                              endDateNotifier.value =
+                                  DateTime(now.year, month + 1, 0, 23, 59, 59);
+                              onChanged();
+                            },
+                          ),
+                        ),
+                      );
+                    });
+              }),
         ValueListenableBuilder(
             valueListenable: startDateNotifier,
             builder: (context, startDate, child) {
@@ -135,4 +182,29 @@ Widget filterBar({
       ],
     ),
   );
+}
+
+int? _selectedMonth(DateTime? startDate, DateTime? endDate) {
+  if (startDate == null || endDate == null) {
+    return null;
+  }
+  DateTime now = DateTime.now();
+  for (int month = 1; month <= 12; month++) {
+    DateTime monthStart = DateTime(now.year, month, 1);
+    DateTime monthEnd = DateTime(now.year, month + 1, 0, 23, 59, 59);
+    if (_isSameSecond(startDate, monthStart) &&
+        _isSameSecond(endDate, monthEnd)) {
+      return month;
+    }
+  }
+  return null;
+}
+
+bool _isSameSecond(DateTime a, DateTime b) {
+  return a.year == b.year &&
+      a.month == b.month &&
+      a.day == b.day &&
+      a.hour == b.hour &&
+      a.minute == b.minute &&
+      a.second == b.second;
 }

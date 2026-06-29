@@ -44,16 +44,18 @@ class _RestockHistoryState extends State<RestockHistory> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70,
+        titleSpacing: 16,
         title: const Text('進貨總覽'),
-        flexibleSpace: Center(
-          child: filterBar(
+        actions: [
+          filterBar(
             startDateNotifier: startDateNotifier,
             endDateNotifier: endDateNotifier,
             onChanged: () {
               setState(() {});
             },
+            showMonthSelector: true,
           ),
-        ),
+        ],
       ),
       body: Column(children: [
         Expanded(
